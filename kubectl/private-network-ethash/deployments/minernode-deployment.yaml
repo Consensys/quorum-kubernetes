@@ -1,0 +1,87 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minernode
+  labels:
+    app: minernode
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: minernode
+  template:
+    metadata:
+      labels:
+        app: minernode
+    spec:
+      initContainers:
+        - name: init-bootnode2
+          image: byrnedo/alpine-curl
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $PANTHEON_BOOTNODE1_SERVICE_HOST:8545"
+      containers:
+        - name: minernode
+          image: pegasyseng/pantheon:develop
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BOOTNODE1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: pantheon-configmap
+                  key: bootnode1PubKey
+            - name: BOOTNODE2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: pantheon-configmap
+                  key: bootnode2PubKey
+            - name: MINER_COINBASE
+              value: "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73"
+          volumeMounts:
+            - name: genesis-config
+              mountPath: /configs
+              readOnly: true
+          ports:
+            - containerPort: 8545
+              name: http
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 30303
+              name: dev-p2p-tcp
+              protocol: TCP
+            - containerPort: 30303
+              name: dev-p2p-udp
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/pantheon/bin/pantheon \
+                --genesis-file=/configs/genesis.json \
+                --miner-enabled \
+                --miner-coinbase=${MINER_COINBASE} \
+                --host-whitelist=* \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${PANTHEON_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${PANTHEON_BOOTNODE2_SERVICE_HOST}:30303
+      volumes:
+        - name: genesis-config
+          configMap:
+            name: pantheon-configmap
+            items:
+              - key: genesis.json
+                path: genesis.json

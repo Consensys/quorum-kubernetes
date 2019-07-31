@@ -1,0 +1,19 @@
+apiVersion: v1
+version: 0.1.0
+appVersion: 1.1.4
+name: pantheon
+description: enterprise ethereum network chart for Kubernetes
+keywords:
+  - ethereum
+  - pantheon
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys
+home: https://pegasys.tech/solutions/
+sources:
+  - https://github.com/PegaSysEng/pantheon
+maintainers:
+  - name: devops
+    email: devops@pegasys.tech
+icon: https://docs.pantheon.pegasys.tech/en/stable/favicon.ico

@@ -1,0 +1,116 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: validator3
+  labels:
+    app: validator3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: validator3
+  template:
+    metadata:
+      labels:
+        app: validator3
+    spec:
+      initContainers:
+        - name: init-bootnode2
+          image: byrnedo/alpine-curl
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${PANTHEON_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: validator3
+          image: pegasyseng/pantheon:develop
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: pantheon-configmap
+                  key: validator1PubKey
+            - name: NODES_HTTP_CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: pantheon-configmap
+                  key: nodesHttpCorsOrigins
+            - name: NODES_HOST_WHITELIST
+              valueFrom:
+                configMapKeyRef:
+                  name: pantheon-configmap
+                  key: nodesHostWhitelist
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /configs
+              readOnly: true
+          ports:
+            - containerPort: 8545
+              name: http
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 30303
+              name: dev-p2p-tcp
+              protocol: TCP
+            - containerPort: 30303
+              name: dev-p2p-udp
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/pantheon/bin/pantheon \
+              --genesis-file=/configs/genesis.json \
+              --node-private-key-file=/secrets/key \
+              --rpc-http-enabled \
+              --rpc-http-host=0.0.0.0 \
+              --rpc-http-port=8545 \
+              --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+              --rpc-http-api=ETH,NET,IBFT \
+              --rpc-ws-enabled \
+              --rpc-ws-host=0.0.0.0 \
+              --rpc-ws-port=8546 \
+              --host-whitelist=${NODES_HOST_WHITELIST} \
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${PANTHEON_VALIDATOR1_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: key
+          secret:
+            secretName: pantheon-validator-keys
+            items:
+              - key: validator3Key
+                path: key
+        - name: genesis-config
+          configMap:
+            name: pantheon-configmap
+            items:
+              - key: genesis.json
+                path: genesis.json
