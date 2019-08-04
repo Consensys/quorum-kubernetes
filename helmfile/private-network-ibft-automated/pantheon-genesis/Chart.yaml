@@ -1,0 +1,13 @@
+apiVersion: v1
+name: pantheon-genesis
+version: 1.0.0
+description: Pantheon Genesis generator with Helm chart in Kubernetes
+appVersion: "1.0"
+keywords:
+  - configuration
+  - genesis
+  - pantheon
+maintainers:
+  - name: devops
+    email: devops@pegasys.tech
+icon: https://docs.pantheon.pegasys.tech/en/stable/favicon.ico
