@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "pantheon.fullname" . }}-prometheus-configmap
+  labels:
+    app: {{ template "pantheon.fullname" . }}-prometheus-configmap
+    chart: {{ template "pantheon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  prometheus.yml: |-
+{{ .Files.Get "prometheus.yml" | indent 4}}

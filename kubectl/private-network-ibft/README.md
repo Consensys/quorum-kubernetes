@@ -4,6 +4,8 @@
 - Update the configmap/configmap.yml with the public keys & genesis file
 - Update the number of nodes you would like in deployments/node-deployment.yaml
 - Run kubectl
+- Monitoring via prometheus & grafana is also setup up in a separate *monitoring* namespace and exposed via NodePort services (ports 30090, 30030 respectively)
+- Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
 
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
@@ -31,20 +33,30 @@ eg: To alter the number of nodes on the network, alter the `replicas: 2` in the 
 
 #### 4. Deploy:
 ```bash
+
+kubectl apply -f namespace/monitoring-namespace.yaml
+kubectl apply -f rbac/prometheus-rbac.yaml
 kubectl apply -f secrets/validator-keys-secret.yaml
 kubectl apply -f configmap/configmap.yaml
+kubectl apply -f configmap/prometheus-configmap.yaml
+kubectl apply -f configmap/grafana-configmap.yaml
 
 kubectl apply -f services/validator1-service.yaml
 kubectl apply -f services/validator2-service.yaml
 kubectl apply -f services/validator3-service.yaml
 kubectl apply -f services/validator4-service.yaml
 kubectl apply -f services/node-service.yaml
+kubectl apply -f services/prometheus-service.yaml
+kubectl apply -f services/grafana-service.yaml
 
 kubectl apply -f deployments/validator1-deployment.yaml
 kubectl apply -f deployments/validator2-deployment.yaml
 kubectl apply -f deployments/validator3-deployment.yaml
 kubectl apply -f deployments/validator4-deployment.yaml
 kubectl apply -f deployments/node-deployment.yaml
+kubectl apply -f deployments/prometheus-deployment.yaml
+kubectl apply -f deployments/grafana-deployment.yaml
+
 ```
 
 
@@ -78,4 +90,5 @@ kubectl delete -f deployments/
 kubectl delete -f services/
 kubectl delete -f configmap/
 kubectl delete -f secrets/
+kubectl delete -f namespace/
 ```

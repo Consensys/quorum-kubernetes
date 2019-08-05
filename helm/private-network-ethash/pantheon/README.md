@@ -8,6 +8,9 @@
   - Spins up the bootnodes with the private keys specified & associated services for each
   - Spins up the nodes (rpc + ws) and a single service to communicate with the nodes
   - Spins up a miner node if enabled
+- Monitoring via prometheus & grafana is also setup up in a separate *monitoring* namespace and exposed via NodePort services (ports 30090, 30030 respectively)
+- Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
+
 
 ## Pre chart install - you need to create config that you want to persist
 

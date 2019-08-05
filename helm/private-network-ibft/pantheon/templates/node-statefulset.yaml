@@ -22,6 +22,10 @@ spec:
         app: {{ template "pantheon.name" . }}
         release: {{ .Release.Name }}
         component: node
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
     spec:
       initContainers:
         - name: init-bootnode2
@@ -101,6 +105,9 @@ spec:
                 --rpc-ws-enabled \
                 --rpc-ws-host=0.0.0.0 \
                 --rpc-ws-port=8546 \
+                --metrics-enabled=true \
+                --metrics-host=0.0.0.0 \
+                --metrics-port=9545 \
                 --host-whitelist=${NODES_HOST_WHITELIST} \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${PANTHEON_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${PANTHEON_VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:

@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "pantheon.fullname" . }}-grafana-configmap-datasources
+  labels:
+    app: {{ template "pantheon.fullname" . }}-grafana-configmap-datasources
+    chart: {{ template "pantheon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  prometheus.yml: |-
+{{ .Files.Get "grafana-datasource.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "pantheon.fullname" . }}-grafana-configmap-dashboards-dashboard
+  labels:
+    app: {{ template "pantheon.fullname" . }}-grafana-configmap-dashboards-dashboard
+    chart: {{ template "pantheon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  dashboard.yml: |-
+{{ .Files.Get "grafana-dashboard-default.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "pantheon.fullname" . }}-grafana-configmap-dashboards-pantheon
+  labels:
+    app: {{ template "pantheon.fullname" . }}-grafana-configmap-dashboards-pantheon
+    chart: {{ template "pantheon.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  pantheon.json: |-
+{{ .Files.Get "grafana-dashboard-pantheon.json" | indent 4}}
