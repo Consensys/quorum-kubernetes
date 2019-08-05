@@ -69,6 +69,7 @@ The general rule is that any new nodes joining the network need to have the foll
 - genesis.json of the network
 - Bootnodes need to be accessible on the network
 - Bootnodes enode's (public key and IP) should be passed in at boot
+- If you’re using permissioning on your network, specifically authorise the new nodes
 
 If the initial setup was on Kubernetes, you have the following scenarios:
 
@@ -76,6 +77,8 @@ If the initial setup was on Kubernetes, you have the following scenarios:
 In this case anything that applies to how current nodes are provisioned should be applicable and the only thing that need be done is increase the number of replicas
 
 #### 2. New node being provisioned elsewhere
-Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere secure using a [Vault](https://www.vaultproject.io/) or [Chamber](https://github.com/segmentio/chamber) and pass the values in at runtime
+Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere accessible to new nodes that may join in future as well, and pass the values in at runtime.
+
+Additionally if you’re using permissioning on your network you will also have to specifically authorise the new nodes
 
 
