@@ -46,7 +46,7 @@ You need to ensure that the genesis file is accessible to all nodes joining the 
 Ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider.
 
 #### Nodes:
-Consider the use of statefulsets instead of depolyments for nodes. The term 'node' refers to bootnode, validator and network nodes.
+Consider the use of statefulsets instead of deployments for nodes. The term 'node' refers to bootnode, validator and network nodes.
 
 Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://docs.pantheon.pegasys.tech/en/stable/Configuring-Pantheon/Using-Configuration-File/) section of our documentation
 
@@ -62,5 +62,20 @@ For ease of use, the kubectl & helm examples included have both installed and in
 
 #### Logging
 Pantheon's logs can be [configured](https://docs.pantheon.pegasys.tech/en/stable/Monitoring/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
+
+
+### New nodes joining the network:
+The general rule is that any new nodes joining the network need to have the following accessible:
+- genesis.json of the network
+- Bootnodes need to be accessible on the network
+- Bootnodes enode's (public key and IP) should be passed in at boot
+
+If the initial setup was on Kubernetes, you have the following scenarios:
+
+#### 1. New node also being provisioned on the K8S cluster:
+In this case anything that applies to how current nodes are provisioned should be applicable and the only thing that need be done is increase the number of replicas
+
+#### 2. New node being provisioned elsewhere
+Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere secure using a [Vault](https://www.vaultproject.io/) or [Chamber](https://github.com/segmentio/chamber) and pass the values in at runtime
 
 

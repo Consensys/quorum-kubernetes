@@ -11,6 +11,9 @@
 - Monitoring via prometheus & grafana is also setup up in a separate *monitoring* namespace and exposed via NodePort services (ports 30090, 30030 respectively)
 - Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
 
+## Overview of Setup
+![Image ethash](https://raw.githubusercontent.com/PegaSysEng/pantheon-k8s/doco/images/ethash.png)
+
 
 ## Pre chart install - you need to create config that you want to persist
 
@@ -36,7 +39,7 @@ node:
   replicaCount: 2
 ```
 
-#### 4. Run helm
+#### 4. Run helm and install the chart
 ```bash
 helm install --namespace NAMESPACE --name pantheon ./pantheon
 ```
@@ -65,7 +68,22 @@ The result confirms that the node running the JSON-RPC service has two peers:
 
 ```
 
-#### 7. Delete
+#### 7. Monitoring
+Get the ip that minikube is running on
+```bash
+minikube ip
+```
+
+For example if the ip returned was `192.168.99.100`
+
+*Prometheus:*
+In a fresh browser tab open `192.168.99.100:30090` to get to the prometheus dashboard and you can see all the available metrics, as well as the targets that it is collecting metrics for
+
+*Grafana:*
+In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:admin` Open the 'Pantheon Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
+
+
+#### 8. Delete
 ```bash
 helm del --purge pantheon
 
