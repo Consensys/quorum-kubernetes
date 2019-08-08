@@ -8,7 +8,7 @@
 - Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
 
 ## Overview of Setup
-![Image ibft](https://raw.githubusercontent.com/PegaSysEng/pantheon-k8s/doco/images/ibft.png)
+![Image ibft](https://raw.githubusercontent.com/PegaSysEng/pantheon-k8s/master/images/ibft.png)
 
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
