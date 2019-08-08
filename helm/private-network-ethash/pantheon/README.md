@@ -12,7 +12,7 @@
 - Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
 
 ## Overview of Setup
-![Image ethash](https://raw.githubusercontent.com/PegaSysEng/pantheon-k8s/master/images/ethash.png)
+![Image ethash](../../../images/ethash.png)
 
 
 ## Pre chart install - you need to create config that you want to persist

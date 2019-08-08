@@ -8,7 +8,7 @@
 - Credentials for grafana are admin:admin. When grafana loads up select the "Pantheon Dashboard"
 
 ## Overview of Setup
-![Image ethash](https://raw.githubusercontent.com/PegaSysEng/pantheon-k8s/master/images/ethash.png)
+![Image ethash](../../images/ethash.png)
 
 #### 1. Boot nodes private keys
 Create private/public keys for the bootnodes using the pantheon subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
