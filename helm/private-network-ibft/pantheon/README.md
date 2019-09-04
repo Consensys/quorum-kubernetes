@@ -26,13 +26,13 @@ Repeat this process for as many validators as you would like to provision i.e ke
 ```bash
 docker run --rm --volume $PWD/ibftSetup/:/opt/pantheon/data pegasyseng/pantheon:develop operator generate-blockchain-config --config-file=/opt/pantheon/data/ibftConfigFile.json --to=/opt/pantheon/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
-mv ./ibftSetup/networkFiles/genesis.json ./ibftSetup/
+cp ./ibftSetup/networkFiles/genesis.json ./
 ```
 
 Update the values.yaml with the keys. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address
 
 #### 2. Genesis.json
-Copy the genesis.json file generated and place it at the root directory of this helm chart
+The genesis.json file generated should have been placed at the root directory of this helm chart
 
 #### 3. Update any more config in values.yaml if required eg: volume sizes, alter the number of nodes on the network etc
 Update the number to nodes to suit, the key is
