@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pantheon-validator3
+  name: besu-validator3
   labels:
     app: validator3
 spec:

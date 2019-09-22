@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: bootnode1
-          image: pegasyseng/pantheon:develop
+          image: hyperledger/besu:develop
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -42,22 +42,22 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: bootnode2PubKey
             - name: NODES_HTTP_CORS_ORIGINS
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: nodesHttpCorsOrigins
             - name: NODES_HOST_WHITELIST
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: nodesHostWhitelist
           volumeMounts:
             - name: key
@@ -84,7 +84,7 @@ spec:
             - -c
           args:
             - |
-              exec /opt/pantheon/bin/pantheon \
+              exec /opt/besu/bin/besu \
               --genesis-file=/configs/genesis.json \
               --node-private-key-file=/secrets/key \
               --rpc-http-enabled \
@@ -98,7 +98,7 @@ spec:
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
               --host-whitelist=${NODES_HOST_WHITELIST} \
-              --bootnodes=enode://${BOOTNODE1_PUBKEY}@${PANTHEON_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${PANTHEON_BOOTNODE2_SERVICE_HOST}:30303
+              --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
               path: /liveness
@@ -108,13 +108,13 @@ spec:
       volumes:
         - name: key
           secret:
-            secretName: pantheon-bootnode-keys
+            secretName: besu-bootnode-keys
             items:
               - key: bootnode1Key
                 path: key
         - name: genesis-config
           configMap:
-            name: pantheon-configmap
+            name: besu-configmap
             items:
               - key: genesis.json
                 path: genesis.json

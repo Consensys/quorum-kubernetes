@@ -25,10 +25,10 @@ spec:
           command:
             - "sh"
             - "-c"
-            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${PANTHEON_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: node
-          image: pegasyseng/pantheon:develop
+          image: hyperledger/besu:develop
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -45,17 +45,17 @@ spec:
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: validator1PubKey
             - name: NODES_HTTP_CORS_ORIGINS
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: nodesHttpCorsOrigins
             - name: NODES_HOST_WHITELIST
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: nodesHostWhitelist
           volumeMounts:
             - name: genesis-config
@@ -79,7 +79,7 @@ spec:
             - -c
           args:
             - |
-              exec /opt/pantheon/bin/pantheon \
+              exec /opt/besu/bin/besu \
               --genesis-file=/configs/genesis.json \
               --rpc-http-enabled \
               --rpc-http-host=0.0.0.0 \
@@ -93,7 +93,7 @@ spec:
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
               --host-whitelist=${NODES_HOST_WHITELIST} \
-              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${PANTHEON_VALIDATOR1_SERVICE_HOST}:30303
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
               path: /liveness
@@ -109,7 +109,7 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: pantheon-configmap
+            name: besu-configmap
             items:
               - key: genesis.json
                 path: genesis.json

@@ -1,6 +1,6 @@
 
 
-# Pantheon-k8s
+# Besu-k8s
 
 The following repo has example reference implementations of private networks using k8s. This is intended to get developers and ops people familiar with how to run a private ethereum network in k8s and understand the concepts involved.
 
@@ -14,7 +14,7 @@ The reference examples in this repo can be used locally, to get familiar with th
 - [Helm Diff plugin](https://github.com/databus23/helm-diff)
 
 
-Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We recommend you starting with at least 8GB, depending on the amount of nodes you are spinning up - the recommended requirements for each pantheon node are 4GB
+Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We recommend you starting with at least 8GB, depending on the amount of nodes you are spinning up - the recommended requirements for each besu node are 4GB
 ```bash
 minikube start --memory 8192
 ```
@@ -41,7 +41,7 @@ Pick the deployment tool that suits your environment and then change directory a
 | --- |
 
 #### Network Topology and High Availability requirements:
-Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://docs.pantheon.pegasys.tech/en/stable/Deploying-Pantheon/High-Availability/) documentation
+Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Deploy/High-Availability/) documentation
 
 When deploying a private network, eg: IBFT you need to ensure that the bootnodes are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
 
@@ -53,20 +53,20 @@ Ensure that you provide enough capacity for data storage for all nodes that are 
 #### Nodes:
 Consider the use of statefulsets instead of deployments for nodes. The term 'node' refers to bootnode, validator and network nodes.
 
-Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://docs.pantheon.pegasys.tech/en/stable/Configuring-Pantheon/Using-Configuration-File/) section of our documentation
+Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation
 
 
 #### Monitoring
 As always please ensure you have sufficient monitoring and alerting setup.
 
-Pantheon publishes metrics to [Prometheus](https://prometheus.io/) and metrics can be configured using the [kubernetes scraper config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config).
+Besu publishes metrics to [Prometheus](https://prometheus.io/) and metrics can be configured using the [kubernetes scraper config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config).
 
-Pantheon also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes easier.
+Besu also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes easier.
 
 For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements.
 
 #### Logging
-Pantheon's logs can be [configured](https://docs.pantheon.pegasys.tech/en/stable/Monitoring/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
+Besu's logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
 
 
 ### New nodes joining the network:

@@ -54,7 +54,7 @@ spec:
       volumes:
         - name: prometheus-config
           configMap:
-            name: pantheon-prometheus-configmap
+            name: besu-prometheus-configmap
             items:
               - key: prometheus.yml
                 path: prometheus.yml

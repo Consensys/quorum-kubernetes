@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pantheon-bootnode2
+  name: besu-bootnode2
   labels:
     app: bootnode2
 spec:

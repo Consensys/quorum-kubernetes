@@ -15,7 +15,7 @@ resources: {}
   #  cpu: 100m
   #  memory: 128Mi
 
-pantheon:
+besu:
   persistentVolume:
     enabled: false
     # storageClass: gp2

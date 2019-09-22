@@ -20,7 +20,7 @@ releases:
     labels:
       component: validators
     namespace: {{ .Namespace }}
-    chart: ./pantheon-node
+    chart: ./besu-node
     values:
       - ./values/validator.yaml
     set:
@@ -31,7 +31,7 @@ releases:
     labels:
       component: validators
     namespace: {{ .Namespace }}
-    chart: ./pantheon-node
+    chart: ./besu-node
     values:
       - ./values/validator.yaml
     set:
@@ -42,7 +42,7 @@ releases:
     labels:
       component: validators
     namespace: {{ .Namespace }}
-    chart: ./pantheon-node
+    chart: ./besu-node
     values:
       - ./values/validator.yaml
     set:
@@ -53,7 +53,7 @@ releases:
     labels:
       component: validators
     namespace: {{ .Namespace }}
-    chart: ./pantheon-node
+    chart: ./besu-node
     values:
       - ./values/validator.yaml
     set:
