@@ -1,9 +1,0 @@
-# Default values for genesis.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# Define the number of Validator key-pair we want to generate and add to the genesis file
-config:
-  blockchain:
-    nodes:
-      count: 4
