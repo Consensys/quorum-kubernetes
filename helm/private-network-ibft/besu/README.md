@@ -58,7 +58,7 @@ minikube dashboard &
 minikube ssh
 
 # once in the terminal
-curl -X POST --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' <PANTHEON_NODE_SERVICE_HOST>:8545
+curl -X POST --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' <BESU_NODE_SERVICE_HOST>:8545
 
 # which should return:
 The result confirms that the node running the JSON-RPC service has two peers:
