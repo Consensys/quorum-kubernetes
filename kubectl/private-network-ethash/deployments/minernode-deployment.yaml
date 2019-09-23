@@ -6,7 +6,7 @@ metadata:
   labels:
     app: minernode
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: minernode
@@ -21,10 +21,10 @@ spec:
           command:
             - "sh"
             - "-c"
-            - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $PANTHEON_BOOTNODE1_SERVICE_HOST:8545"
+            - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $BESU_BOOTNODE1_SERVICE_HOST:8545"
       containers:
         - name: minernode
-          image: pegasyseng/pantheon:develop
+          image: hyperledger/besu:develop
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -41,15 +41,20 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: pantheon-configmap
+                  name: besu-configmap
                   key: bootnode2PubKey
             - name: MINER_COINBASE
               value: "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73"
+            - name: NODES_HOST_WHITELIST
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-configmap
+                  key: nodesHostWhitelist
           volumeMounts:
             - name: genesis-config
               mountPath: /configs
@@ -72,16 +77,31 @@ spec:
             - -c
           args:
             - |
-              exec /opt/pantheon/bin/pantheon \
+              exec /opt/besu/bin/besu \
                 --genesis-file=/configs/genesis.json \
                 --miner-enabled \
                 --miner-coinbase=${MINER_COINBASE} \
-                --host-whitelist=* \
-                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${PANTHEON_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${PANTHEON_BOOTNODE2_SERVICE_HOST}:30303
+                --metrics-enabled=true \
+                --metrics-host=0.0.0.0 \
+                --metrics-port=9545 \
+                --host-whitelist=${NODES_HOST_WHITELIST} \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30
       volumes:
         - name: genesis-config
           configMap:
-            name: pantheon-configmap
+            name: besu-configmap
             items:
               - key: genesis.json
                 path: genesis.json

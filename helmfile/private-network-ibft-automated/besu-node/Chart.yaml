@@ -1,0 +1,21 @@
+apiVersion: v1
+name: besu-node
+version: 0.1.0
+description: Besu Nodes for a POA (IBFT2) Ethereum Blockchain
+appVersion: 1.1.4
+keywords:
+  - validator
+  - bootnode
+  - node
+  - besu
+  - hyperledger
+  - ethereum
+  - pantheon
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys  
+maintainers:
+  - name: devops
+    email: devops@pegasys.tech
+icon: https://besu.hyperledger.org/en/latest/favicon.ico

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pantheon-prometheus-configmap
+  name: besu-prometheus-configmap
   labels:
-    app: pantheon-prometheus-configmap
+    app: besu-prometheus-configmap
   namespace: monitoring
 data:
   prometheus.yml: |-

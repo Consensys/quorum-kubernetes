@@ -14,6 +14,6 @@ releases:
     labels:
       component: bootnode
     namespace: {{ .Namespace }}
-    chart: ../pantheon-node
+    chart: ../besu-node
     values:
       - ../values/bootnode.yaml

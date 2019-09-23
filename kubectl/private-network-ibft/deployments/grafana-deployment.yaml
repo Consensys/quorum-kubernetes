@@ -49,9 +49,9 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards/dashboard.yml
               subPath: dashboard.yml
               readOnly: true
-            - name: grafana-configmap-dashboards-pantheon
-              mountPath: /etc/grafana/provisioning/dashboards/pantheon.json
-              subPath: pantheon.json
+            - name: grafana-configmap-dashboards-besu
+              mountPath: /etc/grafana/provisioning/dashboards/besu.json
+              subPath: besu.json
               readOnly: true
           ports:
             - containerPort: 3000
@@ -60,10 +60,10 @@ spec:
       volumes:
         - name: grafana-configmap-datasources
           configMap:
-            name: pantheon-grafana-configmap-datasources
+            name: besu-grafana-configmap-datasources
         - name: grafana-configmap-dashboards-dashboard
           configMap:
-            name: pantheon-grafana-configmap-dashboards-dashboard
-        - name: grafana-configmap-dashboards-pantheon
+            name: besu-grafana-configmap-dashboards-dashboard
+        - name: grafana-configmap-dashboards-besu
           configMap:
-            name: pantheon-grafana-configmap-dashboards-pantheon
+            name: besu-grafana-configmap-dashboards-besu
