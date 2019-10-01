@@ -83,7 +83,7 @@ The following table lists the configurable parameters of the **Besu node** chart
 
 Parameter | Description | Default
 --------- | ----------- | -------
-`image.repository` | Container image repository | `pegasyseng/besu`
+`image.repository` | Container image repository | `hyperledger/besu`
 `image.tag` | Container image tag | `1.1.3`
 `image.pullPolicy` | Container image pull policy | `IfNotPresent`
 `besu.genesis.name` | IMPORTANT: The name of the configMap to retrieve the genesis | `genesis-besu`
