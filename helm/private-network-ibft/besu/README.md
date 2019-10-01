@@ -24,7 +24,7 @@ Create private/public keys for the validators using the besu subcommands. The pr
 Repeat this process for as many validators as you would like to provision i.e keys and replicate the deployment & service
 
 ```bash
-docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data pegasyseng/besu:develop operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
+docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:develop operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 cp ./ibftSetup/networkFiles/genesis.json ./
 ```
