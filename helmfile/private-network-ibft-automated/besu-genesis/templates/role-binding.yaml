@@ -47,5 +47,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: default
+    namespace: {{ .Namespace }}
 
