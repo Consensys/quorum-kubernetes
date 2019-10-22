@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-rules-besu
+  labels:
+    namespace: besu
+    component: besu-ingress
+  namespace: besu
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /jsonrpc(/|$)(.*)
+        backend:
+          serviceName: besu-node
+          servicePort: 8545
+      - path: /graphql(/|$)(.*)
+        backend:
+          serviceName: besu-node
+          servicePort: 8547
+      - path: /ws(/|$)(.*)
+        backend:
+          serviceName: besu-node
+          servicePort: 8546
