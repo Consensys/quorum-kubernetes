@@ -1,5 +1,5 @@
 {
-``  "genesis": {
+    "genesis": {
     "config": {
       "chainId": 2018,
       "constantinoplefixblock": 0,
