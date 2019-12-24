@@ -25,3 +25,7 @@ spec:
       targetPort: 8546
       protocol: TCP
       name: ws
+    - port: 8547
+      targetPort: 8547
+      protocol: TCP
+      name: graphql

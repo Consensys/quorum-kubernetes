@@ -12,11 +12,12 @@
 
 
 ## Overview of Setup
-![Image ibft](../../../images/ibft.png)
+![Image ibft](../../../images/ibft-orion.png)
 
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
 2. If you add more validators in past the initial setup, they need to be voted in to be validators i.e they will serve as normal nodes and not validators until they've been voted in.
+3. Node1Privacy and Node2Privacy are tied to Orion1 & Orion2 respectively
 
 ## Pre chart install - you need to create config that you want to persist
 #### 1. Validators private keys
@@ -34,27 +35,39 @@ Update the values.yaml with the keys. The private keys are put into secrets and 
 #### 2. Genesis.json
 The genesis.json file generated should have been placed at the root directory of this helm chart
 
-#### 3. Update any more config in values.yaml if required eg: volume sizes, alter the number of nodes on the network etc
+#### 3. Orion keys
+For more information please refer to the [documentation](https://docs.orion.pegasys.tech/en/stable/Getting-Started/Quickstart/#2-generate-keys) 
+Create the keypairs and enter the password when requested. 
+```bash
+docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
+docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
+sudo chown -R $USER:$USER ./orionSetup
+```
+
+#### 4. Orion configuration
+Update the orion1.conf & orion2.conf files to suit requirements 
+
+#### 5. Update any more config in values.yaml if required eg: volume sizes, alter the number of nodes on the network etc
 Update the number to nodes to suit, the key is
 ```bash
 node:
   replicaCount: 1
 ```
 
-#### 4. Run helm and install the chart
+#### 6. Run helm and install the chart
 ```bash
 kubectl create namespace NAMESPACE
 helm install --namespace NAMESPACE besu ./besu
 ```
 
-#### 5. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
+#### 7. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
 
 If using minikube
 ```bash
 minikube dashboard &
 ```
 
-#### 6. Verify that the nodes are communicating:
+#### 8. Verify that the nodes are communicating:
 ```bash
 minikube ssh
 
@@ -71,7 +84,7 @@ The result confirms that the node running the JSON-RPC service has two peers:
 
 ```
 
-#### 7. Monitoring
+#### 9. Monitoring
 Get the ip that minikube is running on
 ```bash
 minikube ip
@@ -86,7 +99,7 @@ In a fresh browser tab open `192.168.99.100:30090` to get to the prometheus dash
 In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:admin` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
 
 
-#### 8. Delete
+#### 10. Delete
 ```bash
 helm del besu --namespace NAMESPACE
 

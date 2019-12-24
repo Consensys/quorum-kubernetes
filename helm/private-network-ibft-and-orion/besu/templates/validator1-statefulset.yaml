@@ -84,6 +84,9 @@ spec:
           - containerPort: 8546
             name: ws
             protocol: TCP
+          - containerPort: 8547
+            name: graphql
+            protocol: TCP
           - containerPort: 30303
             name: dev-p2p-tcp
             protocol: TCP
