@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: node
+  name: besu-node
   labels:
     app: node
 spec:
@@ -29,3 +29,4 @@ spec:
       targetPort: 8547
       protocol: TCP
       name: graphql
+

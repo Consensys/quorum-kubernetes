@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: node
+  name: besu-validator3
   labels:
-    app: node
+    app: validator3
 spec:
   type: ClusterIP
   selector:
-    app: node
+    app: validator3
   ports:
     - port: 30303
       targetPort: 30303

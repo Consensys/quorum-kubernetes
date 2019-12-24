@@ -2,28 +2,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: minernode
+  name: node1privacy
   labels:
-    app: minernode
+    app: node1privacy
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: minernode
+      app: node1privacy
   template:
     metadata:
       labels:
-        app: minernode
+        app: node1privacy
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
     spec:
-      initContainers:
-        - name: init-bootnode2
-          image: byrnedo/alpine-curl
-          command:
-            - "sh"
-            - "-c"
-            - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $BESU_BOOTNODE1_SERVICE_HOST:8545"
       containers:
-        - name: minernode
+        - name: node1privacy
           image: hyperledger/besu:develop
           imagePullPolicy: IfNotPresent
           resources:
@@ -38,18 +35,20 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: BOOTNODE1_PUBKEY
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
                   name: besu-configmap
-                  key: bootnode1PubKey
-            - name: BOOTNODE2_PUBKEY
+                  key: validator1PubKey
+            - name: NODES_HTTP_CORS_ORIGINS
               valueFrom:
                 configMapKeyRef:
                   name: besu-configmap
-                  key: bootnode2PubKey
-            - name: MINER_COINBASE
-              value: "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73"
+                  key: nodesHttpCorsOrigins
             - name: NODES_HOST_WHITELIST
               valueFrom:
                 configMapKeyRef:
@@ -58,6 +57,9 @@ spec:
           volumeMounts:
             - name: genesis-config
               mountPath: /configs
+              readOnly: true
+            - name: orion-pubkey
+              mountPath: /configs/orion
               readOnly: true
           ports:
             - containerPort: 8545
@@ -81,25 +83,33 @@ spec:
           args:
             - |
               exec /opt/besu/bin/besu \
-                --genesis-file=/configs/genesis.json \
-                --miner-enabled \
-                --miner-coinbase=${MINER_COINBASE} \
-                --metrics-enabled=true \
-                --metrics-host=0.0.0.0 \
-                --metrics-port=9545 \
-                --host-whitelist=${NODES_HOST_WHITELIST} \
-                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
+              --genesis-file=/configs/genesis.json \
+              --node-private-key-file=/secrets/key \
+              --rpc-http-enabled \
+              --rpc-http-host=0.0.0.0 \
+              --rpc-http-port=8545 \
+              --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+              --rpc-http-api=ETH,NET,IBFT \
+              --graphql-http-enabled \
+              --graphql-http-host=0.0.0.0 \
+              --graphql-http-port=8547 \
+              --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+              --rpc-ws-enabled \
+              --rpc-ws-host=0.0.0.0 \
+              --rpc-ws-port=8546 \
+              --metrics-enabled=true \
+              --metrics-host=0.0.0.0 \
+              --metrics-port=9545 \
+              --host-whitelist=${NODES_HOST_WHITELIST} \
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
+              --privacy-enabled=true
+              --privacy-url=http://${ORION1_SERVICE_HOST}:8888
+              --privacy-public-key-file=/configs/orion/orion.pub
           livenessProbe:
             httpGet:
               path: /liveness
               port: 8545
             initialDelaySeconds: 60
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: 8545
-            initialDelaySeconds: 120
             periodSeconds: 30
       volumes:
         - name: genesis-config
@@ -108,3 +118,9 @@ spec:
             items:
               - key: genesis.json
                 path: genesis.json
+        - name: orion-pubkey
+          configMap:
+            name: besu-configmap
+            items:
+              - key: orion1PubKey
+                path: orion.pub

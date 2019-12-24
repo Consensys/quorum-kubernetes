@@ -81,6 +81,9 @@ spec:
           - containerPort: 8546
             name: ws
             protocol: TCP
+          - containerPort: 8547
+            name: graphql
+            protocol: TCP
           - containerPort: 30303
             name: dev-p2p-tcp
             protocol: TCP
@@ -102,6 +105,10 @@ spec:
               --rpc-ws-enabled \
               --rpc-ws-host=0.0.0.0 \
               --rpc-ws-port=8546 \
+              --graphql-http-enabled \
+              --graphql-http-host=0.0.0.0 \
+              --graphql-http-port=8547 \
+              --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
               --metrics-enabled=true \
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
