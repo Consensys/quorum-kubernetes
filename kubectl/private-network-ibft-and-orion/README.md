@@ -91,6 +91,7 @@ kubectl apply -f deployments/grafana-deployment.yaml
 ```
 
 
+
 #### 7. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
 
 If using minikube
