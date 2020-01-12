@@ -27,6 +27,7 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 ```
 
 Install helm & helm-diff:
+Please note that the documentation and steps listed use *helm3*. The API has been updated so please take that into account if using an older version
 ```bash
 $ helm plugin install https://github.com/databus23/helm-diff --version master
 ```

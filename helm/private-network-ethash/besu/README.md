@@ -41,7 +41,8 @@ node:
 
 #### 4. Run helm and install the chart
 ```bash
-helm install --namespace NAMESPACE --name besu ./besu
+kubectl create namespace NAMESPACE
+helm install --namespace NAMESPACE besu ./besu
 ```
 
 #### 5. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
@@ -85,6 +86,6 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 
 #### 8. Delete
 ```bash
-helm del --purge besu
+helm del besu --namespace NAMESPACE
 
 ```

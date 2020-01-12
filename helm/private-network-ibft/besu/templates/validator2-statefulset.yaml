@@ -16,6 +16,7 @@ spec:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
       component: validator2
+  serviceName: {{ template "besu.fullname" . }}-validator2
   template:
     metadata:
       labels:

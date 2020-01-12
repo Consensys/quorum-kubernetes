@@ -18,6 +18,7 @@ spec:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
       component: miner
+  serviceName: {{ template "besu.fullname" . }}-miner
   template:
     metadata:
       labels:

@@ -16,6 +16,7 @@ spec:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
       component: bootnode1
+  serviceName: {{ template "besu.fullname" . }}-bootnode1
   template:
     metadata:
       labels:
