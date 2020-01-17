@@ -13,8 +13,12 @@ data:
   nodesHostWhitelist: "*"
   orion1PubKey: "A1aVtMxLCUHmBVHXoZzzBgPbW/wj5axDpW9X8l91SGo="
   orion2PubKey: "Ko2bVqD+nNlNYL5EE7y3IdOnviftjiizpjRt+HTuFBs="
+  orion3PubKey: "k2zXEin4Ip/qBGlRkJejnGWdP9cjkK+DAvKNW31L2C8="
+  orion4PubKey: "qeGD024x2UwHClwVqI5A2Fgy2hDdtoR+Y60ghTAnWUs="
   orion1ServiceHost: "http://besu-orion1.default.svc.cluster.local:8888/"
   orion2ServiceHost: "http://besu-orion2.default.svc.cluster.local:8888/"
+  orion3ServiceHost: "http://besu-orion3.default.svc.cluster.local:8888/"
+  orion4ServiceHost: "http://besu-orion4.default.svc.cluster.local:8888/"
   genesis.json: |-
     {
       "config": {
@@ -77,4 +81,30 @@ data:
     publickeys = ["/configs/keys/orion.pub"]
     privatekeys = ["/secrets/key"]
     tls = "off"
+  orion3.conf: |-
+      # URL advertised to Orion nodes
+      nodeurl = "http://besu-orion3.default.svc.cluster.local:8080/"
+      nodeport = 8080
+      nodenetworkinterface = "0.0.0.0"
+      # URL advertised to Ethereum clients
+      clienturl = "http://besu-orion3.default.svc.cluster.local:8888/"
+      clientport = 8888
+      clientnetworkinterface = "0.0.0.0"
+      othernodes = ["http://besu-orion1.default.svc.cluster.local:8080/"]
+      publickeys = ["/configs/keys/orion.pub"]
+      privatekeys = ["/secrets/key"]
+      tls = "off"
+  orion4.conf: |-
+        # URL advertised to Orion nodes
+        nodeurl = "http://besu-orion4.default.svc.cluster.local:8080/"
+        nodeport = 8080
+        nodenetworkinterface = "0.0.0.0"
+        # URL advertised to Ethereum clients
+        clienturl = "http://besu-orion4.default.svc.cluster.local:8888/"
+        clientport = 8888
+        clientnetworkinterface = "0.0.0.0"
+        othernodes = ["http://besu-orion1.default.svc.cluster.local:8080/"]
+        publickeys = ["/configs/keys/orion.pub"]
+        privatekeys = ["/secrets/key"]
+        tls = "off"
 
