@@ -13,6 +13,8 @@ data:
   nodesHostWhitelist: "*"
   orion1PubKey: "A1aVtMxLCUHmBVHXoZzzBgPbW/wj5axDpW9X8l91SGo="
   orion2PubKey: "Ko2bVqD+nNlNYL5EE7y3IdOnviftjiizpjRt+HTuFBs="
+  orion1ServiceHost: "http://besu-orion1.default.svc.cluster.local:8888/"
+  orion2ServiceHost: "http://besu-orion2.default.svc.cluster.local:8888/"
   genesis.json: |-
     {
       "config": {
