@@ -109,7 +109,8 @@
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303 \
                 --privacy-enabled=true \
                 --privacy-url=${ORION3_SERVICE_HOST} \
-                --privacy-public-key-file=/configs/orion/orion.pub
+                --privacy-public-key-file=/configs/orion/orion.pub \
+                --min-gas-price=0
             livenessProbe:
               httpGet:
                 path: /liveness
