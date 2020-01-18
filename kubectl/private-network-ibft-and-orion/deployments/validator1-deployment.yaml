@@ -39,6 +39,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: ORION1_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-configmap
+                  key: orion1ServiceHost
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
@@ -60,6 +65,9 @@ spec:
               readOnly: true
             - name: genesis-config
               mountPath: /configs
+              readOnly: true
+            - name: orion-pubkey
+              mountPath: /configs/orion
               readOnly: true
           ports:
             - containerPort: 8545
@@ -89,7 +97,7 @@ spec:
               --rpc-http-host=0.0.0.0 \
               --rpc-http-port=8545 \
               --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
-              --rpc-http-api=ETH,NET,IBFT \
+              --rpc-http-api=ETH,NET,IBFT,EEA,PRIV \
               --graphql-http-enabled \
               --graphql-http-host=0.0.0.0 \
               --graphql-http-port=8547 \
@@ -101,7 +109,11 @@ spec:
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
               --host-whitelist=${NODES_HOST_WHITELIST} \
-              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303 \
+              --privacy-enabled=true \
+              --privacy-url=${ORION1_SERVICE_HOST} \
+              --privacy-public-key-file=/configs/orion/orion.pub \
+              --min-gas-price=0
           livenessProbe:
             httpGet:
               path: /liveness
@@ -121,3 +133,9 @@ spec:
             items:
               - key: genesis.json
                 path: genesis.json
+        - name: orion-pubkey
+          configMap:
+            name: besu-configmap
+            items:
+              - key: orion1PubKey
+                path: orion.pub
