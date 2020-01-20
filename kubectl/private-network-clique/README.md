@@ -21,6 +21,8 @@ Repeat this process for as many validators as you would like to provision i.e ke
 ```bash
 npm install besu-clique-config
 besu-clique-config --config-file=cliqueSetup/cliqueConfigFile.json --to=cliqueSetup/networkFiles --private-key-file-name=key
+sudo chown -R $USER:$USER ./cliqueSetup
+mv ./cliqueSetup/networkFiles/genesis.json ./cliqueSetup/
 ```
 
 Update the secrets/validator-key-secret.yaml with the private keys. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address
