@@ -13,6 +13,7 @@
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
 2. If you add more validators in past the initial setup, they need to be voted in to be validators i.e they will serve as normal nodes and not validators until they've been voted in.
+3. Node1Privacy to Node4Privacy are tied to Orion1 to Orion4 respectively
 
 #### 1. Boot nodes private keys
 Create private/public keys for the validators using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
@@ -39,7 +40,9 @@ For more information please refer to the [documentation](https://docs.orion.pega
 Create the keypairs and enter the password when requested. 
 ```bash
 docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
-docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
+docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
+docker run -it --volume $PWD/orionSetup/orion3:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
+docker run -it --volume $PWD/orionSetup/orion4:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
 sudo chown -R $USER:$USER ./orionSetup
 ```
 
@@ -71,12 +74,15 @@ kubectl apply -f services/node1privacy-service.yaml
 kubectl apply -f services/node2privacy-service.yaml
 kubectl apply -f services/orion1-service.yaml
 kubectl apply -f services/orion2-service.yaml
+kubectl apply -f services/orion3-service.yaml
+kubectl apply -f services/orion4-service.yaml
 kubectl apply -f services/prometheus-service.yaml
 kubectl apply -f services/grafana-service.yaml
 
 kubectl apply -f deployments/orion1-deployment.yaml
 kubectl apply -f deployments/orion2-deployment.yaml
-kubectl apply -f deployments/node2privacy-deployment.yaml
+kubectl apply -f deployments/orion3-deployment.yaml
+kubectl apply -f deployments/orion4-deployment.yaml
 kubectl apply -f deployments/validator1-deployment.yaml
 kubectl apply -f deployments/validator2-deployment.yaml
 kubectl apply -f deployments/validator3-deployment.yaml
@@ -84,6 +90,8 @@ kubectl apply -f deployments/validator4-deployment.yaml
 kubectl apply -f deployments/node-deployment.yaml
 kubectl apply -f deployments/node1privacy-deployment.yaml
 kubectl apply -f deployments/node2privacy-deployment.yaml
+kubectl apply -f deployments/node3privacy-deployment.yaml
+kubectl apply -f deployments/node4privacy-deployment.yaml
 
 kubectl apply -f deployments/prometheus-deployment.yaml
 kubectl apply -f deployments/grafana-deployment.yaml

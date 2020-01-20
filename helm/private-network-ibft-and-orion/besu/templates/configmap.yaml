@@ -48,6 +48,19 @@ data:
   orion2PubKey: {{ .Values.orions.orion2.publicKey | quote }}
   {{ end }}
 
+  {{ if regexMatch "^0x" .Values.orions.orion3.publicKey }}
+  orion3PubKey: {{ trimPrefix "0x" .Values.orions.orion3.publicKey | quote }}
+  {{ else }}
+  orion3PubKey: {{ .Values.orions.orion3.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.orions.orion4.publicKey }}
+  orion4PubKey: {{ trimPrefix "0x" .Values.orions.orion4.publicKey | quote }}
+  {{ else }}
+  orion4PubKey: {{ .Values.orions.orion4.publicKey | quote }}
+  {{ end }}
+
+
   genesis.json: |-
 {{ .Files.Get "genesis.json" | indent 4}}
 
@@ -56,3 +69,9 @@ data:
 
   orion2.conf: |-
 {{ .Files.Get "orion2.conf" | nindent 4}}
+
+orion3.conf: |-
+  {{ .Files.Get "orion3.conf" | nindent 4}}
+
+orion4.conf: |-
+  {{ .Files.Get "orion4.conf" | nindent 4}}

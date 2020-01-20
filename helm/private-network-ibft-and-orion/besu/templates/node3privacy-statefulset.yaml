@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "besu.fullname" . }}-node1privacy
+  name: {{ template "besu.fullname" . }}-node3privacy
   labels:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
     namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
-    component: node1privacy
+    component: node3privacy
 spec:
   replicas: {{ .Values.node.replicaCount }}
   selector:
     matchLabels:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
-      component: node1privacy
-  serviceName: {{ template "besu.fullname" . }}-node1privacy
+      component: node3privacy
+  serviceName: {{ template "besu.fullname" . }}-node3privacy
   template:
     metadata:
       labels:
         app: {{ template "besu.name" . }}
         release: {{ .Release.Name }}
-        component: node1privacy
+        component: node3privacy
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9545"
@@ -123,7 +123,7 @@ spec:
                 --host-whitelist=${NODES_HOST_WHITELIST} \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
                 --privacy-enabled=true
-                --privacy-url=http://${BESU_ORION1_SERVICE_HOST}:8888
+                --privacy-url=http://${BESU_ORION3_SERVICE_HOST}:8888
                 --privacy-public-key-file=/configs/orion/orion.pub
           livenessProbe:
             httpGet:
@@ -148,5 +148,5 @@ spec:
           configMap:
             name: besu-configmap
             items:
-              - key: orion1PubKey
+              - key: orion3PubKey
                 path: orion.pub
