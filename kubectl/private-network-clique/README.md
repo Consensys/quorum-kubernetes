@@ -48,6 +48,7 @@ kubectl apply -f configmap/grafana-configmap.yaml
 kubectl apply -f services/validator1-service.yaml
 kubectl apply -f services/validator2-service.yaml
 kubectl apply -f services/validator3-service.yaml
+kubectl apply -f services/validator4-service.yaml
 kubectl apply -f services/node-service.yaml
 kubectl apply -f services/prometheus-service.yaml
 kubectl apply -f services/grafana-service.yaml
@@ -55,6 +56,7 @@ kubectl apply -f services/grafana-service.yaml
 kubectl apply -f deployments/validator1-deployment.yaml
 kubectl apply -f deployments/validator2-deployment.yaml
 kubectl apply -f deployments/validator3-deployment.yaml
+kubectl apply -f deployments/validator4-deployment.yaml
 kubectl apply -f deployments/node-deployment.yaml
 kubectl apply -f deployments/prometheus-deployment.yaml
 kubectl apply -f deployments/grafana-deployment.yaml
