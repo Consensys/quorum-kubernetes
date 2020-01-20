@@ -103,7 +103,7 @@ spec:
               --host-whitelist=${NODES_HOST_WHITELIST} \
               --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
               --privacy-enabled=true
-              --privacy-url=http://${ORION2_SERVICE_HOST}:8888
+              --privacy-url=http://${BESU_ORION2_SERVICE_HOST}:8888
               --privacy-public-key-file=/configs/orion/orion.pub
           livenessProbe:
             httpGet:
