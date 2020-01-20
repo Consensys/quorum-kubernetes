@@ -116,7 +116,7 @@ spec:
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
               --host-whitelist=${NODES_HOST_WHITELIST} \
-              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303 \
               --privacy-enabled=true \
               --privacy-url=${ORION2_SERVICE_HOST}  \
               --privacy-public-key-file=/configs/orion/orion.pub \
