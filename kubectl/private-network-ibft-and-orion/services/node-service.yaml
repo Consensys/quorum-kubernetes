@@ -29,4 +29,3 @@ spec:
       targetPort: 8547
       protocol: TCP
       name: graphql
-

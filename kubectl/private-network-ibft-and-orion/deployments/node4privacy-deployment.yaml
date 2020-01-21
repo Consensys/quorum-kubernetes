@@ -2,32 +2,25 @@
   apiVersion: apps/v1
   kind: Deployment
   metadata:
-    name: validator4
+    name: node4privacy
     labels:
-      app: validator4
+      app: node4privacy
   spec:
     replicas: 1
     selector:
       matchLabels:
-        app: validator4
+        app: node4privacy
     template:
       metadata:
         labels:
-          app: validator4
+          app: node4privacy
         annotations:
           prometheus.io/scrape: "true"
           prometheus.io/port: "9545"
           prometheus.io/path: "/metrics"
       spec:
-        initContainers:
-          - name: init-bootnode2
-            image: byrnedo/alpine-curl
-            command:
-              - "sh"
-              - "-c"
-              - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
         containers:
-          - name: validator4
+          - name: node4privacy
             image: hyperledger/besu:develop
             imagePullPolicy: IfNotPresent
             resources:
@@ -62,11 +55,11 @@
                     name: besu-configmap
                     key: nodesHostWhitelist
             volumeMounts:
-              - name: key
-                mountPath: /secrets
-                readOnly: true
               - name: genesis-config
                 mountPath: /configs
+                readOnly: true
+              - name: orion-pubkey
+                mountPath: /configs/orion
                 readOnly: true
             ports:
               - containerPort: 8545
@@ -96,7 +89,7 @@
                 --rpc-http-host=0.0.0.0 \
                 --rpc-http-port=8545 \
                 --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
-                --rpc-http-api=ETH,NET,IBFT \
+                --rpc-http-api=ETH,NET,IBFT,PRIV,EEA \
                 --graphql-http-enabled \
                 --graphql-http-host=0.0.0.0 \
                 --graphql-http-port=8547 \
@@ -108,7 +101,10 @@
                 --metrics-host=0.0.0.0 \
                 --metrics-port=9545 \
                 --host-whitelist=${NODES_HOST_WHITELIST} \
-                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303 \
+                --privacy-enabled=true \
+                --privacy-url=http://${BESU_ORION4_SERVICE_HOST}:8888 \
+                --privacy-public-key-file=/configs/orion/orion.pub
             livenessProbe:
               httpGet:
                 path: /liveness
@@ -116,15 +112,15 @@
               initialDelaySeconds: 60
               periodSeconds: 30
         volumes:
-          - name: key
-            secret:
-              secretName: besu-validator-keys
-              items:
-                - key: validator4Key
-                  path: key
           - name: genesis-config
             configMap:
               name: besu-configmap
               items:
                 - key: genesis.json
                   path: genesis.json
+          - name: orion-pubkey
+            configMap:
+              name: besu-configmap
+              items:
+                - key: orion4PubKey
+                  path: orion.pub

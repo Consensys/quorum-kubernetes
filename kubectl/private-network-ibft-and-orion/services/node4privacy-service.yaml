@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: besu-node1privacy
+  name: besu-node4privacy
   labels:
-    app: node1privacy
+    app: node4privacy
 spec:
   type: ClusterIP
   selector:
-    app: node1privacy
+    app: node4privacy
   ports:
     - port: 30303
       targetPort: 30303
