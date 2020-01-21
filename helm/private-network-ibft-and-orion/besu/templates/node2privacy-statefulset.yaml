@@ -109,6 +109,7 @@ spec:
                 --rpc-http-host=0.0.0.0 \
                 --rpc-http-port=8545 \
                 --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+                --rpc-http-api=ETH,NET,IBFT,EEA,PRIV \
                 --graphql-http-enabled \
                 --graphql-http-host=0.0.0.0 \
                 --graphql-http-port=8547 \
