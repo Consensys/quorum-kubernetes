@@ -1,14 +1,16 @@
+{{- $validatorNumber := "validator4" }}
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "besu.fullname" . }}-validator4
+  name: {{ template "besu.fullname" . }}-{{ $validatorNumber }}
   labels:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
     namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
-    component: validator3
+    component: {{ $validatorNumber }}
 spec:
   replicas: 1
   selector:
@@ -16,27 +18,27 @@ spec:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
       component: validator4
-  serviceName: "validator1-service"
+  serviceName: "{{ $validatorNumber }}-service"
   template:
     metadata:
       labels:
         app: {{ template "besu.name" . }}
         release: {{ .Release.Name }}
-        component: validator4
+        component: {{ $validatorNumber }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
       initContainers:
-      - name: init-bootnode2
+      - name: init-bootnode
         image: byrnedo/alpine-curl
         command:
           - "sh"
           - "-c"
           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
-      - name: validator4
+      - name: {{ $validatorNumber }}
         image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources:
@@ -58,72 +60,52 @@ spec:
           - name: VALIDATOR1_PUBKEY
             valueFrom:
               configMapKeyRef:
-                name: besu-configmap
+                name: besu-configmap-validators
                 key: validator1PubKey
           - name: VALIDATOR2_PUBKEY
             valueFrom:
               configMapKeyRef:
-                name: besu-configmap
+                name: besu-configmap-validators
                 key: validator2PubKey
-          - name: NODES_HTTP_CORS_ORIGINS
-            valueFrom:
-              configMapKeyRef:
-                name: besu-configmap
-                key: nodesHttpCorsOrigins
-          - name: NODES_HOST_WHITELIST
-            valueFrom:
-              configMapKeyRef:
-                name: besu-configmap
-                key: nodesHostWhitelist
         volumeMounts:
-        - name: key
-          mountPath: /secrets
-          readOnly: true
-        - name: genesis-config
-          mountPath: /configs
-          readOnly: true
-        - name: data
-          mountPath: /data
+          - name: key
+            mountPath: /secrets
+            readOnly: true
+          - name: genesis-config
+            mountPath: /etc/genesis
+            readOnly: true
+          - name: config-toml
+            mountPath: /etc/besu
+            readOnly: true
+          - name: data
+            mountPath: /data
         ports:
-          - containerPort: 8545
-            name: http
+          - name: http
+            containerPort: {{ .Values.besuConfig.rpc.port }}
             protocol: TCP
-          - containerPort: 8546
-            name: ws
+          - name: ws
+            containerPort: {{ .Values.besuConfig.ws.port }}
             protocol: TCP
-          - containerPort: 8547
-            name: graphql
+          - name: graphql
+            containerPort: {{ .Values.besuConfig.graphql.port }}
             protocol: TCP
-          - containerPort: 30303
-            name: dev-p2p-tcp
+          - name: p2p-tcp
+            containerPort: {{ .Values.besuConfig.p2p.port }}
             protocol: TCP
-          - containerPort: 30303
-            name: dev-p2p-udp
+          - name: p2p-udp
+            containerPort: {{ .Values.besuConfig.p2p.port }}
             protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.besuConfig.metrics.port }}
+            protocol: TCP
         command:
           - /bin/sh
           - -c
         args:
           - |
             exec /opt/besu/bin/besu \
-              --genesis-file=/configs/genesis.json \
               --node-private-key-file=/secrets/key \
-              --rpc-http-enabled \
-              --rpc-http-host=0.0.0.0 \
-              --rpc-http-port=8545 \
-              --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
-              --rpc-http-api=ETH,NET,IBFT \
-              --graphql-http-enabled \
-              --graphql-http-host=0.0.0.0 \
-              --graphql-http-port=8547 \
-              --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
-              --rpc-ws-enabled \
-              --rpc-ws-host=0.0.0.0 \
-              --rpc-ws-port=8546 \
-              --metrics-enabled=true \
-              --metrics-host=0.0.0.0 \
-              --metrics-port=9545 \
-              --host-whitelist=${NODES_HOST_WHITELIST} \
+              --config-file=/etc/besu/config.toml \
               --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
         livenessProbe:
           httpGet:
@@ -134,16 +116,19 @@ spec:
       volumes:
       - name: key
         secret:
-          secretName: besu-validator-keys
+          secretName: besu-{{ $validatorNumber }}-key
           items:
-            - key: validator4Key
+            - key: {{ $validatorNumber }}Key
               path: key
       - name: genesis-config
         configMap:
-          name: besu-configmap
+          name: besu-configmap-besu-genesis
           items:
             - key: genesis.json
               path: genesis.json
+      - name: config-toml
+        configMap:
+          name: besu-configmap-config-toml
       - name: data
         emptyDir:
-          sizeLimit: "{{ .Values.node.pvcSizeLimit }}"
+          sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"

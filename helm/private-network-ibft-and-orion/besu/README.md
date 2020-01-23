@@ -8,7 +8,7 @@
   - Spins up the validators up with the private keys specified & associated services for each
   - Spins up the nodes (rpc + ws) and a single service to communicate with the nodes
 - Monitoring via prometheus & grafana is also setup up in a separate *monitoring* namespace and exposed via NodePort services (ports 30090, 30030 respectively)
-- Credentials for grafana are admin:admin. When grafana loads up select the "Besu Dashboard"
+- Credentials for grafana are admin:password. When grafana loads up select the "Besu Dashboard"
 
 
 ## Overview of Setup
@@ -22,7 +22,7 @@
 ## Pre chart install - you need to create config that you want to persist
 #### 1. Validators private keys
 Create private/public keys for the validators using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
-Repeat this process for as many validators as you would like to provision i.e keys and replicate the deployment & service
+Update the `count` key in the ibftConfigFile.json to alter the number of validators as you would like to provision i.e keys and replicate the deployment & service
 
 ```bash
 docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:develop operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
@@ -39,13 +39,13 @@ The genesis.json file generated should have been placed at the root directory of
 For more information please refer to the [documentation](https://docs.orion.pegasys.tech/en/stable/Getting-Started/Quickstart/#2-generate-keys) 
 Create the keypairs and enter the password when requested. 
 ```bash
-docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
-docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
+docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && cat orion1.password | /opt/orion/bin/orion --generatekeys nodeKey'
+docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && cat orion2.password |/opt/orion/bin/orion --generatekeys  nodeKey' 
 sudo chown -R $USER:$USER ./orionSetup
 ```
 
 #### 4. Orion configuration
-Update the orion1.conf & orion2.conf files to suit requirements 
+Update the orion<n>.conf files to suit requirements 
 
 #### 5. Update any more config in values.yaml if required eg: volume sizes, alter the number of nodes on the network etc
 Update the number to nodes to suit, the key is
@@ -96,7 +96,7 @@ For example if the ip returned was `192.168.99.100`
 In a fresh browser tab open `192.168.99.100:30090` to get to the prometheus dashboard and you can see all the available metrics, as well as the targets that it is collecting metrics for
 
 *Grafana:*
-In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:admin` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
+In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:password` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
 
 
 #### 10. Delete

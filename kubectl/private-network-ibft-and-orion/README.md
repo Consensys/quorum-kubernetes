@@ -5,7 +5,7 @@
 - Update the number of nodes you would like in deployments/node-deployment.yaml
 - Run kubectl
 - Monitoring via prometheus & grafana is also setup up in a separate *monitoring* namespace and exposed via NodePort services (ports 30090, 30030 respectively)
-- Credentials for grafana are admin:admin. When grafana loads up select the "besu Dashboard"
+- Credentials for grafana are admin:password. When grafana loads up select the "besu Dashboard"
 
 ## Overview of Setup
 ![Image ibft](../../images/ibft-orion.png)
@@ -51,7 +51,7 @@ Update the configmap/orion-configmap.yaml with the public keys
 **Note:** Please remove the '0x' prefix of the public keys
 
 #### 5. Orion configuration
-Update the orion1.conf & orion2.conf sections in the configmap/orion-configmap.yaml to suit requirements 
+Update the orion1.conf to orion4.conf sections in the configmap/orion-configmap.yaml to suit requirements 
 
 #### 6. Deploy:
 ```bash
@@ -97,7 +97,7 @@ For example if the ip returned was `192.168.99.100`
 In a fresh browser tab open `192.168.99.100:30090` to get to the prometheus dashboard and you can see all the available metrics, as well as the targets that it is collecting metrics for
 
 *Grafana:*
-In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:admin` Open the 'besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
+In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:password` Open the 'besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
 
 
 #### 10. Delete

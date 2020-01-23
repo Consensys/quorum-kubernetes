@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "besu.fullname" . }}-configmap
+  name: {{ template "besu.fullname" . }}-configmap-validators
   labels:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
@@ -33,9 +33,6 @@ data:
   validator4PubKey: {{ .Values.validators.validator4.publicKey | quote }}
   {{ end }}
 
-  nodesHttpCorsOrigins: {{ .Values.node.httpCorsOrigins | quote }}
-  nodesHostWhitelist: {{ .Values.node.hostWhitelist | quote }}
-
   {{ if regexMatch "^0x" .Values.orions.orion1.publicKey }}
   orion1PubKey: {{ trimPrefix "0x" .Values.orions.orion1.publicKey | quote }}
   {{ else }}
@@ -47,31 +44,3 @@ data:
   {{ else }}
   orion2PubKey: {{ .Values.orions.orion2.publicKey | quote }}
   {{ end }}
-
-  {{ if regexMatch "^0x" .Values.orions.orion3.publicKey }}
-  orion3PubKey: {{ trimPrefix "0x" .Values.orions.orion3.publicKey | quote }}
-  {{ else }}
-  orion3PubKey: {{ .Values.orions.orion3.publicKey | quote }}
-  {{ end }}
-
-  {{ if regexMatch "^0x" .Values.orions.orion4.publicKey }}
-  orion4PubKey: {{ trimPrefix "0x" .Values.orions.orion4.publicKey | quote }}
-  {{ else }}
-  orion4PubKey: {{ .Values.orions.orion4.publicKey | quote }}
-  {{ end }}
-
-
-  genesis.json: |-
-{{ .Files.Get "genesis.json" | indent 4}}
-
-  orion1.conf: |-
-{{ .Files.Get "orion1.conf" | nindent 4}}
-
-  orion2.conf: |-
-{{ .Files.Get "orion2.conf" | nindent 4}}
-
-orion3.conf: |-
-  {{ .Files.Get "orion3.conf" | nindent 4}}
-
-orion4.conf: |-
-  {{ .Files.Get "orion4.conf" | nindent 4}}

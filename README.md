@@ -55,6 +55,8 @@ Consider the use of statefulsets instead of deployments for nodes. The term 'nod
 
 Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation
 
+#### RBAC:
+We encourage the use of RBAC's for access to the private key of each node, ie. only a specific pod/statefulset is allowed to access a specific secret
 
 #### Monitoring
 As always please ensure you have sufficient monitoring and alerting setup.

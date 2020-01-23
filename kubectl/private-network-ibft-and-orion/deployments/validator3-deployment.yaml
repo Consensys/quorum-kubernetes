@@ -20,7 +20,7 @@
           prometheus.io/path: "/metrics"
       spec:
         initContainers:
-          - name: init-bootnode2
+          - name: init-bootnode
             image: byrnedo/alpine-curl
             command:
               - "sh"
