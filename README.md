@@ -26,9 +26,9 @@ Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCom
 Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
-Install helm with:
+Install helm & helm-diff:
+Please note that the documentation and steps listed use *helm3*. The API has been updated so please take that into account if using an older version
 ```bash
-$ helm init
 $ helm plugin install https://github.com/databus23/helm-diff --version master
 ```
 
@@ -55,6 +55,8 @@ Consider the use of statefulsets instead of deployments for nodes. The term 'nod
 
 Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation
 
+#### RBAC:
+We encourage the use of RBAC's for access to the private key of each node, ie. only a specific pod/statefulset is allowed to access a specific secret
 
 #### Monitoring
 As always please ensure you have sufficient monitoring and alerting setup.

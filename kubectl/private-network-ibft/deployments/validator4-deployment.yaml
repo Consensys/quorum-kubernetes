@@ -20,7 +20,7 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       initContainers:
-        - name: init-bootnode2
+        - name: init-bootnode
           image: byrnedo/alpine-curl
           command:
             - "sh"
@@ -74,6 +74,9 @@ spec:
               protocol: TCP
             - containerPort: 8546
               name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
               protocol: TCP
             - containerPort: 30303
               name: dev-p2p-tcp

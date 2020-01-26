@@ -14,14 +14,12 @@ data:
   {{ else }}
   bootnode1PubKey: {{ .Values.bootnode1.publicKey | quote }}
   {{ end }}
+
   {{ if regexMatch "^0x" .Values.bootnode2.publicKey }}
   bootnode2PubKey: {{ trimPrefix "0x" .Values.bootnode2.publicKey | quote }}
   {{ else }}
   bootnode2PubKey: {{ .Values.bootnode2.publicKey | quote }}
   {{ end }}
-
-  nodesHttpCorsOrigins: {{ .Values.node.httpCorsOrigins | quote }}
-  nodesHostWhitelist: {{ .Values.node.hostWhitelist | quote }}
 
   genesis.json: |-
 {{ .Files.Get "genesis.json" | indent 4}}

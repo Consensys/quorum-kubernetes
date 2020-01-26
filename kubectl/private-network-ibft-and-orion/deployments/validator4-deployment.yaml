@@ -1,0 +1,130 @@
+---
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: validator4
+    labels:
+      app: validator4
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: validator4
+    template:
+      metadata:
+        labels:
+          app: validator4
+        annotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "9545"
+          prometheus.io/path: "/metrics"
+      spec:
+        initContainers:
+          - name: init-bootnode
+            image: byrnedo/alpine-curl
+            command:
+              - "sh"
+              - "-c"
+              - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+        containers:
+          - name: validator4
+            image: hyperledger/besu:develop
+            imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+            env:
+              - name: POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: VALIDATOR1_PUBKEY
+                valueFrom:
+                  configMapKeyRef:
+                    name: besu-configmap
+                    key: validator1PubKey
+              - name: NODES_HTTP_CORS_ORIGINS
+                valueFrom:
+                  configMapKeyRef:
+                    name: besu-configmap
+                    key: nodesHttpCorsOrigins
+              - name: NODES_HOST_WHITELIST
+                valueFrom:
+                  configMapKeyRef:
+                    name: besu-configmap
+                    key: nodesHostWhitelist
+            volumeMounts:
+              - name: key
+                mountPath: /secrets
+                readOnly: true
+              - name: genesis-config
+                mountPath: /configs
+                readOnly: true
+            ports:
+              - containerPort: 8545
+                name: http
+                protocol: TCP
+              - containerPort: 8546
+                name: ws
+                protocol: TCP
+              - containerPort: 8547
+                name: graphql
+                protocol: TCP
+              - containerPort: 30303
+                name: dev-p2p-tcp
+                protocol: TCP
+              - containerPort: 30303
+                name: dev-p2p-udp
+                protocol: UDP
+            command:
+              - /bin/sh
+              - -c
+            args:
+              - |
+                exec /opt/besu/bin/besu \
+                --genesis-file=/configs/genesis.json \
+                --node-private-key-file=/secrets/key \
+                --rpc-http-enabled \
+                --rpc-http-host=0.0.0.0 \
+                --rpc-http-port=8545 \
+                --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+                --rpc-http-api=ETH,NET,IBFT \
+                --graphql-http-enabled \
+                --graphql-http-host=0.0.0.0 \
+                --graphql-http-port=8547 \
+                --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
+                --rpc-ws-enabled \
+                --rpc-ws-host=0.0.0.0 \
+                --rpc-ws-port=8546 \
+                --metrics-enabled=true \
+                --metrics-host=0.0.0.0 \
+                --metrics-port=9545 \
+                --host-whitelist=${NODES_HOST_WHITELIST} \
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303
+            livenessProbe:
+              httpGet:
+                path: /liveness
+                port: 8545
+              initialDelaySeconds: 60
+              periodSeconds: 30
+        volumes:
+          - name: key
+            secret:
+              secretName: besu-validator-keys
+              items:
+                - key: validator4Key
+                  path: key
+          - name: genesis-config
+            configMap:
+              name: besu-configmap
+              items:
+                - key: genesis.json
+                  path: genesis.json
