@@ -32,27 +32,11 @@ eg: To alter the number of nodes on the network, alter the `replicas: 2` in the 
 
 #### 4. Deploy:
 ```bash
-kubectl apply -f namespace/monitoring-namespace.yaml
-kubectl apply -f rbac/prometheus-rbac.yaml
-kubectl apply -f secrets/bootnode-keys-secret.yaml
-kubectl apply -f configmap/configmap.yaml
-kubectl apply -f configmap/prometheus-configmap.yaml
-kubectl apply -f configmap/grafana-configmap.yaml
+./deploy.sh
 
-kubectl apply -f services/bootnode1-service.yaml
-kubectl apply -f services/bootnode2-service.yaml
-kubectl apply -f services/node-service.yaml
-kubectl apply -f services/prometheus-service.yaml
-kubectl apply -f services/grafana-service.yaml
+# optionally deploy with miner
+./deploy-with-miner.sh
 
-kubectl apply -f deployments/bootnode1-deployment.yaml
-kubectl apply -f deployments/bootnode2-deployment.yaml
-kubectl apply -f deployments/node-deployment.yaml
-kubectl apply -f deployments/prometheus-deployment.yaml
-kubectl apply -f deployments/grafana-deployment.yaml
-
-# optionally deploy the miner
-kubectl apply -f deployments/minernode-deployment.yaml
 ```
 
 
@@ -97,9 +81,6 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 
 #### 8. Delete
 ```
-kubectl delete -f deployments/
-kubectl delete -f services/
-kubectl delete -f configmap/
-kubectl delete -f secrets/
-kubectl delete -f namespace/
+./remove.sh
+
 ```

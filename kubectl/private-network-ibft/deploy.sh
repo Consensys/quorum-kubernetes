@@ -4,6 +4,3 @@ kubectl apply -f rbac/
 kubectl apply -f secrets/
 kubectl apply -f configmap/
 kubectl apply -f services/
-
-
-
