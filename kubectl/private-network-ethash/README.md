@@ -82,5 +82,4 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 #### 8. Delete
 ```
 ./remove.sh
-
 ```
