@@ -47,9 +47,9 @@ sudo chown -R $USER:$USER ./orionSetup
 ```
 
 #### 5. Orion configuration
-`configmap/configmap.yaml` contains the `orion1.conf` to `orion4.conf` sections. The orion public keys (`orion1PubKey` to `orion4PubKey`) can also be found in here. The orion private keys can be found in `secrets/orion-keys-secret.yaml`.  Update both files with your own generated keypairs
+`configmap/configmap.yaml` contains the `orion1.conf` to `orion4.conf` sections. The orion public keys (`orion1PubKey` to `orion4PubKey`) can also be found in here. The orion private keys can be found in `secrets/orion-keys-secret.yaml`.  
 
-The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address. **Note:** Please remove the '0x' prefix of the public keys
+Update both files with your own generated keypairs. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address. **Note:** Please remove the '0x' prefix of the public keys
 
 #### 6. Deploy:
 ```bash
