@@ -46,12 +46,10 @@ docker run -it --volume $PWD/orionSetup/orion4:/opt/orion/data --entrypoint "/bi
 sudo chown -R $USER:$USER ./orionSetup
 ```
 
-Update the secrets/orion-keys-secret.yaml with the private keys. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address
-Update the configmap/orion-configmap.yaml with the public keys
-**Note:** Please remove the '0x' prefix of the public keys
-
 #### 5. Orion configuration
-Update the orion1.conf to orion4.conf sections in the configmap/orion-configmap.yaml to suit requirements 
+`configmap/configmap.yaml` contains the `orion1.conf` to `orion4.conf` sections. The orion public keys (`orion1PubKey` to `orion4PubKey`) can also be found in here. The orion private keys can be found in `secrets/orion-keys-secret.yaml`.  Update both files with your own generated keypairs
+
+The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address. **Note:** Please remove the '0x' prefix of the public keys
 
 #### 6. Deploy:
 ```bash
