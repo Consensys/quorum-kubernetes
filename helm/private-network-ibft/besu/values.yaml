@@ -4,8 +4,7 @@
 imagePullPolicy: IfNotPresent
 image:
   repository: hyperledger/besu
-  tag: develop
-
+  tag: 1.3.8
 
 # config specific to node-statefulset ie. replicas, storage etc
 node:

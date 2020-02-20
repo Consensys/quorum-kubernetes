@@ -17,6 +17,8 @@ The reference examples in this repo can be used locally, to get familiar with th
 Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We recommend you starting with at least 8GB, depending on the amount of nodes you are spinning up - the recommended requirements for each besu node are 4GB
 ```bash
 minikube start --memory 8192
+# or with RBAC
+minikube start --memory 8192 --extra-config=apiserver.Authorization.Mode=RBAC
 ```
 
 Verify kubectl and minikube are working with

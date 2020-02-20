@@ -1,3 +1,4 @@
+# this is a clusterrole because it spans the cluster over multiple namespaces
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -19,13 +20,17 @@ rules:
     verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
+
+
 ---
-#apiVersion: v1
-#kind: ServiceAccount
-#metadata:
-#  name: default
-#  namespace: monitoring
-#---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring
+
+
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -36,6 +41,6 @@ roleRef:
   name: prometheus
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: prometheus
     namespace: monitoring
 ---

@@ -1,5 +1,40 @@
 {{- $validatorNumber := "validator1" }}
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $validatorNumber }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $validatorNumber }}-key-read-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: [ {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key ]
+    verbs: ["get"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ $validatorNumber }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $validatorNumber }}-key-read-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $validatorNumber }}-sa
+    namespace: {{ .Release.Namespace }}
+
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -30,6 +65,7 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: {{ $validatorNumber }}-sa
       containers:
       - name: validator1
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -110,9 +146,6 @@ spec:
       - name: key
         secret:
           secretName: besu-{{ $validatorNumber }}-key
-          items:
-            - key: {{ $validatorNumber }}Key
-              path: key
       - name: genesis-config
         configMap:
           name: besu-configmap-besu-genesis
