@@ -16,7 +16,9 @@ The reference examples in this repo can be used locally, to get familiar with th
 
 Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We recommend you starting with at least 8GB, depending on the amount of nodes you are spinning up - the recommended requirements for each besu node are 4GB
 ```bash
-minikube start --memory 8192
+minikube start --memory 16384
+# or with RBAC
+minikube start --memory 16384 --extra-config=apiserver.Authorization.Mode=RBAC
 ```
 
 Verify kubectl and minikube are working with
@@ -35,6 +37,13 @@ $ helm plugin install https://github.com/databus23/helm-diff --version master
 Pick the deployment tool that suits your environment and then change directory and follow the Readme.md files there.
 
 
+Namespaces:
+Currently we do not deploy anything in the 'default' namespace. Anything related to Besu gets spun up in a 'besu' namespace, the monitoring pieces get spun up in a 'monitoring' namespace.
+Namespaces are part of the setup and do not need to be created via kubectl prior to deploying. To change the namespaces:
+- In Kubectl, you need to edit every file in the deployment
+- In Helm, edit the namespace value in the values.yaml 
+
+It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
 
 ## Production Network Guidelines:
 | ⚠️ **Note**: After you have familiarised yourself with the examples in this repo, it is recommended that you design your network based on your needs, taking the following guidelines into account |

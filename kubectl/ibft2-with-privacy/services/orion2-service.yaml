@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: besu-orion2
+  labels:
+    app: orion2
+  namespace: besu
+spec:
+  type: ClusterIP
+  selector:
+    app: orion2
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: nodeport
+    - port: 8888
+      targetPort: 8888
+      protocol: TCP
+      name: clientport
