@@ -48,6 +48,10 @@ validators:
 orions:
   pvcSizeLimit: "1Gi"
   pvcStorageClass: "standard"
+  memRequest: "512Mi"
+  memLimit: "1024Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
   orion1:
     publicKey: "Q7U40nEBpSg4AmieAKZ+4CB8wteH6eE57EDqOH34DRc="
   orion2:

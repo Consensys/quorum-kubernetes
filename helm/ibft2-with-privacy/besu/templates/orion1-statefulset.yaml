@@ -68,11 +68,11 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "{{ .Values.orions.cpuRequest }}"
+              memory: "{{ .Values.orions.memRequest }}"
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "{{ .Values.orions.cpuLimit }}"
+              memory: "{{ .Values.orions.memLimit }}"
           env:
             - name: POD_IP
               valueFrom:

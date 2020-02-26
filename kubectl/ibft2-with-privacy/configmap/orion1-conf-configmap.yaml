@@ -20,4 +20,5 @@ data:
     othernodes = ["http://besu-orion2.default.svc.cluster.local:8080/"]
     publickeys = ["/configs/keys/orion.pub"]
     privatekeys = ["/secrets/key"]
+    passwords = "/secrets/password"
     tls = "off"
