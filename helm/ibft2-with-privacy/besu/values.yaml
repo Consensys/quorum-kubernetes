@@ -5,21 +5,30 @@ imagePullPolicy: IfNotPresent
 image:
   besu:
     repository: hyperledger/besu
-    tag: develop
+    tag: latest
   orion:
     repository: pegasyseng/orion
-    tag: develop
+    tag: latest
 
+namespace: besu
 
 # config specific to node-statefulset ie. replicas, storage etc
 node:
   replicaCount: 1
   pvcSizeLimit: "1Gi"
   pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
 
 validators:
   pvcSizeLimit: "1Gi"
   pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
   validator1:
     privateKey: "0x8457b1dc606d05308cc96f604dbde54ad85cb4de508742c8e265080b9e08b48c"
     publicKey: "0x5d812c3c25ff398ab416968fce9009c2be7ed70a87abc8ea30bd667ce17a9287a6341fbf6ce757bb8148436c39c71296639ea81afcc94cdf908b6e1344f26188"

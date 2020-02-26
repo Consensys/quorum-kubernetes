@@ -7,8 +7,9 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 data:
   orion-init.sh: |
     #!/bin/bash

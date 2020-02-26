@@ -6,9 +6,10 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
     component: node
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   type: ClusterIP
   selector:
@@ -16,23 +17,23 @@ spec:
     release: {{ .Release.Name }}
     component: node
   ports:
-    - port: 30303
-      targetPort: 30303
+    - name: http
+      port: {{ .Values.besuConfig.rpc.port }}
+      targetPort: http
+      protocol: TCP
+    - name: ws
+      port: {{ .Values.besuConfig.ws.port }}
+      targetPort: ws
+      protocol: TCP
+    - name: graphql
+      port: {{ .Values.besuConfig.graphql.port }}
+      targetPort: graphql
+      protocol: TCP
+    - name: p2p-tcp
+      port: {{ .Values.besuConfig.p2p.port }}
+      targetPort: p2p-tcp
+      protocol: TCP
+    - name: p2p-udp
+      port: {{ .Values.besuConfig.p2p.port }}
+      targetPort: p2p-udp
       protocol: UDP
-      name: dev-p2p-udp
-    - port: 30303
-      targetPort: 30303
-      protocol: TCP
-      name: dev-p2p-tcp
-    - port: 8545
-      targetPort: 8545
-      protocol: TCP
-      name: http
-    - port: 8546
-      targetPort: 8546
-      protocol: TCP
-      name: ws
-    - port: 8547
-      targetPort: 8547
-      protocol: TCP
-      name: graphql

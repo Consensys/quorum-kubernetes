@@ -7,9 +7,10 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
     component: node
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.node.replicaCount }}
   selector:
@@ -42,11 +43,11 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "{{ .Values.node.cpuRequest }}"
+              memory: "{{ .Values.node.memRequest }}"
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "{{ .Values.node.cpuLimit }}"
+              memory: "{{ .Values.node.memLimit }}"
           env:
             - name: POD_IP
               valueFrom:

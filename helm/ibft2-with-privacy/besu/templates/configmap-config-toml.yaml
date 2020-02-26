@@ -6,8 +6,9 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 data:
   config.toml: |-
     # Every possible CLI should be in this file.

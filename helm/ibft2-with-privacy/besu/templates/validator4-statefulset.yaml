@@ -1,5 +1,40 @@
 {{- $validatorNumber := "validator4" }}
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $validatorNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $validatorNumber }}-key-read-role
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: [ {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key ]
+    verbs: ["get"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ $validatorNumber }}-rb
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $validatorNumber }}-key-read-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $validatorNumber }}-sa
+    namespace: {{ .Values.namespace }}
+
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -8,17 +43,18 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
     component: {{ $validatorNumber }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: {{ template "besu.name" . }}
       release: {{ .Release.Name }}
-      component: validator4
-  serviceName: "{{ $validatorNumber }}-service"
+      component: {{ $validatorNumber }}
+  serviceName: {{ template "besu.fullname" . }}-validator4
   template:
     metadata:
       labels:
@@ -30,6 +66,7 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: {{ $validatorNumber }}-sa
       initContainers:
       - name: init-bootnode
         image: byrnedo/alpine-curl
@@ -43,11 +80,11 @@ spec:
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources:
           requests:
-            cpu: 100m
-            memory: 256Mi
+            cpu: "{{ .Values.validators.cpuRequest }}"
+            memory: "{{ .Values.validators.memRequest }}"
           limits:
-            cpu: 500m
-            memory: 512Mi
+            cpu: "{{ .Values.validators.cpuLimit }}"
+            memory: "{{ .Values.validators.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -117,9 +154,6 @@ spec:
       - name: key
         secret:
           secretName: besu-{{ $validatorNumber }}-key
-          items:
-            - key: {{ $validatorNumber }}Key
-              path: key
       - name: genesis-config
         configMap:
           name: besu-configmap-besu-genesis
@@ -131,4 +165,4 @@ spec:
           name: besu-configmap-config-toml
       - name: data
         emptyDir:
-          sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"
+          sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

@@ -8,15 +8,16 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
     component: {{ $validatorNumber }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   type: ClusterIP
   selector:
     app: {{ template "besu.name" . }}
     release: {{ .Release.Name }}
-    component: {{ $validatorNumber }}
+    component: validator3
   ports:
     - name: http
       port: {{ .Values.besuConfig.rpc.port }}

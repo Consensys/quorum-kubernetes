@@ -8,9 +8,10 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
     component: miner
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   replicas: 1
   selector:
@@ -43,11 +44,11 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "{{ .Values.node.cpuRequest }}"
+              memory: "{{ .Values.node.memRequest }}"
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: "{{ .Values.node.cpuLimit }}"
+              memory: "{{ .Values.node.memLimit }}"
           env:
             - name: POD_IP
               valueFrom:
@@ -60,12 +61,12 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-configmap-bootnodes
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-configmap-bootnodes
                   key: bootnode2PubKey
             - name: MINER_COINBASE
               value: {{ .Values.besuConfig.miner.coinbase | quote }}
@@ -123,7 +124,7 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-configmap
+            name: besu-configmap-besu-genesis
             items:
               - key: genesis.json
                 path: genesis.json

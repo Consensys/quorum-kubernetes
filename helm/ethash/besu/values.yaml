@@ -4,7 +4,9 @@
 imagePullPolicy: IfNotPresent
 image:
   repository: hyperledger/besu
-  tag: develop
+  tag: latest
+
+namespace: besu
 
 bootnode1:
   privateKey: "0x3262e00fd76fdb2cbec12ff964b288255846446be6950d5f0519b77dcdbea98d"
@@ -18,6 +20,10 @@ node:
   replicaCount: 2
   pvcSizeLimit: "1Gi"
   pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
 
 # common parameters to all nodes
 besuConfig:

@@ -6,8 +6,9 @@ metadata:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
     release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
     heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 data:
   {{ if regexMatch "^0x" .Values.validators.validator1.publicKey }}
   validator1PubKey: {{ trimPrefix "0x" .Values.validators.validator1.publicKey | quote }}
@@ -33,14 +34,3 @@ data:
   validator4PubKey: {{ .Values.validators.validator4.publicKey | quote }}
   {{ end }}
 
-  {{ if regexMatch "^0x" .Values.orions.orion1.publicKey }}
-  orion1PubKey: {{ trimPrefix "0x" .Values.orions.orion1.publicKey | quote }}
-  {{ else }}
-  orion1PubKey: {{ .Values.orions.orion1.publicKey | quote }}
-  {{ end }}
-
-  {{ if regexMatch "^0x" .Values.orions.orion2.publicKey }}
-  orion2PubKey: {{ trimPrefix "0x" .Values.orions.orion2.publicKey | quote }}
-  {{ else }}
-  orion2PubKey: {{ .Values.orions.orion2.publicKey | quote }}
-  {{ end }}

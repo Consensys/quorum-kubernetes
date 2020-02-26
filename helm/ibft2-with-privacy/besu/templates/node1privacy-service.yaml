@@ -7,10 +7,11 @@ metadata:
   labels:
     app: {{ template "besu.name" . }}
     chart: {{ template "besu.chart" . }}
-    release: {{ .Release.Name }}
-    namespace: {{ .Release.Namespace }}
-    heritage: {{ .Release.Service }}
     component: {{ $nodeNumber }}privacy
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
   type: ClusterIP
   selector:
