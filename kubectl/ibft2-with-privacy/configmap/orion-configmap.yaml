@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-orion-init
+  labels:
+    app: besu-orion-init
+  namespace: besu
+data:
+  orion-init.sh: |
+    #!/bin/bash
+    mkdir /configs
+    cp /configs-ro/orion.conf /configs/orion.conf
+    sed -i "s/default/$POD_NAMESPACE/g" /configs/orion.conf
+    /opt/orion/bin/orion /configs/orion.conf
