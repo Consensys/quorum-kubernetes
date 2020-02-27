@@ -23,8 +23,8 @@ Repeat this process for as many bootnodes as you would like to provision i.e key
 
 ```bash
 mkdir -p ./generated_config/bootnode1 ./generated_config/bootnode2
-docker run --rm --volume $PWD/generated_config/bootnode1:/opt/besu/data hyperledger/besu:develop --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
-docker run --rm --volume $PWD/generated_config/bootnode2:/opt/besu/data hyperledger/besu:develop --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
+docker run --rm --volume $PWD/generated_config/bootnode1:/opt/besu/data hyperledger/besu:latest --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
+docker run --rm --volume $PWD/generated_config/bootnode2:/opt/besu/data hyperledger/besu:latest --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
 ```
 
 Update the values.yaml with the keys. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address
@@ -85,6 +85,6 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 
 #### 8. Delete
 ```bash
-helm del besu --namespace NAMESPACE
+helm del besu
 
 ```

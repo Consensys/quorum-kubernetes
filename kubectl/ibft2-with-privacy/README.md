@@ -13,14 +13,14 @@
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
 2. If you add more validators in past the initial setup, they need to be voted in to be validators i.e they will serve as normal nodes and not validators until they've been voted in.
-3. Node1Privacy to Node4Privacy are tied to Orion1 to Orion4 respectively
+3. Node1Privacy to Node4Privacy are tied to Orion1 to Orion2 respectively
 
 #### 1. Boot nodes private keys
 Create private/public keys for the validators using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
 Repeat this process for as many validators as you would like to provision i.e keys and replicate the deployment & service
 
 ```bash
-docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:develop operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
+docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:latest operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 mv ./ibftSetup/networkFiles/genesis.json ./ibftSetup/
 ```
@@ -39,17 +39,15 @@ eg: To alter the number of nodes on the network, alter the `replicas: 2` in the 
 For more information please refer to the [documentation](https://docs.orion.pegasys.tech/en/stable/Getting-Started/Quickstart/#2-generate-keys) 
 Create the keypairs and enter the password when requested. 
 ```bash
-docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
-docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey'
-docker run -it --volume $PWD/orionSetup/orion3:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
-docker run -it --volume $PWD/orionSetup/orion4:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:develop -c 'cd /opt/orion/data && /opt/orion/bin/orion -g nodeKey' 
+docker run -it --volume $PWD/orionSetup/orion1:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:latest -c 'cd /opt/orion/data && cat orion1.password | /opt/orion/bin/orion --generatekeys nodeKey'
+docker run -it --volume $PWD/orionSetup/orion2:/opt/orion/data --entrypoint "/bin/sh" pegasyseng/orion:latest -c 'cd /opt/orion/data && cat orion2.password | /opt/orion/bin/orion --generatekeys  nodeKey' 
 sudo chown -R $USER:$USER ./orionSetup
 ```
 
 #### 5. Orion configuration
-`configmap/configmap.yaml` contains the `orion1.conf` to `orion4.conf` sections. The orion public keys (`orion1PubKey` to `orion4PubKey`) can also be found in here. The orion private keys can be found in `secrets/orion-keys-secret.yaml`.  
+`configmap/orion<N>-conf-configmap.yaml` contains the `orion1.conf` to `orion2.conf` sections. The orion public keys (`orion1PubKey` to `orion2PubKey`) can also be found in here. The orion private keys can be found in `secrets/orion<N>-key-secret.yaml`.  
 
-Update both files with your own generated keypairs. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address. **Note:** Please remove the '0x' prefix of the public keys
+Update the files with your own generated keypairs. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address. **Note:** Please remove the '0x' prefix of the public keys
 
 #### 6. Deploy:
 ```bash
