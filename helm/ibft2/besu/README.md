@@ -24,7 +24,7 @@ Create private/public keys for the validators using the besu subcommands. The pr
 Update the `count` key in the ibftConfigFile.json to alter the number of validators as you would like to provision i.e keys and replicate the deployment & service
 
 ```bash
-docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:develop operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
+docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:latest operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 cp ./ibftSetup/networkFiles/genesis.json ./
 ```
@@ -87,6 +87,6 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 
 #### 8. Delete
 ```bash
-helm del besu --namespace NAMESPACE
+helm del besu 
 
 ```

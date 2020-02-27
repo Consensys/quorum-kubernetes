@@ -12,12 +12,12 @@
 
 
 ## Overview of Setup
-![Image ibft](../../../images/ibft-orion.png)
+![Image consortium](../../../images/consortium.png)
 
 ## NOTE:
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
 2. If you add more validators in past the initial setup, they need to be voted in to be validators i.e they will serve as normal nodes and not validators until they've been voted in.
-3. Node1Privacy to Node2Privacy are tied to Orion1 to Orion2 respectively
+3. Node1Privacy to Node3Privacy are tied to Orion1 to Orion respectively
 
 ## Pre chart install - you need to create config that you want to persist
 #### 1. Validators private keys

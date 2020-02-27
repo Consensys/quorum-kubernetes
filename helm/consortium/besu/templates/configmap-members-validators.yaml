@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-configmap-validators
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace.members }}
+  namespace: {{ .Values.namespace.members }}
+data:
+  {{ if regexMatch "^0x" .Values.validators.validator1.publicKey }}
+  validator1PubKey: {{ trimPrefix "0x" .Values.validators.validator1.publicKey | quote }}
+  {{ else }}
+  validator1PubKey: {{ .Values.validators.validator1.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.validators.validator2.publicKey }}
+  validator2PubKey: {{ trimPrefix "0x" .Values.validators.validator2.publicKey | quote }}
+  {{ else }}
+  validator2PubKey: {{ .Values.validators.validator2.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.validators.validator3.publicKey }}
+  validator3PubKey: {{ trimPrefix "0x" .Values.validators.validator3.publicKey | quote }}
+  {{ else }}
+  validator3PubKey: {{ .Values.validators.validator3.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.validators.validator4.publicKey }}
+  validator4PubKey: {{ trimPrefix "0x" .Values.validators.validator4.publicKey | quote }}
+  {{ else }}
+  validator4PubKey: {{ .Values.validators.validator4.publicKey | quote }}
+  {{ end }}
+
