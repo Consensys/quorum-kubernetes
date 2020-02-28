@@ -121,7 +121,7 @@ spec:
                 path: genesis.json
         - name: orion-pubkey
           configMap:
-            name: orion1-configmap
+            name: orion-configmap
             items:
-              - key: publicKey
+              - key: orion1PubKey
                 path: orion.pub

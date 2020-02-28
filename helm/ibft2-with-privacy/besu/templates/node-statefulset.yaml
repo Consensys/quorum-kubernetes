@@ -60,12 +60,12 @@ spec:
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-validators
+                  name: besu-validators-configmap
                   key: validator1PubKey
             - name: VALIDATOR2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-validators
+                  name: besu-validators-configmap
                   key: validator2PubKey
           volumeMounts:
             - name: genesis-config
@@ -118,13 +118,13 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-configmap-besu-genesis
+            name: besu-genesis-configmap
             items:
               - key: genesis.json
                 path: genesis.json
         - name: config-toml
           configMap:
-            name: besu-configmap-config-toml
+            name: besu-config-toml-configmap
         - name: data
           emptyDir:
             sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

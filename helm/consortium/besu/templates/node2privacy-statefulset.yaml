@@ -67,12 +67,12 @@ spec:
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-validators
+                  name: besu-validators-configmap
                   key: validator1PubKey
             - name: VALIDATOR2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-validators
+                  name: besu-validators-configmap
                   key: validator2PubKey
             # this allows us to pass in the orion service at runtime and make the script generic
             - name: BESU_ORION_SERVICE_HOST
@@ -133,19 +133,19 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-configmap-besu-genesis
+            name: besu-genesis-configmap
             items:
               - key: genesis.json
                 path: genesis.json
         - name: orion-pubkey
           configMap:
-            name: besu-configmap-orion2-conf
+            name: besu-orion-configmap
             items:
               - key: orion2PubKey
                 path: orion.pub
         - name: config-toml
           configMap:
-            name: besu-configmap-config-toml
+            name: besu-config-toml-configmap
         - name: data
           emptyDir:
             sizeLimit: "{{ .Values.node.pvcSizeLimit }}"
