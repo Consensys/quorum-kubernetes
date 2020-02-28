@@ -61,12 +61,12 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-bootnodes
+                  name: besu-bootnodes-configmap
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap-bootnodes
+                  name: besu-bootnodes-configmap
                   key: bootnode2PubKey
             - name: MINER_COINBASE
               value: {{ .Values.besuConfig.miner.coinbase | quote }}
@@ -104,7 +104,6 @@ spec:
           args:
             - |
               exec /opt/besu/bin/besu \
-                --node-private-key-file=/secrets/key \
                 --config-file=/etc/besu/config.toml \
                 --miner-enabled \
                 --miner-coinbase=${MINER_COINBASE} \
@@ -124,13 +123,13 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-configmap-besu-genesis
+            name: besu-genesis-configmap
             items:
               - key: genesis.json
                 path: genesis.json
         - name: config-toml
           configMap:
-            name: besu-configmap-config-toml
+            name: besu-config-toml-configmap
         - name: data
           emptyDir:
             sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

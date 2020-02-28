@@ -86,6 +86,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: ORION_NODEURL
+              value: "http://besu-{{ $orionNumber }}.$(POD_NAMESPACE).svc.cluster.local:8080/"
+            - name: ORION_CLIENTURL
+              value: "http://besu-{{ $orionNumber }}.$(POD_NAMESPACE).svc.cluster.local:8888/"
+            - name: ORION_OTHERNODES
+              value: "http://besu-orion2.$(POD_NAMESPACE).svc.cluster.local:8080/"
           volumeMounts:
             - name: key
               mountPath: /secrets
@@ -94,16 +100,13 @@ spec:
               mountPath: /passwords
               readOnly: true
             - name: orion-conf
-              mountPath: /configs-ro
+              mountPath: /configs
               readOnly: true
             - name: orion-pubkey
               mountPath: /configs/keys
               readOnly: true
             - name: data
               mountPath: /data
-            - name: orion-init
-              mountPath: /scripts/orion-init.sh
-              subPath: orion-init.sh
           ports:
             - containerPort: 8888
               name: nodeport
@@ -114,7 +117,9 @@ spec:
           command:
             - /bin/sh
             - -c
-            - /scripts/orion-init.sh
+          args:
+            - |
+              exec /opt/orion/bin/orion /configs/orion.conf
           livenessProbe:
             httpGet:
               path: /upcheck
@@ -130,13 +135,13 @@ spec:
       volumes:
         - name: orion-conf
           configMap:
-            name: besu-configmap-{{ $orionNumber }}-conf
+            name: besu-orion-configmap
             items:
-              - key: {{ $orionNumber }}.conf
+              - key: orion.conf
                 path: orion.conf
         - name: orion-pubkey
           configMap:
-            name: besu-configmap-{{ $orionNumber }}-conf
+            name: besu-orion-configmap
             items:
               - key: {{ $orionNumber }}PubKey
                 path: orion.pub
@@ -152,10 +157,6 @@ spec:
             items:
               - key: {{ $orionNumber }}.password
                 path: orion.password
-        - name: orion-init
-          configMap:
-            name: besu-orion-init
-            defaultMode: 0777
         - name: data
           emptyDir:
             sizeLimit: "{{ .Values.orions.pvcSizeLimit }}"

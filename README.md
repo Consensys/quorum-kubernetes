@@ -49,6 +49,38 @@ It is recommended you follow this approach as well in your production setups and
 | ⚠️ **Note**: After you have familiarised yourself with the examples in this repo, it is recommended that you design your network based on your needs, taking the following guidelines into account |
 | --- |
 
+
+#### Pod Resources:
+The templates in this repository have been set to run locally on Minikube to get the user familiar with the setup. Hence the resources are set to:
+
+```bash
+besu:
+  pvcSizeLimit: "1Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+
+orion:
+  pvcSizeLimit: "1Gi"
+  pvcStorageClass: "standard"
+  memRequest: "512Mi"
+  memLimit: "1024Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+```
+
+When designing your setup to run in `staging` or `production` environments, please ensure you **grant at least 4GB of memory to Besu pods and 2GB of memory to Orion pods.** Also ensure you **select the appropriate storage class and size for your nodes.**
+
+Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
+
+When deploying a private network, eg: IBFT you need to ensure that the bootnodes are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
+
+You need to ensure that the genesis file is accessible to all nodes joining the network.
+
+
+
 #### Network Topology and High Availability requirements:
 Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
 
