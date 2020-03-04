@@ -4,7 +4,8 @@ metadata:
   name: ingress-rules-besu
   labels:
     namespace: besu
-    component: besu-ingress
+    app: nginx-ingress
+    relase: besu-ingress
   namespace: besu
   annotations:
     kubernetes.io/ingress.class: nginx
