@@ -98,7 +98,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: besu-validators-configmap
-                key: validator2PubKey
+                key: validator1PubKey
           - name: VALIDATOR2_PUBKEY
             valueFrom:
               configMapKeyRef:
