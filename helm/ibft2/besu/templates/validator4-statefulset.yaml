@@ -165,4 +165,4 @@ spec:
           name: besu-config-toml-configmap
       - name: data
         emptyDir:
-          sizeLimit: "{{ .Values.node.pvcSizeLimit }}"
+          sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"
