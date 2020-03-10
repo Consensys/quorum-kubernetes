@@ -32,12 +32,15 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       initContainers:
-        - name: init-bootnode
-          image: byrnedo/alpine-curl
-          command:
-            - "sh"
-            - "-c"
-            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      - name: init-bootnode
+        image: byrnedo/alpine-curl
+        env:
+          - name: VALIDATOR1_SERVICE_HOST
+            value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
+        command:
+          - "sh"
+          - "-c"
+          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: {{ $nodeNumber }}privacy
           image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
@@ -61,13 +64,19 @@ spec:
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-validators-configmap
+                  name: {{ template "besu.fullname" . }}-validators-configmap
                   key: validator1PubKey
             - name: VALIDATOR2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-validators-configmap
+                  name: {{ template "besu.fullname" . }}-validators-configmap
                   key: validator2PubKey
+            - name: VALIDATOR1_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
+            - name: VALIDATOR2_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_VALIDATOR2_SERVICE_HOST)"
+            - name: ORION1_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_ORION1_SERVICE_HOST)"
           volumeMounts:
             - name: orion-pubkey
               mountPath: /configs/orion
@@ -107,9 +116,9 @@ spec:
               exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
                 --privacy-enabled=true \
-                --privacy-url=http://${BESU_ORION1_SERVICE_HOST}:8888 \
+                --privacy-url=http://${ORION1_SERVICE_HOST}:8888 \
                 --privacy-public-key-file=/configs/orion/orion.pub \
-                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
               path: /liveness
@@ -125,19 +134,19 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-genesis-configmap
+            name: {{ template "besu.fullname" . }}-genesis-configmap
             items:
               - key: genesis.json
                 path: genesis.json
         - name: orion-pubkey
           configMap:
-            name: besu-orion-configmap
+            name: {{ template "besu.fullname" . }}-orion-configmap
             items:
               - key: orion1PubKey
                 path: orion.pub
         - name: config-toml
           configMap:
-            name: besu-config-toml-configmap
+            name: {{ template "besu.fullname" . }}-config-toml-configmap
         - name: data
           emptyDir:
             sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

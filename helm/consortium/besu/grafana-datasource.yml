@@ -8,7 +8,7 @@ datasources:
     type: prometheus
     access: proxy
     orgId: 1
-    url: http://besu-prometheus.monitoring:9090
+    url: http://$PROMETHEUS_SERVICE_HOST.monitoring:9090
     password:
     user:
     database:
