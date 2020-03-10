@@ -103,7 +103,7 @@ spec:
       volumes:
         - name: prometheus-config
           configMap:
-            name: besu-prometheus-configmap
+            name: {{ template "besu.fullname" . }}-prometheus-configmap
             items:
               - key: prometheus.yml
                 path: prometheus.yml

@@ -47,6 +47,8 @@ spec:
               value: "admin"
             - name: GF_SECURITY_ADMIN_PASSWORD
               value: "password"
+            - name: PROMETHEUS_SERVICE_HOST
+              value: {{ template "besu.upperfullname" . }}-prometheus
           volumeMounts:
             - name: grafana-configmap-datasources
               mountPath: /etc/grafana/provisioning/datasources/prometheus.yml
@@ -67,10 +69,10 @@ spec:
       volumes:
         - name: grafana-configmap-datasources
           configMap:
-            name: besu-grafana-configmap-datasources
+            name: {{ template "besu.fullname" . }}-grafana-configmap-datasources
         - name: grafana-configmap-dashboards-dashboard
           configMap:
-            name: besu-grafana-configmap-dashboards-dashboard
+            name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-dashboard
         - name: grafana-configmap-dashboards-besu
           configMap:
-            name: besu-grafana-configmap-dashboards-besu
+            name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-besu
