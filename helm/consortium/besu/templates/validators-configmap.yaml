@@ -21,16 +21,3 @@ data:
   {{ else }}
   validator2PubKey: {{ .Values.validators.validator2.publicKey | quote }}
   {{ end }}
-
-  {{ if regexMatch "^0x" .Values.validators.validator3.publicKey }}
-  validator3PubKey: {{ trimPrefix "0x" .Values.validators.validator3.publicKey | quote }}
-  {{ else }}
-  validator3PubKey: {{ .Values.validators.validator3.publicKey | quote }}
-  {{ end }}
-
-  {{ if regexMatch "^0x" .Values.validators.validator4.publicKey }}
-  validator4PubKey: {{ trimPrefix "0x" .Values.validators.validator4.publicKey | quote }}
-  {{ else }}
-  validator4PubKey: {{ .Values.validators.validator4.publicKey | quote }}
-  {{ end }}
-
