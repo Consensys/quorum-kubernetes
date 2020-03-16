@@ -84,7 +84,7 @@ spec:
             - name: data
               mountPath: /data
           ports:
-            - name: http
+            - name: json-rpc
               containerPort: {{ .Values.besuConfig.rpc.port }}
               protocol: TCP
             - name: ws
@@ -93,10 +93,10 @@ spec:
             - name: graphql
               containerPort: {{ .Values.besuConfig.graphql.port }}
               protocol: TCP
-            - name: p2p-tcp
+            - name: rlpx
               containerPort: {{ .Values.besuConfig.p2p.port }}
               protocol: TCP
-            - name: p2p-udp
+            - name: discovery
               containerPort: {{ .Values.besuConfig.p2p.port }}
               protocol: UDP
             - name: metrics

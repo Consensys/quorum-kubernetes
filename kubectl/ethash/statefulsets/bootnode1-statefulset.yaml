@@ -105,7 +105,7 @@ spec:
               readOnly: true
           ports:
             - containerPort: 8545
-              name: http
+              name: json-rpc
               protocol: TCP
             - containerPort: 8546
               name: ws
@@ -114,10 +114,10 @@ spec:
               name: graphql
               protocol: TCP
             - containerPort: 30303
-              name: dev-p2p-tcp
+              name: rlpx
               protocol: TCP
             - containerPort: 30303
-              name: dev-p2p-udp
+              name: discovery
               protocol: UDP
           command:
             - /bin/sh

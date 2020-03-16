@@ -13,15 +13,15 @@ spec:
     - port: 30303
       targetPort: 30303
       protocol: UDP
-      name: dev-p2p-udp
+      name: discovery
     - port: 30303
       targetPort: 30303
       protocol: TCP
-      name: dev-p2p-tcp
+      name: rlpx
     - port: 8545
       targetPort: 8545
       protocol: TCP
-      name: http
+      name: json-rpc
     - port: 8546
       targetPort: 8546
       protocol: TCP

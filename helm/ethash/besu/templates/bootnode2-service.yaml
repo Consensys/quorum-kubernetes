@@ -19,9 +19,9 @@ spec:
     release: {{ .Release.Name }}
     component: {{ $bootnodeNumber }}
   ports:
-    - name: http
+    - name: json-rpc
       port: {{ .Values.besuConfig.rpc.port }}
-      targetPort: http
+      targetPort: json-rpc
       protocol: TCP
     - name: ws
       port: {{ .Values.besuConfig.ws.port }}
@@ -31,11 +31,11 @@ spec:
       port: {{ .Values.besuConfig.graphql.port }}
       targetPort: graphql
       protocol: TCP
-    - name: p2p-tcp
+    - name: rlpx
       port: {{ .Values.besuConfig.p2p.port }}
-      targetPort: p2p-tcp
+      targetPort: rlpx
       protocol: TCP
-    - name: p2p-udp
+    - name: discovery
       port: {{ .Values.besuConfig.p2p.port }}
-      targetPort: p2p-udp
+      targetPort: discovery
       protocol: UDP
