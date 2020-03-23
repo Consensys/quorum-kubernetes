@@ -45,6 +45,14 @@ Namespaces are part of the setup and do not need to be created via kubectl prior
 
 It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
 
+
+Ingress Controllers:
+
+If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](./helm/ingress/README.md) with rules that are configured to do so.
+ 
+Please use these as a reference and develop solutions to match your network topology and requirements.
+
+
 ## Production Network Guidelines:
 | ⚠️ **Note**: After you have familiarised yourself with the examples in this repo, it is recommended that you design your network based on your needs, taking the following guidelines into account |
 | --- |
@@ -107,6 +115,8 @@ Besu publishes metrics to [Prometheus](https://prometheus.io/) and metrics can b
 Besu also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes easier.
 
 For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements.
+
+We also have [example ingress controller config rules](./helm/ingress/), should you want to use a setup that makes use of ingress controllers. 
 
 #### Logging
 Besu's logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
