@@ -97,12 +97,12 @@ besuConfig:
     enabled: true
     host: "0.0.0.0"
     port: 9545
-    push:
-      enabled: false
-      host: "5.5.5.5"
-      port: 212
-      interval: 15
-      prometheusJob: "besu"
+  metricsPush:
+    enabled: false
+    host: "5.5.5.5"
+    port: 9091
+    interval: 15
+    prometheusJob: "besu"
   privacy:
     enabled: false
     url: "http://127.0.0.1:8888"
