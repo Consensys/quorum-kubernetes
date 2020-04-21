@@ -96,7 +96,9 @@ When deploying a private network, eg: IBFT you need to ensure that the bootnodes
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
 
-#### Data Volumes:
+Hyperledger Besu supports [NAT mechanisms](https://besu.hyperledger.org/en/stable/Reference/CLI/CLI-Syntax/#nat-method) and the default is set to automatically handle NAT environments. If you experience issues with NAT and logs have messages that have the NATService throwing exceptions connecting to external IPs, please add this option in your Besu deployments `--nat-method = NONE` 
+
+#### Data Volumes:                     
 Ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider.
 
 #### Nodes:
@@ -105,7 +107,7 @@ Consider the use of statefulsets instead of deployments for nodes. The term 'nod
 Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation
 
 #### RBAC:
-We encourage the use of RBAC's for access to the private key of each node, ie. only a specific pod/statefulset is allowed to access a specific secret
+We encourage the use of RBAC's for access to the private key of each node, ie. only a specific pod/statefulset is allowed to access a specific secret. If you need to specify a Kube config file to each pod please use the `KUBE_CONFIG_PATH` variable
 
 #### Monitoring
 As always please ensure you have sufficient monitoring and alerting setup.
@@ -121,7 +123,6 @@ We also have [example ingress controller config rules](./helm/ingress/), should 
 #### Logging
 Besu's logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
 
-
 ### New nodes joining the network:
 The general rule is that any new nodes joining the network need to have the following accessible:
 - genesis.json of the network
@@ -136,6 +137,8 @@ In this case anything that applies to how current nodes are provisioned should b
 
 #### 2. New node being provisioned elsewhere
 Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere accessible to new nodes that may join in future as well, and pass the values in at runtime.
+
+Ensure that the host being provisioned can also connect to the other nodes that you have on the k8s cluster, otherwise it will be unable to connect to any peers (bar the bootnodes). The most reliable way to do this is via a VPN so it has access to the bootnodes as well as any nodes on the k8s cluster
 
 Additionally if you’re using permissioning on your network you will also have to specifically authorise the new nodes
 
