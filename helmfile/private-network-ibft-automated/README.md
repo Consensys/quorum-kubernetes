@@ -110,7 +110,7 @@ You have to modify the `name` and the `index` value:
   - name: validator-<INDEX_NUMBER>
     labels:
       component: validators
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ./besu-node
     values:
       - ./values/validator.yaml

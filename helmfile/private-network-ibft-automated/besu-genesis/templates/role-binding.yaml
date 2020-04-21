@@ -8,7 +8,7 @@ metadata:
     helm.sh/chart: {{ include "besu-genesis.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    namespace:  {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
       - ""
@@ -47,5 +47,5 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
 
