@@ -11,14 +11,11 @@ metadata:
 data:
   config.toml: |-
     # Every possible CLI should be in this file.
-    # The odds are you are reading this because you added a CLI and didn't add it
-    # here and a test broke.  To fix the test add your CLI to this file.
     #
     # Please use a plausible value, besu has to at least be able to parse it.
     # If it is a multi-valued CLI make it a TOML array.
     # If it is a number or boolean make it a number or boolean
     # All other config options are strings, and must be quoted.
-    # Please provide some sensible grouping.
 
     # Node Information
     data-path="/data"
@@ -36,84 +33,77 @@ data:
 
     logging={{ .Values.node.logging | quote }}
   
-    {{- if .Values.node.p2p.enabled -}}
+    {{ if .Values.node.p2p.enabled -}}
     # P2P network
     p2p-enabled={{ .Values.node.p2p.enabled }}
     discovery-enabled={{ .Values.node.p2p.discovery }}
     p2p-host={{ .Values.node.p2p.host | quote }}
     p2p-port={{ .Values.node.p2p.port }}
-    max-peers={{ .Values.node.p2p.max_peers }}
-    {{- end -}}
+    max-peers={{ .Values.node.p2p.maxPeers }}
+    {{ end }}
   
     # Transaction Pool
-    tx-pool-retention-hours={{ .Values.node.tx_pool.retention_hours }}
-    tx-pool-max-size={{ .Values.node.tx_pool.max_size }}
-
-    min-gas-price={{ .Values.node.miner.gas_price | quote }}
-
-    {{- if .Values.node.miner.enabled -}}
-    # Mining
-    miner-enabled={{ .Values.node.miner.enabled }}
-    miner-coinbase={{ .Values.node.miner.coinbase | quote }}
-    miner-extra-data={{ .Values.node.miner.extra_data | quote }}
-    {{- end -}}
+    tx-pool-retention-hours={{ .Values.node.txPool.retentionHours }}
+    tx-pool-max-size={{ .Values.node.txPool.maxSize }}
 
     {{ if or .Values.node.rpc.enabled .Values.node.graphql.enabled .Values.node.ws.enabled }}
-    host-whitelist={{ .Values.node.http.whitlist }}
+    host-whitelist={{ .Values.node.http.whitelist }}
     {{ end }}
 
-    {{- if .Values.node.rpc.enabled -}}
+    {{ if .Values.node.rpc.enabled -}}
     # JSON-RPC
     rpc-http-enabled={{ .Values.node.rpc.enabled }}
     rpc-http-host={{ .Values.node.rpc.host | quote }}
     rpc-http-port={{ .Values.node.rpc.port }}
     rpc-http-api={{ .Values.node.rpc.api }}
-    rpc-http-cors-origins={{ .Values.node.rpc.cors_origins }}
-    rpc-http-authentication-enabled={{ .Values.node.rpc.authentication_enabled }}
-    {{- end -}}
+    rpc-http-cors-origins={{ .Values.node.rpc.corsOrigins }}
+    rpc-http-authentication-enabled={{ .Values.node.rpc.authenticationEnabled }}
+    {{ end }}
   
-    {{- if .Values.node.graphql.enabled -}}
+    {{ if .Values.node.graphql.enabled -}}
     # GRAPHQL-RPC
     graphql-http-enabled={{ .Values.node.graphql.enabled }}
     graphql-http-host={{ .Values.node.graphql.host | quote }}
     graphql-http-port={{ .Values.node.graphql.port }}
-    graphql-http-cors-origins={{ .Values.node.graphql.cors_origins }}
+    graphql-http-cors-origins={{ .Values.node.graphql.corsOrigins }}
     {{- end -}}
   
-    {{- if .Values.node.ws.enabled -}}
+    {{ if .Values.node.ws.enabled -}}
     # WebSockets API
     rpc-ws-enabled={{ .Values.node.ws.enabled }}
     rpc-ws-host={{ .Values.node.ws.host | quote }}
     rpc-ws-port={{ .Values.node.rpc.port }}
     rpc-ws-api={{ .Values.node.ws.api }}
-    #rpc-ws-apis=["DEBUG","ETH"]
-    rpc-ws-authentication-enabled={{ .Values.node.ws.authentication_enabled }}
-    {{- end -}}
+    rpc-ws-authentication-enabled={{ .Values.node.ws.authenticationEnabled }}
+    {{ end }}
 
-    {{- if .Values.permissions.enabled -}}
+    {{ if .Values.permissions.enabled -}}
     # Permissioning
     permissions-nodes-config-file-enabled={{ .Values.permissions.nodes.enabled }}
     permissions-accounts-config-file-enabled={{ .Values.permissions.accounts.enabled }}
     permissions-nodes-contract-enabled={{ .Values.permissions.nodes_contract.enabled }}
     permissions-nodes-contract-address={{ .Values.permissions.nodes_contract.address | quote }}
-    {{- end -}}
+    {{ end }}
   
-    {{- if .Values.node.privacy.enabled -}}
+    {{ if .Values.node.privacy.enabled -}}
     # Privacy
     privacy-enabled={{ .Values.node.privacy.enabled }}
     privacy-url={{ .Values.node.privacy.url | quote }}
     privacy-precompiled-address={{ .Values.node.privacy.precompiled_address }}
-    {{- end -}}
+    {{ end }}
 
-    {{- if .Values.node.ws.enabled -}}
-    # Prometheus Metrics Endpoint
+    {{ if .Values.node.metrics.enabled  -}}
+    # Metrics
     metrics-enabled={{ .Values.node.metrics.enabled }}
     metrics-host={{ .Values.node.metrics.host | quote }}
     metrics-port={{ .Values.node.metrics.port }}
-    metrics-category={{ .Values.node.metrics.category }}
-    metrics-push-enabled={{ .Values.node.metrics.push.enabled }}
-    metrics-push-host={{ .Values.node.metrics.push.host | quote }}
-    metrics-push-port={{ .Values.node.metrics.push.port }}
-    metrics-push-interval={{ .Values.node.metrics.push.interval }}
-    metrics-push-prometheus-job={{ .Values.node.metrics.push.prometheus | quote }}
-    {{- end -}}
+    {{ end }}
+
+    {{ if .Values.node.metricsPush.enabled -}}
+    # Metrics Push
+    metrics-push-enabled={{ .Values.node.metricsPush.enabled }}
+    metrics-push-host={{ .Values.node.metricsPush.host | quote }}
+    metrics-push-port={{ .Values.node.metricsPush.port }}
+    metrics-push-interval={{ .Values.node.metricsPush.interval }}
+    metrics-push-prometheus-job={{ .Values.node.metricsPush.prometheus | quote }}
+    {{ end }}

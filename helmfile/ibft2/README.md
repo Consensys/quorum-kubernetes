@@ -30,8 +30,11 @@ This charts deploys 3 components:
 
 ## Installing the Chart
 To install the chart in the namesapce with the name `my-namespace`:
+```bash
+kubectl create namespace my-namespace
+helmfile -n my-namespace -f helmfile.yaml apply
+```
 
-`helmfile -n my-namespace -f helmfile.yaml apply`
 
 The command deploys multi Besu nodes in PoA (IBFT 2.0) on the Kubernetes cluster in the default configuration. 
 The configuration section lists the parameters that can be configured during installation.

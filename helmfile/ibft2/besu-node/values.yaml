@@ -4,8 +4,7 @@ index: 0
 
 image:
   repository: hyperledger/besu
-  tag: develop
-  # Always | IfNotPresent
+  tag: latest
   pullPolicy: IfNotPresent
 
 nameOverride:
@@ -38,57 +37,43 @@ node:
   logging: DEBUG
   p2p:
     enabled: true
-    host: "127.0.0.1"
+    host: "0.0.0.0"
     port: 30303
     discovery: true
-    max_peers: 42
-  chain:
-    network: "MAINNET"
-    network_id: 303
-    sync_mode: "fast"
-    fast_sync: 5
-  miner:
-    enabled: true
-    coinbase: "0x0000000000000000000000000000000000000002"
-    extra_data: "0x444F4E27542050414E4943202120484F444C2C20484F444C2C20484F444C2021"
-    gas_price: "0"
-  tx_pool:
-    retention_hours: 999
-    max_size: 1024
-  http:
-    whitlist: '["*"]'
+    maxPeers: 25
   rpc:
     enabled: true
     host: "0.0.0.0"
     port: 8545
     api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
-    cors_origins: '["all"]'
-    authentication_enabled: false
+    corsOrigins: '["all"]'
+    authenticationEnabled: false
   ws:
     enabled: false
     host: "0.0.0.0"
     port: 8546
     api: '["DEBUG", "ETH", "WEB3", "NET"]'
-    authentication_enabled: false
+    authenticationEnabled: false
   graphql:
     enabled: false
     host: "0.0.0.0"
     port: 8547
-    cors_origins: '["all"]'
+    corsOrigins: '["all"]'
+  txPool:
+    retentionHours: 999
+    maxSize: 1024
+  http:
+    whitelist: '["*"]'
   metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+  metricsPush:
     enabled: false
-    host: "8.6.7.5"
-    port: 9303
-    category: ["RPC"]
-    image:
-      repository: marchand/besuexporter
-      tag: "0.2.5"
-    push:
-      enabled: false
-      host: "5.5.5.1"
-      port: 212
-      interval: 42
-      prometheus: "besu-everything"
+    host: "5.5.5.5"
+    port: 9091
+    interval: 15
+    prometheusJob: "besu"
   privacy:
     enabled: false
     url: "http://127.0.0.1:8888"

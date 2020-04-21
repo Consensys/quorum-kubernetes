@@ -27,8 +27,6 @@ spec:
         - name: generate-genesis
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          # command: ["/bin/sh", "-c"]
-          # args: ["/init/generate-genesis-manager.sh"]
           command:
             - /bin/sh
             - -c

@@ -11,22 +11,22 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - name: http
+    - name: json-rpc
       port: {{ .Values.node.rpc.port }}
-      targetPort: http
+      targetPort: json-rpc
     - name: ws
       port: {{ .Values.node.ws.port }}
       targetPort: ws
     - name: graphql
       port: {{ .Values.node.graphql.port }}
       targetPort: graphql
-    - name: p2p-tcp
+    - name: rlpx
       port: {{ .Values.node.p2p.port }}
-      targetPort: p2p-tcp
+      targetPort: rlpx
       protocol: TCP
-    - name: p2p-udp
+    - name: discovery
       port: {{ .Values.node.p2p.port }}
-      targetPort: p2p-udp
+      targetPort: discovery
       protocol: UDP
   selector:
     app.kubernetes.io/name: {{ include "besu-node.name" . }}

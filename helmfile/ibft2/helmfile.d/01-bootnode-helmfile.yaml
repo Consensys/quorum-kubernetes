@@ -8,12 +8,12 @@ helmDefaults:
 
 releases:
   ##################################
-  # Genesis
+  # Bootnode
   ##################################
-  - name: genesis
+  - name: bootnode
     labels:
-      component: genesis
-    namespace: {{ .Release.Namespace }}
-    chart: ../besu-genesis
+      component: bootnode
+    namespace: {{ .Namespace }}
+    chart: ../besu-node
     values:
-      - ../values/genesis.yaml
+      - ../values/bootnode.yaml

@@ -19,8 +19,10 @@ rules:
       - get
       - list
       - update
+      - patch
       - create
       - delete
+      - deletecollection
   - apiGroups:
       - ""
     resources:

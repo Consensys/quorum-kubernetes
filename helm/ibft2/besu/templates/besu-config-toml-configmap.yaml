@@ -72,7 +72,6 @@ data:
     rpc-ws-host={{ .Values.besuConfig.ws.host | quote }}
     rpc-ws-port={{ .Values.besuConfig.ws.port }}
     rpc-ws-api={{ .Values.besuConfig.ws.api }}
-    #rpc-ws-apis=["DEBUG","ETH"]
     rpc-ws-authentication-enabled={{ .Values.besuConfig.ws.authenticationEnabled }}
     {{ end }}
 

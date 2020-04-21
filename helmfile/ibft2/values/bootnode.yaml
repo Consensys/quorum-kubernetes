@@ -1,7 +1,7 @@
 # Number of bootnode. Will not scale automatically unless keys etc.. are pre-provisionned.
 
 image:
-  tag: "develop"
+  tag: latest
 
 besu:
   persistentVolume:

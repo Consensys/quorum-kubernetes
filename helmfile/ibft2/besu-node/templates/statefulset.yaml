@@ -27,6 +27,15 @@ spec:
         prometheus.io/port: "9303"
 {{- end}}
     spec:
+{{- if .Values.validators.enabled}}
+      initContainers:
+      - name: init-bootnode
+        image: byrnedo/alpine-curl
+        command:
+          - "sh"
+          - "-c"
+          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BOOTNODE_BESU_NODE_SERVICE_HOST}:8545/liveness"
+{{- end}}
       terminationGracePeriodSeconds: 20
       containers:
         - name: validators
@@ -37,8 +46,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: BESU_OPTS
-              value: "-Dbesu.docker=false"
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: BOOTNODE_PUBKEY_SECRET
               valueFrom:
                 secretKeyRef:
@@ -51,7 +62,13 @@ spec:
             - |
                exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
-                --bootnodes{{- if not .Values.bootnode.enabled }}=enode://${BOOTNODE_PUBKEY_SECRET}@${BOOTNODE_BESU_NODE_SERVICE_HOST}:{{ .Values.node.p2p.port }}{{- end }}
+                --bootnodes=enode://${BOOTNODE_PUBKEY_SECRET}@${BOOTNODE_BESU_NODE_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
           volumeMounts:
             - name: data
               mountPath: /data
@@ -68,7 +85,7 @@ spec:
             - name: genesis-config
               mountPath: /etc/genesis
           ports:
-            - name: http
+            - name: json-rpc
               containerPort: {{ .Values.node.rpc.port }}
               protocol: TCP
             - name: ws
@@ -77,10 +94,10 @@ spec:
             - name: graphql
               containerPort: {{ .Values.node.graphql.port }}
               protocol: TCP
-            - name: p2p-tcp
+            - name: rlpx
               containerPort: {{ .Values.node.p2p.port }}
               protocol: TCP
-            - name: p2p-udp
+            - name: discovery
               containerPort: {{ .Values.node.p2p.port }}
               protocol: UDP
           resources:

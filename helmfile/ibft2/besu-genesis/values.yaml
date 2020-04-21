@@ -4,8 +4,7 @@
 
 image:
   repository: hyperledger/besu
-  tag: develop
-  # Always | IfNotPresent
+  tag: latest
   pullPolicy: IfNotPresent
 
 validators:
@@ -15,7 +14,7 @@ validators:
 config:
   genesis:
     config:
-      chainId: 1981
+      chainId: 2018
       constantinoplefixblock: 0
       ibft2:
         blockperiodseconds: 2
@@ -23,7 +22,6 @@ config:
         requesttimeoutseconds: 10
     nonce: '0x0'
     timestamp: '0x58ee40ba'
-    extraData: '0xf87ea00000000000000000000000000000000000000000000000000000000000000000f85494ca6e9704586eb1fb38194308e2192e43b1e1979c94ce2276efc33fee3c321e634eac28a9476e53b71c94f466a7174230056004d11178d2647c12740fa58b94b83820d6cf4b7e5aa67a2b57969caa5cdf6dff49808400000000c0'
     gasLimit: '0x47b760'
     difficulty: '0x1'
     mixHash: '0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365'
