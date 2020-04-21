@@ -4,7 +4,7 @@ metadata:
   name: besu-validator2
   labels:
     app: validator2
-namespace: besu
+  namespace: besu
 spec:
   type: ClusterIP
   selector:
