@@ -19,7 +19,7 @@ releases:
   - name: validator-1
     labels:
       component: validators
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ./besu-node
     values:
       - ./values/validator.yaml
@@ -30,7 +30,7 @@ releases:
   - name: validator-2
     labels:
       component: validators
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ./besu-node
     values:
       - ./values/validator.yaml
@@ -41,7 +41,7 @@ releases:
   - name: validator-3
     labels:
       component: validators
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ./besu-node
     values:
       - ./values/validator.yaml
@@ -52,7 +52,7 @@ releases:
   - name: validator-4
     labels:
       component: validators
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ./besu-node
     values:
       - ./values/validator.yaml

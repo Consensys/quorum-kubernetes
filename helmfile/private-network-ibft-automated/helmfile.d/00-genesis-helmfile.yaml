@@ -13,7 +13,7 @@ releases:
   - name: genesis
     labels:
       component: genesis
-    namespace: {{ .Namespace }}
+    namespace: {{ .Release.Namespace }}
     chart: ../besu-genesis
     values:
       - ../values/genesis.yaml
