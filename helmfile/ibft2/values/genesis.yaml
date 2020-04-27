@@ -1,0 +1,6 @@
+---
+# Define the number of Validators you want
+rawConfig:
+  blockchain:
+    nodes:
+      count: 4
