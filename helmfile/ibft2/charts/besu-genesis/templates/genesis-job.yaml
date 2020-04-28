@@ -80,7 +80,7 @@ spec:
             - name: generated-config
               mountPath: /generated-config
           command:
-            - /bin/sh
+            - /bin/bash
             - -c
           args:
             - |
@@ -100,6 +100,17 @@ spec:
                   i=$((i+1))
                 fi
               done
+
+              echo "Creating bootnode keys ..."
+              for j in {1..2}
+              do
+                /opt/besu/bin/besu public-key export --to=public${j}.key
+                sed 's/^0x//' ./public${j}.key > enode${j}.key
+                echo "Creating bootnode ${j} secrets in k8s ..."
+                ./kubectl create secret generic besu-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode.key=./enode${j}.key
+                rm ./public${j}.key ./enode${j}.key /opt/besu/key
+              done
+
               echo "Completed ..."
       volumes:
         - name: raw-config
@@ -145,7 +156,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
-            - /bin/sh
+            - /bin/bash
             - -c
           args:
             - |
@@ -153,10 +164,15 @@ spec:
               curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting genesis configmap in k8s ..."
               ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
-              echo "Creating validator secrets in k8s ..."
+              echo "Deleting validator secrets in k8s ..."
               for f in `seq 1 {{ .Values.rawConfig.blockchain.nodes.count }}`; do
                 echo $f
                 ./kubectl delete secret besu-validator-${f}-keys --namespace {{ .Release.Namespace }}
+              done
+              echo "Deleting bootnode secrets in k8s ..."
+              for j in {1..2}
+              do
+                ./kubectl delete secret besu-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
               done
               echo "Completed ..."
 

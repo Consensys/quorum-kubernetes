@@ -80,7 +80,7 @@ spec:
           command:
             - "sh"
             - "-c"
-            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${VALIDATOR_1_BESU_NODE_SERVICE_HOST}:8545/liveness"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BOOTNODE_1_BESU_NODE_SERVICE_HOST}:8545/liveness"
 {{- end}}
       containers:
       - name: {{ .Release.Name }}
@@ -102,15 +102,15 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          - name: VALIDATOR1_PUBKEY
+          - name: BOOTNODE1_PUBKEY
             valueFrom:
               secretKeyRef:
-                name: besu-validator-1-keys
+                name: besu-bootnode-1-keys
                 key: enode.key
-          - name: VALIDATOR2_PUBKEY
+          - name: BOOTNODE2_PUBKEY
             valueFrom:
               secretKeyRef:
-                name: besu-validator-2-keys
+                name: besu-bootnode-2-keys
                 key: enode.key
         volumeMounts:
           - name: key
@@ -151,7 +151,11 @@ spec:
             exec /opt/besu/bin/besu \
               --node-private-key-file=/secrets/private.key \
               --config-file=/etc/besu/config.toml \
-              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR_1_BESU_NODE_SERVICE_HOST}:30303
+{{- if not .Values.bootnode.enabled }}
+              --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BOOTNODE_1_BESU_NODE_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BOOTNODE_2_BESU_NODE_SERVICE_HOST}:30303
+{{ else }}
+              --bootnodes
+{{- end}}
         livenessProbe:
           httpGet:
             path: /liveness

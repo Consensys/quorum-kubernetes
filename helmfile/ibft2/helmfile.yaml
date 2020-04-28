@@ -25,11 +25,28 @@ helmDefaults:
 helmfiles:
   - ./helmfile.d/00-genesis.yaml
 
+
 # The desired states of Helm releases.
 releases:
   - name: monitoring
     namespace: {{ .Namespace }}
     chart: ./charts/besu-monitoring
+
+  - name: bootnode-1
+    labels:
+      component: bootnode
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/bootnode.yaml
+
+  - name: bootnode-2
+    labels:
+      component: bootnode
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/bootnode.yaml
 
   - name: validator-1
     labels:
@@ -37,10 +54,7 @@ releases:
     namespace: {{ .Namespace }}
     chart: ./charts/besu-node
     values:
-      - ./values/bootnode.yaml
-    set:
-      - name: index
-        value: 1
+      - ./values/validator.yaml
 
   - name: validator-2
     labels:
@@ -48,10 +62,7 @@ releases:
     namespace: {{ .Namespace }}
     chart: ./charts/besu-node
     values:
-      - ./values/bootnode.yaml
-    set:
-      - name: index
-        value: 2
+      - ./values/validator.yaml
 
   - name: validator-3
     labels:
@@ -60,9 +71,6 @@ releases:
     chart: ./charts/besu-node
     values:
       - ./values/validator.yaml
-    set:
-      - name: index
-        value: 3
 
   - name: validator-4
     labels:
@@ -71,7 +79,4 @@ releases:
     chart: ./charts/besu-node
     values:
       - ./values/validator.yaml
-    set:
-      - name: index
-        value: 4
 

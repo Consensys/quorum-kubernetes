@@ -93,7 +93,6 @@ Parameter | Description | Default
 `besu.bootnode.privKey` | the Besu bootnode private key. If not present, the key is automatically generated | ``
 `besu.validators.enabled` | If true, the Besu node deployed will be a validator | `false`
 `besu.validators.privKey` | the Besu validator private key. If not present, retrieve the key from genesis chart  | ``
-`index` | The number of the validator (override by helmfile) | `0`
 `replicaCount` | Warning: Should stay at this default value.  | `1`
 `service.type` | Kubernetes service type | `ClusterIP`
 `besu.persistentVolume.enabled` | If true, it's claim a persistent Volume | `false`
