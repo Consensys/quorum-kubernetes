@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-datasources
+  name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-datasources
   labels:
-    app: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-datasources
+    app: {{ template "besu-monitoring.fullname" . }}-grafana-cm-datasources
     chart: {{ template "besu-monitoring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -19,9 +19,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-dashboard
+  name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-default
   labels:
-    app: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-dashboard
+    app: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-default
     chart: {{ template "besu-monitoring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -36,9 +36,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-besu
+  name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-besu
   labels:
-    app: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-besu
+    app: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-besu
     chart: {{ template "besu-monitoring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}

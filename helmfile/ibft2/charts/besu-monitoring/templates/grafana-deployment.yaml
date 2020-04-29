@@ -50,15 +50,15 @@ spec:
             - name: PROMETHEUS_SERVICE_HOST
               value: {{ template "besu-monitoring.fullname" . }}-prometheus
           volumeMounts:
-            - name: grafana-configmap-datasources
+            - name: grafana-cm-datasources
               mountPath: /etc/grafana/provisioning/datasources/prometheus.yml
               subPath: prometheus.yml
               readOnly: true
-            - name: grafana-configmap-dashboards-dashboard
+            - name: grafana-cm-dash-default
               mountPath: /etc/grafana/provisioning/dashboards/dashboard.yml
               subPath: dashboard.yml
               readOnly: true
-            - name: grafana-configmap-dashboards-besu
+            - name: grafana-cm-dash-besu
               mountPath: /etc/grafana/provisioning/dashboards/besu.json
               subPath: besu.json
               readOnly: true
@@ -67,12 +67,12 @@ spec:
               name: http
               protocol: TCP
       volumes:
-        - name: grafana-configmap-datasources
+        - name: grafana-cm-datasources
           configMap:
-            name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-datasources
-        - name: grafana-configmap-dashboards-dashboard
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-datasources
+        - name: grafana-cm-dash-default
           configMap:
-            name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-dashboard
-        - name: grafana-configmap-dashboards-besu
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-default
+        - name: grafana-cm-dash-besu
           configMap:
-            name: {{ template "besu-monitoring.fullname" . }}-grafana-configmap-dashboards-besu
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-besu

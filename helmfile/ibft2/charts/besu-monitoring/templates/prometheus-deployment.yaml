@@ -10,7 +10,6 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus
-  namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups: [""]
     resources:
