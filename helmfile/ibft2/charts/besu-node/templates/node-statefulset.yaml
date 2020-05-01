@@ -174,7 +174,12 @@ spec:
               path: genesis.json
       - name: config-toml
         configMap:
-          name: besu-config-toml
+          name: {{ include "besu-node.fullname" . }}-config-toml
+      {{- if .Values.node.permissions.enabled }}
+      - name: permissions-config
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-permissions
+      {{- end }}
       - name: data
         emptyDir:
           sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

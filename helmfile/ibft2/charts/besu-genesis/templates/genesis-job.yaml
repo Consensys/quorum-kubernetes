@@ -90,6 +90,7 @@ spec:
               /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
               echo "Creating genesis configmap in k8s ..."
               ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+
               echo "Creating validator secrets in k8s ..."
               i=1
               for f in /generated-config/keys/*; do
