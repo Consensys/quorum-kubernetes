@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "besu-monitoring.fullname" . }}-grafana
+  labels:
+    app: {{ template "besu-monitoring.name" . }}
+    chart: {{ template "besu-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    namespace: monitoring
+    heritage: {{ .Release.Service }}
+    component: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: grafana
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu-monitoring.name" . }}
+        release: {{ .Release.Name }}
+        component: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:6.2.5
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "password"
+            - name: PROMETHEUS_SERVICE_HOST
+              value: {{ template "besu-monitoring.fullname" . }}-prometheus
+          volumeMounts:
+            - name: grafana-cm-datasources
+              mountPath: /etc/grafana/provisioning/datasources/prometheus.yml
+              subPath: prometheus.yml
+              readOnly: true
+            - name: grafana-cm-dash-default
+              mountPath: /etc/grafana/provisioning/dashboards/dashboard.yml
+              subPath: dashboard.yml
+              readOnly: true
+            - name: grafana-cm-dash-besu
+              mountPath: /etc/grafana/provisioning/dashboards/besu.json
+              subPath: besu.json
+              readOnly: true
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+      volumes:
+        - name: grafana-cm-datasources
+          configMap:
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-datasources
+        - name: grafana-cm-dash-default
+          configMap:
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-default
+        - name: grafana-cm-dash-besu
+          configMap:
+            name: {{ template "besu-monitoring.fullname" . }}-grafana-cm-dash-besu

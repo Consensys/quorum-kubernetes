@@ -46,6 +46,13 @@ Namespaces are part of the setup and do not need to be created via kubectl prior
 It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
 
 
+Monitoring:
+The example setups all have out custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes and network easier.
+
+We use the default ports 3000 for grafana and 9090 for prometheus deployments, and the respective Nodeport services use ports 30030 and 30090. Credentials are `admin:password` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
+
+Please configure the kubernetes scraper and grafana security to suit your requirements, Grafana supports [multiple options](https://grafana.com/docs/grafana/latest/auth/overview/) that can be configured using env vars
+
 Ingress Controllers:
 
 If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](./helm/ingress/README.md) with rules that are configured to do so.
@@ -116,7 +123,7 @@ Besu publishes metrics to [Prometheus](https://prometheus.io/) and metrics can b
 
 Besu also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes easier.
 
-For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements.
+For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements, grafana supports multiple options that can be configured using env vars
 
 We also have [example ingress controller config rules](./helm/ingress/), should you want to use a setup that makes use of ingress controllers. 
 
@@ -138,7 +145,7 @@ In this case anything that applies to how current nodes are provisioned should b
 #### 2. New node being provisioned elsewhere
 Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere accessible to new nodes that may join in future as well, and pass the values in at runtime.
 
-Ensure that the host being provisioned can also connect to the other nodes that you have on the k8s cluster, otherwise it will be unable to connect to any peers (bar the bootnodes). The most reliable way to do this is via a VPN so it has access to the bootnodes as well as any nodes on the k8s cluster
+Ensure that the host being provisioned can also connect to the other nodes that you have on the k8s cluster, otherwise it will be unable to connect to any peers (bar the bootnodes). The most reliable way to do this is via a VPN so it has access to the bootnodes as well as any nodes on the k8s cluster. You can alternatively use ingresses on the nodes (ideally more than just bootnodes) you wish to expose, where TCP & UDP on port 30303 need to be open for discovery.
 
 Additionally if you’re using permissioning on your network you will also have to specifically authorise the new nodes
 

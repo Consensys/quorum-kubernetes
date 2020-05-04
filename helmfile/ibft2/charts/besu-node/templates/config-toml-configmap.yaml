@@ -1,0 +1,114 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "besu-node.fullname" . }}-config-toml
+  labels:
+    app: {{ template "besu-node.name" . }}
+    chart: {{ template "besu-node.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-node.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "besu-node.chart" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.toml: |-
+    # Every possible CLI should be in this file.
+    #
+    # Please use a plausible value, besu has to at least be able to parse it.
+    # If it is a multi-valued CLI make it a TOML array.
+    # If it is a number or boolean make it a number or boolean
+    # All other config options are strings, and must be quoted.
+
+    # Node Information
+    data-path={{ .Values.node.dataPath | quote }}
+    genesis-file={{ .Values.node.genesisFilePath | quote }}
+    # TODO : insert as command line & mount Volume
+    # rpc-http-authentication-credentials-file="none"
+    # TODO : insert as command line & mount Volume
+    # rpc-ws-authentication-credentials-file="none"
+    # TODO : insert as command line & mount Volume
+    # permissions-nodes-config-file="./permissions_config.toml"
+    # TODO : insert as command line & mount Volume
+    # permissions-accounts-config-file="./permissions_config.toml"
+    logging={{ .Values.node.logging | quote }}
+
+    # Transaction Pool
+    tx-pool-retention-hours={{ .Values.node.txPool.retentionHours }}
+    tx-pool-max-size={{ .Values.node.txPool.maxSize }}
+
+    {{ if  .Values.node.p2p.enabled -}}
+    # P2P network
+    p2p-enabled={{ .Values.node.p2p.enabled }}
+    discovery-enabled={{ .Values.node.p2p.discovery }}
+    p2p-host={{ .Values.node.p2p.host | quote }}
+    p2p-port={{ .Values.node.p2p.port }}
+    max-peers={{ .Values.node.p2p.maxPeers }}
+    {{ end }}
+
+    {{ if or .Values.node.rpc.enabled .Values.node.graphql.enabled .Values.node.ws.enabled }}
+    host-whitelist={{ .Values.node.http.whitelist }}
+    {{ end }}
+
+    {{ if  .Values.node.rpc.enabled -}}
+    # JSON-RPC
+    rpc-http-enabled={{ .Values.node.rpc.enabled }}
+    rpc-http-host={{ .Values.node.rpc.host | quote }}
+    rpc-http-port={{ .Values.node.rpc.port }}
+    rpc-http-api={{ .Values.node.rpc.api }}
+    rpc-http-cors-origins={{ .Values.node.rpc.corsOrigins }}
+    rpc-http-authentication-enabled={{ .Values.node.rpc.authenticationEnabled }}
+    {{ end }}
+
+    {{ if  .Values.node.graphql.enabled -}}
+    # GRAPHQL-RPC
+    graphql-http-enabled={{ .Values.node.graphql.enabled }}
+    graphql-http-host={{ .Values.node.graphql.host | quote }}
+    graphql-http-port={{ .Values.node.graphql.port }}
+    graphql-http-cors-origins={{ .Values.node.graphql.corsOrigins }}
+    {{ end }}
+
+    {{ if  .Values.node.ws.enabled -}}
+    # WebSockets API
+    rpc-ws-enabled={{ .Values.node.ws.enabled }}
+    rpc-ws-host={{ .Values.node.ws.host | quote }}
+    rpc-ws-port={{ .Values.node.ws.port }}
+    rpc-ws-api={{ .Values.node.ws.api }}
+    rpc-ws-authentication-enabled={{ .Values.node.ws.authenticationEnabled }}
+    {{ end }}
+
+    {{ if  .Values.node.permissions.enabled -}}
+    # Permissioning
+    permissions-nodes-config-file-enabled={{ .Values.node.permissions.nodes.enabled }}
+    permissions-accounts-config-file-enabled={{ .Values.node.permissions.accounts.enabled }}
+    permissions-nodes-contract-enabled={{ .Values.node.permissions.nodesContract.enabled }}
+    permissions-nodes-contract-address={{ .Values.node.permissions.nodesContract.address | quote }}
+    {{ end }}
+
+    {{ if  .Values.node.privacy.enabled -}}
+    # Privacy
+    privacy-enabled={{ .Values.node.privacy.enabled }}
+    privacy-url={{ .Values.node.privacy.url | quote }}
+    privacy-precompiled-address={{ .Values.node.privacy.precompiledAddress }}
+    {{ end }}
+
+    {{ if  .Values.node.metrics.enabled -}}
+    # Metrics
+    metrics-enabled={{ .Values.node.metrics.enabled }}
+    metrics-host={{ .Values.node.metrics.host | quote }}
+    metrics-port={{ .Values.node.metrics.port }}
+    {{ end }}
+
+    {{ if  .Values.node.metricsPush.enabled -}}
+    # Metrics Push
+    metrics-push-enabled={{ .Values.node.metricsPush.enabled }}
+    metrics-push-host={{ .Values.node.metricsPush.host | quote }}
+    metrics-push-port={{ .Values.node.metricsPush.port }}
+    metrics-push-interval={{ .Values.node.metricsPush.interval }}
+    metrics-push-prometheus-job={{ .Values.node.metricsPush.prometheusJob | quote }}
+    {{ end }}
+
+

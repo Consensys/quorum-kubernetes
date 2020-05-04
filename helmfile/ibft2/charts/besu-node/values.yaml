@@ -1,0 +1,132 @@
+---
+image:
+  repository: hyperledger/besu
+  tag: latest
+  pullPolicy: IfNotPresent
+
+bootnode:
+  enabled: false
+
+node:
+  # privKey:
+  # pubKey:
+  pvcSizeLimit: "1Gi"
+  pvcStorageClass: "standard"
+  resources:
+    memRequest: "1024Mi"
+    memLimit: "2048Mi"
+    cpuRequest: "100m"
+    cpuLimit: "500m"
+  dataPath: "/data"
+  genesisFilePath: "/etc/genesis/genesis.json"
+  logging: INFO
+  p2p:
+    enabled: true
+    host: "0.0.0.0"
+    port: 30303
+    discovery: true
+    maxPeers: 25
+  rpc:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8545
+    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+    corsOrigins: '["all"]'
+    authenticationEnabled: false
+  ws:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8546
+    api: '["DEBUG", "ETH", "WEB3", "NET"]'
+    authenticationEnabled: false
+  graphql:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8547
+    corsOrigins: '["all"]'
+  txPool:
+    retentionHours: 999
+    maxSize: 1024
+  http:
+    whitelist: '["*"]'
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+  metricsPush:
+    enabled: false
+    host: "5.5.5.5"
+    port: 9091
+    interval: 15
+    prometheusJob: "besu"
+  privacy:
+    enabled: false
+    url: "http://127.0.0.1:8888"
+    precompiledAddress: 9
+  permissions:
+    enabled: false
+    nodes:
+      enabled: false
+      whitelist: ["enode://6f8a80d14311c39f35f516fa664deaaaa13e85b2f7493f37f6144d86991ec012937307647bd3b9a82abe2974e1407241d54947bbb39763a4cac9f77166ad92a0@192.168.0.9:4567","enode://6f8a80d14311c39f35f516fa664deaaaa13e85b2f7493f37f6144d86991ec012937307647bd3b9a82abe2974e1407241d54947bbb39763a4cac9f77166ad92a0@192.169.0.9:4568"]
+    nodesContract:
+      enabled: false
+      address: "0x0000000000000000000000000000000000001234"
+    accounts:
+      enabled: false
+      whitelist: ["0x0000000000000000000000000000000000000009"]
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+resources: {}
+
+ingress_http:
+  enabled: true
+  annotations: {}
+  #   ingress.kubernetes.io/ssl-redirect: "true"
+  #   kubernetes.io/tls-acme: "true"
+  #   certmanager.k8s.io/cluster-issuer: letsencrypt-production
+  path: /
+  hosts:
+    - k8s.localhost.lan
+  # tls:
+  #  - secretName: clique-tls
+  #    hosts:
+  #      - chain.apps.consensys
+
+ingress_ws:
+  enabled: false
+  annotations: {}
+  #   ingress.kubernetes.io/ssl-redirect: "true"
+  #   kubernetes.io/tls-acme: "true"
+  #   nginx.ingress.kubernetes.io/rewrite-target: /
+  #   certmanager.k8s.io/cluster-issuer: letsencrypt-production
+  # path: /ws
+  # hosts:
+  #   - k8s.localhost.lan
+  # tls:
+  #  - secretName: clique-tls
+  #    hosts:
+  #      - k8s.localhost.lan
+
+ingress_ethstats:
+  enabled: false
+  annotations: {}
+  #   ingress.kubernetes.io/ssl-redirect: "true"
+  #   kubernetes.io/tls-acme: "true"
+  #   certmanager.k8s.io/cluster-issuer: letsencrypt-production
+  # path: /
+  # hosts:
+  #   - ethstats.apps.consensys.paris
+  # tls:
+  #  - secretName: clique-ethstats-tls
+  #    hosts:
+  #      - ethstats.apps.consensys.paris
+
+ethstats:
+  enabled: false
+  # webSocketSecret: tralala
+  # nodeSelector: {}
+  # image:
+  #   repository: puppeth/ethstats
+  #   tag: latest

@@ -1,0 +1,82 @@
+---
+repositories:
+#  - name: stable
+#    url: https://kubernetes-charts.storage.googleapis.com
+
+# Default values to set for args along with dedicated keys that can be set by contributors, cli args take precedence over these.
+# In other words, unset values results in no flags passed to helm.
+# See the helm usage (helm SUBCOMMAND -h) for more info on default values when those flags aren't provided.
+helmDefaults:
+  # verify the chart before upgrading (only works with packaged charts not directories)
+  verify: false
+  # wait for k8s resources via --wait.
+  wait: true
+  # time in seconds to wait for any individual Kubernetes operation (like Jobs for hooks, and waits on pod/pvc/svc/deployment readiness)
+  timeout: 600
+  # performs pods restart for the resource if applicable
+  recreatePods: false
+  # forces resource update through delete/recreate if needed
+  force: false
+  # restores previous state in case of failed release
+  atomic: true
+  createNamespace: true
+
+# Path to the helmfile state file being processed BEFORE releases in this state file
+helmfiles:
+  - ./helmfile.d/00-genesis.yaml
+
+
+# The desired states of Helm releases.
+releases:
+  - name: monitoring
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-monitoring
+
+  - name: bootnode-1
+    labels:
+      component: bootnode
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/bootnode.yaml
+
+  - name: bootnode-2
+    labels:
+      component: bootnode
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/bootnode.yaml
+
+  - name: validator-1
+    labels:
+      component: validators
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/validator.yaml
+
+  - name: validator-2
+    labels:
+      component: validators
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/validator.yaml
+
+  - name: validator-3
+    labels:
+      component: validators
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/validator.yaml
+
+  - name: validator-4
+    labels:
+      component: validators
+    namespace: {{ .Namespace }}
+    chart: ./charts/besu-node
+    values:
+      - ./values/validator.yaml
+
