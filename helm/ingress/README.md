@@ -11,11 +11,25 @@ The following will create an nginx ingress controller and rules that route publi
 ```bash
 helm repo add stable https://kubernetes-charts.storage.googleapis.com/
 helm install grafana-ingress stable/nginx-ingress --namespace monitoring --set controller.replicaCount=2 --set rbac.create=true
-``````
+```
 
-2. Deploy the ingress rules for grafana like so:
+Alternatively to install an ingress for the RPC node service:
+Update the namespace to suit your deployment
+```
+helm install besu-ingress stable/nginx-ingress --namespace besu --set controller.replicaCount=2 --set rbac.create=true
+```
+
+2. Deploy the ingress rules like so:
+For grafana:
+
 ```bash
 kubectl apply -f ingress-rules-grafana.yml
 ```
+For the Besu RPC service :
+
+```bash
+kubectl apply -f ingress-rules-besu.yml
+```
+
 
 
