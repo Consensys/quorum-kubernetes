@@ -58,7 +58,7 @@ spec:
     spec:
       initContainers:
         - name: init-bootnode
-          image: byrnedo/alpine-curl
+          image: pegasyseng/k8s-helper:v1.18.4
           command:
             - "sh"
             - "-c"

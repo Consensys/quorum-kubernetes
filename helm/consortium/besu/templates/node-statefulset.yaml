@@ -32,7 +32,7 @@ spec:
     spec:
       initContainers:
         - name: init-bootnode
-          image: byrnedo/alpine-curl
+          image: pegasyseng/k8s-helper:v1.18.4
           env:
             - name: VALIDATOR1_SERVICE_HOST
               value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
