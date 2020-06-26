@@ -4,6 +4,7 @@ import (
 	// "io/ioutil"
 	// "encoding/json"
 
+	"fmt"
 	"strconv"
 
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
@@ -50,16 +51,20 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 	hostWhitelist := "--host-whitelist=${NODES_HOST_WHITELIST} "
 
 	bootEnodes := ""
+	curlCommandTemplate := "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${%s}:8545/liveness "
+	curlCommand := ""
 	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
 		bootEnodes += "enode://${BOOTNODE" + strconv.Itoa(i) + "_PUBKEY}@"
 		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_HOST}:"
 		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_PORT}"
+		curlCommand += fmt.Sprintf(curlCommandTemplate, "BESU_BOOTNODE"+strconv.Itoa(i)+"_SERVICE_HOST")
 		if i < instance.Spec.Bootnodes {
 			bootEnodes += ","
+			curlCommand += "&& "
 		}
 	}
-	reqLogger.Info("Enodes string")
-	reqLogger.Info(bootEnodes)
+	reqLogger.Info("curlCommand : ")
+	reqLogger.Info(curlCommand)
 
 	enodeOption := "--bootnodes=" + bootEnodes
 
@@ -78,7 +83,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 				Command: []string{
 					"sh",
 					"-c",
-					"curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_BOOTNODE1_SERVICE_HOST}:8545/liveness",
+					curlCommand,
 				},
 			},
 		}
