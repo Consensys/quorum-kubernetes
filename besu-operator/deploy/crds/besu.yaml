@@ -1,0 +1,20 @@
+apiVersion: hyperledger.org/v1alpha1
+kind: Besu
+metadata:
+  name: besu
+spec:
+  bootnodescount: 2
+  validatorscount: 2
+  bootnodes:
+      replicas: 1
+      pubkey: "5d812c3c25ff398ab416968fce9009c2be7ed70a87abc8ea30bd667ce17a9287a6341fbf6ce757bb8148436c39c71296639ea81afcc94cdf908b6e1344f26188"
+      privkey: "0x8457b1dc606d05308cc96f604dbde54ad85cb4de508742c8e265080b9e08b48c"
+      replicas: 1
+      pubkey: "b2fba529681ea7f4619556753d40c8689b936fb1c621bc91f94d2938eb58c285d4911457ae4887b9c3bd593b2d608d319c6dc384d6acae2d043a4657029178d3"
+      privkey: "0xa53a0dea5e51a9e0735e331b336af65d60f516c7080a52da683f6fd96342be42"
+  validators:
+      replicas: 1
+      privkey: "0x28021485044bf6870160f90b82ab6bbd14c691d4414140a63d047a7e3362c64e"
+    - replicas: 1
+      privkey: "0xfb122a05ab1897ff144e1c9efb0bb3144f1e7f319aa5c55e20ef3d8d8464f4e8"
+  members: 1

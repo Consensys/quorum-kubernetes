@@ -1,0 +1,577 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: besus.hyperledger.org
+spec:
+  group: hyperledger.org
+  names:
+    kind: Besu
+    listKind: BesuList
+    plural: besus
+    singular: besu
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Besu is the Schema for the besus API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BesuSpec defines the desired state of Besu
+            properties:
+              bootnodes:
+                description: Bootnodes configurations
+                items:
+                  description: BesuNodeSpec defines the desired state of BesuNode
+                  properties:
+                    bootnodes:
+                      type: integer
+                    graphql:
+                      description: GraphQl
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    httpwhitelist:
+                      description: Defaults to ["*"]
+                      type: string
+                    image:
+                      description: 'Besu Image Configuration Defaults to :   repository:
+                        hyperledger/besu   tag: latest   pullPolicy: IfNotPresent'
+                      properties:
+                        pullPolicy:
+                          description: 'Besu container image pull policy Defaults
+                            to : IfNotPresent'
+                          type: string
+                        repository:
+                          description: 'Besu container image repository Defaults to
+                            : hyperledger/besu'
+                          type: string
+                        tag:
+                          description: 'Besu container image tag Defaults to : latest'
+                          type: string
+                      required:
+                      - repository
+                      - tag
+                      type: object
+                    metrics:
+                      description: PortConfig defines port configurations of different
+                        types of ports
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    name:
+                      description: Name of the node
+                      type: string
+                    p2p:
+                      description: P2P
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    privkey:
+                      description: Private key
+                      type: string
+                    pubkey:
+                      description: Public key
+                      type: string
+                    pvcSizeLimit:
+                      description: "\tSize of the Volume Defaults to : \"1Gi\""
+                      type: string
+                    pvcStorageClass:
+                      description: "\tStorage class of the Volume Defaults to : \"standard\""
+                      type: string
+                    replicas:
+                      description: 'Number of replica pods corresponding to this node
+                        Defaults to : 1'
+                      format: int32
+                      type: integer
+                    resources:
+                      description: Requests and limits
+                      properties:
+                        cpuLimit:
+                          description: CPU Limit Defaults to 500m
+                          type: string
+                        cpuRequest:
+                          description: CPU Request Defaults to 100m
+                          type: string
+                        memLimit:
+                          description: Memory Limit Defaults to 2048Mi
+                          type: string
+                        memRequest:
+                          description: Memory Request Defaults to 1024Mi
+                          type: string
+                      required:
+                      - cpuLimit
+                      - cpuRequest
+                      - memLimit
+                      - memRequest
+                      type: object
+                    rpc:
+                      description: RPC
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    type:
+                      description: 'Type of node, takes one of the values : Bootnode,
+                        Validator, Member'
+                      type: string
+                    ws:
+                      description: WS
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                  type: object
+                type: array
+              bootnodescount:
+                description: 'Number of bootnodes in the network Defaults to : 2'
+                type: integer
+              genesis:
+                description: Besu Network Genesis Configuration
+                properties:
+                  alloc:
+                    description: Predeploy contracts when starting Besu with Ether
+                    items:
+                      description: Transaction defines alloc
+                      properties:
+                        address:
+                          description: Address
+                          type: string
+                        balance:
+                          description: Balance
+                          type: string
+                      required:
+                      - address
+                      - balance
+                      type: object
+                    type: array
+                  coinbase:
+                    description: 'The coinbase address is the account to which mining
+                      rewards are paid. Defaults to : 0x0000000000000000000000000000000000000000'
+                    type: string
+                  config:
+                    description: "GenesisConfig Defaults to : chainId: 2018   constantinoplefixblock:
+                      0   ibft2:     blockperiodseconds: 2     epochlength: 30000
+                      \trequesttimeoutseconds: 10"
+                    properties:
+                      chainId:
+                        description: 'The identifier of the private Ethereum network
+                          Defaults to : 2018'
+                        type: integer
+                      constantinoplefixblock:
+                        description: 'In private networks, the milestone block defines
+                          the protocol version for the network Defaults to : 0'
+                        type: integer
+                      ibft2:
+                        description: 'Ibft2 configurations Defaults to : blockperiodseconds
+                          : 2 epochlength : 30000 requesttimeoutseconds : 10'
+                        properties:
+                          blockperiodseconds:
+                            description: 'Minimum block time in seconds. Defaults
+                              to : 2'
+                            type: integer
+                          epochlength:
+                            description: 'Number of blocks after which to reset all
+                              votes. Defaults to : 30000'
+                            type: integer
+                          requesttimeoutseconds:
+                            description: "\tTimeout for each consensus round before
+                              a round change. Defaults to : 10"
+                            type: integer
+                        required:
+                        - blockperiodseconds
+                        - epochlength
+                        - requesttimeoutseconds
+                        type: object
+                    required:
+                    - chainId
+                    - constantinoplefixblock
+                    - ibft2
+                    type: object
+                  difficulty:
+                    description: 'Specify a fixed difficulty in private networks Defaults
+                      to : 0x1'
+                    type: string
+                  gasLimit:
+                    description: 'Set the block size limit (measured in gas) Defaults
+                      to : 0x47b760'
+                    type: string
+                  mixHash:
+                    description: 'Hash for Istanbul block identification (IBFT 2.0).
+                      Defaults to : 0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365'
+                    type: string
+                  nonce:
+                    description: 'Nonce Defaults to : 0x0'
+                    type: string
+                  timestamp:
+                    description: 'Timestamp Defaults to : 0x58ee40ba'
+                    type: string
+                required:
+                - alloc
+                - coinbase
+                - config
+                - difficulty
+                - gasLimit
+                - mixHash
+                - nonce
+                - timestamp
+                type: object
+              image:
+                description: 'Besu Image Configuration Defaults to :   repository:
+                  hyperledger/besu   tag: latest   pullPolicy: IfNotPresent'
+                properties:
+                  pullPolicy:
+                    description: 'Besu container image pull policy Defaults to : IfNotPresent'
+                    type: string
+                  repository:
+                    description: 'Besu container image repository Defaults to : hyperledger/besu'
+                    type: string
+                  tag:
+                    description: 'Besu container image tag Defaults to : latest'
+                    type: string
+                required:
+                - repository
+                - tag
+                type: object
+              members:
+                description: 'Number of members in the network Defaults to : 0'
+                format: int32
+                type: integer
+              validators:
+                description: Validators configurations
+                items:
+                  description: BesuNodeSpec defines the desired state of BesuNode
+                  properties:
+                    bootnodes:
+                      type: integer
+                    graphql:
+                      description: GraphQl
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    httpwhitelist:
+                      description: Defaults to ["*"]
+                      type: string
+                    image:
+                      description: 'Besu Image Configuration Defaults to :   repository:
+                        hyperledger/besu   tag: latest   pullPolicy: IfNotPresent'
+                      properties:
+                        pullPolicy:
+                          description: 'Besu container image pull policy Defaults
+                            to : IfNotPresent'
+                          type: string
+                        repository:
+                          description: 'Besu container image repository Defaults to
+                            : hyperledger/besu'
+                          type: string
+                        tag:
+                          description: 'Besu container image tag Defaults to : latest'
+                          type: string
+                      required:
+                      - repository
+                      - tag
+                      type: object
+                    metrics:
+                      description: PortConfig defines port configurations of different
+                        types of ports
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    name:
+                      description: Name of the node
+                      type: string
+                    p2p:
+                      description: P2P
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    privkey:
+                      description: Private key
+                      type: string
+                    pubkey:
+                      description: Public key
+                      type: string
+                    pvcSizeLimit:
+                      description: "\tSize of the Volume Defaults to : \"1Gi\""
+                      type: string
+                    pvcStorageClass:
+                      description: "\tStorage class of the Volume Defaults to : \"standard\""
+                      type: string
+                    replicas:
+                      description: 'Number of replica pods corresponding to this node
+                        Defaults to : 1'
+                      format: int32
+                      type: integer
+                    resources:
+                      description: Requests and limits
+                      properties:
+                        cpuLimit:
+                          description: CPU Limit Defaults to 500m
+                          type: string
+                        cpuRequest:
+                          description: CPU Request Defaults to 100m
+                          type: string
+                        memLimit:
+                          description: Memory Limit Defaults to 2048Mi
+                          type: string
+                        memRequest:
+                          description: Memory Request Defaults to 1024Mi
+                          type: string
+                      required:
+                      - cpuLimit
+                      - cpuRequest
+                      - memLimit
+                      - memRequest
+                      type: object
+                    rpc:
+                      description: RPC
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                    type:
+                      description: 'Type of node, takes one of the values : Bootnode,
+                        Validator, Member'
+                      type: string
+                      default: "Member"
+                    ws:
+                      description: WS
+                      properties:
+                        api:
+                          type: string
+                        authenticationEnabled:
+                          type: boolean
+                        corsOrigins:
+                          type: string
+                        discovery:
+                          type: boolean
+                        enabled:
+                          description: 'Port is enabled or not Defaults to : true'
+                          type: boolean
+                        host:
+                          description: 'Host Defaults to : "0.0.0.0"'
+                          type: string
+                        port:
+                          description: Port
+                          type: integer
+                      required:
+                      - corsOrigins
+                      - enabled
+                      - host
+                      - port
+                      type: object
+                  type: object
+                type: array
+              validatorscount:
+                description: 'Number of validators in the network Defaults to : 4'
+                type: integer
+            required:
+            - bootnodescount
+            - validatorscount
+            type: object
+          status:
+            description: BesuStatus defines the observed state of Besu
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
