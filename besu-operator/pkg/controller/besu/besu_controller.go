@@ -5,12 +5,12 @@ import (
 	"strconv"
 
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
+	"github.com/Sumaid/besu-kubernetes/besu-operator/pkg/resources"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -109,20 +109,47 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		return reconcile.Result{}, err
 	}
 	var result *reconcile.Result
-	pubkeys := make(map[string]string)
 
-	for i, bootspec := range instance.Spec.Bootnodes {
-		pubkeys["bootnode"+strconv.Itoa(i+1)+"pubkey"] = bootspec.PubKey
+	if len(instance.Spec.Bootnodes) > 0 && instance.Spec.Bootnodes[0].PubKey != "" {
+		instance.Status.HaveKeys = true
+	} else {
+		instance.Status.HaveKeys = false
 	}
 
-	result, err = r.ensureConfigMap(request, instance, r.besuConfigMap(instance, pubkeys))
+	if instance.Status.HaveKeys == false {
+		// generate keys
+		result, err = r.ensureRole(request, instance, r.besuRole(instance))
+		if result != nil {
+			return *result, err
+		}
+
+		result, err = r.ensureRoleBinding(request, instance, r.besuRoleBinding(instance))
+		if result != nil {
+			return *result, err
+		}
+
+		result, err = r.ensureServiceAccount(request, instance, resources.NewServiceAccount(instance.ObjectMeta.Name+"-sa", instance.GetNamespace()))
+		if result != nil {
+			return *result, err
+		}
+
+		result, err = r.ensureJob(request, instance, r.besuInitJob(instance))
+		if result != nil {
+			return *result, err
+		}
+		instance.Status.HaveKeys = true
+	}
+
+	// for i, bootspec := range instance.Spec.Bootnodes {
+	// 	pubkeys["bootnode"+strconv.Itoa(i+1)+"pubkey"] = bootspec.PubKey
+	// }
+
+	result, err = r.ensureConfigMap(request, instance, r.besuConfigMap(instance))
 	if result != nil {
 		return *result, err
 	}
 
-	for i, bootspec := range instance.Spec.Bootnodes {
-		bootspec.Type = "Bootnode"
-		bootspec.Bootnodes = instance.Spec.BootnodesCount
+	for i := 0; i < instance.Spec.BootnodesCount; i++ {
 		node := &hyperledgerv1alpha1.BesuNode{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BesuNode",
@@ -132,7 +159,10 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 				Name:      "bootnode" + strconv.Itoa(i+1),
 				Namespace: instance.Namespace,
 			},
-			Spec: bootspec,
+			Spec: hyperledgerv1alpha1.BesuNodeSpec{
+				Type:      "Bootnode",
+				Bootnodes: instance.Spec.BootnodesCount,
+			},
 		}
 		controllerutil.SetControllerReference(instance, node, r.scheme)
 		result, err = r.ensureBesuNode(request, instance, node)
@@ -142,9 +172,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
-	for i, validatorSpec := range instance.Spec.Validators {
-		validatorSpec.Type = "Validator"
-		validatorSpec.Bootnodes = instance.Spec.BootnodesCount
+	for i := 0; i < instance.Spec.ValidatorsCount; i++ {
 		validatorNode := &hyperledgerv1alpha1.BesuNode{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "BesuNode",
@@ -154,7 +182,10 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 				Name:      "validator" + strconv.Itoa(i+1),
 				Namespace: instance.Namespace,
 			},
-			Spec: validatorSpec,
+			Spec: hyperledgerv1alpha1.BesuNodeSpec{
+				Type:      "Validator",
+				Bootnodes: instance.Spec.BootnodesCount,
+			},
 		}
 		controllerutil.SetControllerReference(instance, validatorNode, r.scheme)
 		result, err = r.ensureBesuNode(request, instance, validatorNode)
@@ -188,124 +219,4 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
-	instance *hyperledgerv1alpha1.Besu,
-	sfs *hyperledgerv1alpha1.BesuNode,
-) (*reconcile.Result, error) {
-
-	// See if BesuNode already exists and create if it doesn't
-	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
-	}, sfs)
-	if err != nil && errors.IsNotFound(err) {
-
-		// Create the BesuNode
-		log.Info("Creating a new BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
-		err = r.client.Create(context.TODO(), sfs)
-
-		if err != nil {
-			// BesuNode failed
-			log.Error(err, "Failed to create new BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
-			return &reconcile.Result{}, err
-		} else {
-			// BesuNode was successful
-			return nil, nil
-		}
-	} else if err != nil {
-		// Error that isn't due to the BesuNode not existing
-		log.Error(err, "Failed to get BesuNode")
-		return &reconcile.Result{}, err
-	}
-
-	return nil, nil
-}
-
-func (r *ReconcileBesu) ensureConfigMap(request reconcile.Request,
-	instance *hyperledgerv1alpha1.Besu,
-	s *corev1.ConfigMap,
-) (*reconcile.Result, error) {
-	found := &corev1.ConfigMap{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
-	}, found)
-	if err != nil && errors.IsNotFound(err) {
-		// Create the ConfigMap
-		log.Info("Creating a new ConfigMap", "ConfigMap.Namespace", s.Namespace, "ConfigMap.Name", s.Name)
-		err = r.client.Create(context.TODO(), s)
-
-		if err != nil {
-			// Creation failed
-			log.Error(err, "Failed to create new ConfigMap", "ConfigMap.Namespace", s.Namespace, "ConfigMap.Name", s.Name)
-			return &reconcile.Result{}, err
-		} else {
-			// Creation was successful
-			return nil, nil
-		}
-	} else if err != nil {
-		// Error that isn't due to the ConfigMap not existing
-		log.Error(err, "Failed to get ConfigMap")
-		return &reconcile.Result{}, err
-	}
-
-	return nil, nil
-}
-
-func (r *ReconcileBesu) besuConfigMap(instance *hyperledgerv1alpha1.Besu, data map[string]string) *corev1.ConfigMap {
-	data["genesis.json"] = `
-	{
-		"config": {
-		  "chainId": 2018,
-		  "constantinoplefixblock": 0,
-		  "ibft2": {
-			"blockperiodseconds": 2,
-			"epochlength": 30000,
-			"requesttimeoutseconds": 10
-		  }
-		},
-		"nonce": "0x0",
-		"timestamp": "0x58ee40ba",
-		"gasLimit": "0x47b760",
-		"difficulty": "0x1",
-		"mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
-		"coinbase": "0x0000000000000000000000000000000000000000",
-		"alloc": {
-		  "fe3b557e8fb62b89f4916b721be55ceb828dbd73": {
-			"privateKey": "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
-			"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-			"balance": "0xad78ebc5ac6200000"
-		  },
-		  "627306090abaB3A6e1400e9345bC60c78a8BEf57": {
-			"privateKey": "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
-			"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-			"balance": "90000000000000000000000"
-		  },
-		  "f17f52151EbEF6C7334FAD080c5704D77216b732": {
-			"privateKey": "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-			"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-			"balance": "90000000000000000000000"
-		  }
-		},
-		"extraData": "0xf87ea00000000000000000000000000000000000000000000000000000000000000000f85494ca6e9704586eb1fb38194308e2192e43b1e1979c94ce2276efc33fee3c321e634eac28a9476e53b71c94f466a7174230056004d11178d2647c12740fa58b94b83820d6cf4b7e5aa67a2b57969caa5cdf6dff49808400000000c0"
-	  }`
-
-	conf := &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "besu-" + "configmap",
-			Namespace: instance.Namespace,
-			Labels: map[string]string{
-				"app": "besu-" + "configmap",
-			},
-		},
-		Data: data,
-	}
-	controllerutil.SetControllerReference(instance, conf, r.scheme)
-	return conf
 }

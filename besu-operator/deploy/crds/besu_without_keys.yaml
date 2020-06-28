@@ -1,0 +1,8 @@
+apiVersion: hyperledger.org/v1alpha1
+kind: Besu
+metadata:
+  name: besu
+spec:
+  bootnodescount: 2
+  validatorscount: 2
+  members: 1

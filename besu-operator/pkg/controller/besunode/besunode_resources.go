@@ -43,7 +43,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 	labels["app"] = instance.ObjectMeta.Name
 
 	commandInitial := "exec /opt/besu/bin/besu --genesis-file=/configs/genesis.json "
-	keyFile := "--node-private-key-file=/secrets/key "
+	keyFile := "--node-private-key-file=/secrets/private.key "
 	rpcOptions := "--rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545 --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} --rpc-http-api=ETH,NET,IBFT "
 	graphqlOptions := "--graphql-http-enabled --graphql-http-host=0.0.0.0 --graphql-http-port=8547 --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} "
 	rpcWsOptions := "--rpc-ws-enabled --rpc-ws-host=0.0.0.0 --rpc-ws-port=8546 "
@@ -99,7 +99,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 					},
 					Items: []corev1.KeyToPath{
 						{
-							Key:  "genesis.json",
+							Key:  "genesisnode",
 							Path: "genesis.json",
 						},
 					},
@@ -136,13 +136,14 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 	}
 
 	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
+		reqLogger.Info("Bootnodes key environment binder : ")
 		envVars = append(envVars, corev1.EnvVar{
 			Name: "BOOTNODE" + strconv.Itoa(i) + "_PUBKEY",
 			ValueFrom: &corev1.EnvVarSource{
-				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-					Key: "bootnode" + strconv.Itoa(i) + "pubkey",
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "enode.key",
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "besu-configmap",
+						Name: "besu-bootnode" + strconv.Itoa(i) + "-key",
 					},
 				},
 			},
@@ -188,6 +189,11 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 		})
 	}
 
+	replicas := instance.Spec.Replicas
+	if replicas == 0 {
+		replicas = 1
+	}
+
 	sfs := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -199,7 +205,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &instance.Spec.Replicas,
+			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -416,71 +422,11 @@ func (r *ReconcileBesuNode) besunodeSecret(instance *hyperledgerv1alpha1.BesuNod
 		},
 		Type: "Opaque",
 		StringData: map[string]string{
-			"key": instance.Spec.PrivKey,
+			"private.key": instance.Spec.PrivKey,
+			"public.key":  instance.Spec.PubKey,
+			"enode.key":   instance.Spec.PubKey,
 		},
 	}
 	controllerutil.SetControllerReference(instance, secr, r.scheme)
 	return secr
 }
-
-// func (r *ReconcileBesuNode) besunodeConfigMap(instance *hyperledgerv1alpha1.BesuNode) *corev1.ConfigMap {
-// 	conf := &corev1.ConfigMap{
-// 		TypeMeta: metav1.TypeMeta{
-// 			Kind:       "ConfigMap",
-// 			APIVersion: "v1",
-// 		},
-// 		ObjectMeta: metav1.ObjectMeta{
-// 			Name:      "besu-" + "configmap",
-// 			Namespace: instance.Namespace,
-// 			Labels: map[string]string{
-// 				"app": "besu-" + "configmap",
-// 			},
-// 		},
-// 		Data: map[string]string{
-// 			"bootnode1pubkey":      "5d812c3c25ff398ab416968fce9009c2be7ed70a87abc8ea30bd667ce17a9287a6341fbf6ce757bb8148436c39c71296639ea81afcc94cdf908b6e1344f26188",
-// 			"bootnode2pubkey":      "b2fba529681ea7f4619556753d40c8689b936fb1c621bc91f94d2938eb58c285d4911457ae4887b9c3bd593b2d608d319c6dc384d6acae2d043a4657029178d3",
-// 			"bootnode3pubkey":      "00b20ab6a385a2403d64637b3d93cb6d83215a08f29adb6feb4b8bf03387b734444e8b060f53150dea4b9b897823540d19918c13d6f57a5153d190b5fad7bf51",
-// 			"bootnode4pubkey":      "5fc1f8dc9f0c03087128e4bd724530e883d7de1a431269876dff9c95b8952f73c7e85ac7b49d85a2ad4950e967319482af435e07a0eab0a98d98449437787a00",
-// 			"nodesHttpCorsOrigins": "*",
-// 			"nodesHostWhitelist":   "*",
-// 			"genesis.json": `
-// 				{
-// 				"config": {
-// 				  "chainId": 2018,
-// 				  "constantinoplefixblock": 0,
-// 				  "ibft2": {
-// 					"blockperiodseconds": 2,
-// 					"epochlength": 30000,
-// 					"requesttimeoutseconds": 10
-// 				  }
-// 				},
-// 				"nonce": "0x0",
-// 				"timestamp": "0x58ee40ba",
-// 				"gasLimit": "0x47b760",
-// 				"difficulty": "0x1",
-// 				"mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
-// 				"coinbase": "0x0000000000000000000000000000000000000000",
-// 				"alloc": {
-// 				  "fe3b557e8fb62b89f4916b721be55ceb828dbd73": {
-// 					"privateKey": "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
-// 					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-// 					"balance": "0xad78ebc5ac6200000"
-// 				  },
-// 				  "627306090abaB3A6e1400e9345bC60c78a8BEf57": {
-// 					"privateKey": "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
-// 					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-// 					"balance": "90000000000000000000000"
-// 				  },
-// 				  "f17f52151EbEF6C7334FAD080c5704D77216b732": {
-// 					"privateKey": "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-// 					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-// 					"balance": "90000000000000000000000"
-// 				  }
-// 				},
-// 				"extraData": "0xf87ea00000000000000000000000000000000000000000000000000000000000000000f85494ca6e9704586eb1fb38194308e2192e43b1e1979c94ce2276efc33fee3c321e634eac28a9476e53b71c94f466a7174230056004d11178d2647c12740fa58b94b83820d6cf4b7e5aa67a2b57969caa5cdf6dff49808400000000c0"
-// 			  }`,
-// 		},
-// 	}
-// 	controllerutil.SetControllerReference(instance, conf, r.scheme)
-// 	return conf
-// }

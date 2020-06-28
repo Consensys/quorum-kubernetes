@@ -167,10 +167,11 @@ func (r *ReconcileBesuNode) Reconcile(request reconcile.Request) (reconcile.Resu
 			return *result, err
 		}
 
-		//ensure existence of secret child resources
-		result, err = r.ensureSecret(request, instance, r.besunodeSecret(instance))
-		if result != nil {
-			return *result, err
+		if instance.Spec.PrivKey != "" {
+			result, err = r.ensureSecret(request, instance, r.besunodeSecret(instance))
+			if result != nil {
+				return *result, err
+			}
 		}
 	}
 
