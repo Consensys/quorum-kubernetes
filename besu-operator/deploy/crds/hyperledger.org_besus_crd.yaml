@@ -159,6 +159,7 @@ spec:
                         Defaults to : 1'
                       format: int32
                       type: integer
+                      default: 1
                     resources:
                       description: Requests and limits
                       properties:
@@ -480,6 +481,7 @@ spec:
                         Defaults to : 1'
                       format: int32
                       type: integer
+                      default: 1
                     resources:
                       description: Requests and limits
                       properties:
@@ -569,6 +571,14 @@ spec:
             type: object
           status:
             description: BesuStatus defines the observed state of Besu
+            properties:
+              havekeys:
+                description: Field to show whether child besu node resources have
+                  keys or not
+                type: boolean
+                default: false
+            required:
+            - havekeys
             type: object
         type: object
     served: true

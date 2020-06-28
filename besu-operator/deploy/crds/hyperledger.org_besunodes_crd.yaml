@@ -152,6 +152,7 @@ spec:
                   to : 1'
                 format: int32
                 type: integer
+                default: 1
               resources:
                 description: Requests and limits
                 properties:
