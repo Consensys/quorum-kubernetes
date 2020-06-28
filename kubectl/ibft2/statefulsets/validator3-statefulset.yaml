@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: validator1-sa
+  name: validator3-sa
   namespace: besu
 
 ---
