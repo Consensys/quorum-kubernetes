@@ -56,6 +56,7 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: bootnode1-sa
       containers:
         - name: bootnode1
           image: hyperledger/besu:latest
@@ -79,30 +80,25 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-bootnodes-configmap
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-bootnodes-configmap
                   key: bootnode2PubKey
-            - name: NODES_HTTP_CORS_ORIGINS
-              valueFrom:
-                configMapKeyRef:
-                  name: besu-configmap
-                  key: nodesHttpCorsOrigins
-            - name: NODES_HOST_WHITELIST
-              valueFrom:
-                configMapKeyRef:
-                  name: besu-configmap
-                  key: nodesHostWhitelist
           volumeMounts:
             - name: key
               mountPath: /secrets
               readOnly: true
             - name: genesis-config
-              mountPath: /configs
+              mountPath: /etc/genesis
               readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
           ports:
             - containerPort: 8545
               name: json-rpc
@@ -125,20 +121,9 @@ spec:
           args:
             - |
               exec /opt/besu/bin/besu \
-              --genesis-file=/configs/genesis.json \
-              --node-private-key-file=/secrets/key \
-              --rpc-http-enabled \
-              --rpc-http-host=0.0.0.0 \
-              --rpc-http-port=8545 \
-              --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} \
-              --rpc-ws-enabled \
-              --rpc-ws-host=0.0.0.0 \
-              --rpc-ws-port=8546 \
-              --metrics-enabled=true \
-              --metrics-host=0.0.0.0 \
-              --metrics-port=9545 \
-              --host-whitelist=${NODES_HOST_WHITELIST} \
-              --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
+                --node-private-key-file=/secrets/key \
+                --config-file=/etc/besu/config.toml \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
               path: /liveness
@@ -151,7 +136,10 @@ spec:
             secretName: besu-bootnode1-key
         - name: genesis-config
           configMap:
-            name: besu-configmap
-            items:
-              - key: genesis.json
-                path: genesis.json
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"
