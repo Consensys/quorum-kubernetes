@@ -368,6 +368,42 @@ func (r *ReconcileBesu) newBesuNode(instance *hyperledgerv1alpha1.Besu,
 			Type:      nodeType,
 			Bootnodes: bootsCount,
 			Replicas:  1,
+			Image: hyperledgerv1alpha1.Image{
+				Repository: "hyperledger/besu",
+				Tag:        "1.4.6",
+				PullPolicy: "IfNotPresent",
+			},
+			Resources: hyperledgerv1alpha1.Resources{
+				MemRequest: "1024Mi",
+				CPURequest: "100m",
+				MemLimit:   "2048Mi",
+				CPULimit:   "500m",
+			},
+			P2P: hyperledgerv1alpha1.PortConfig{
+				Enabled:               true,
+				Host:                  "0.0.0.0",
+				Port:                  30303,
+				Discovery:             true,
+				AuthenticationEnabled: false,
+			},
+			RPC: hyperledgerv1alpha1.PortConfig{
+				Enabled:               true,
+				Host:                  "0.0.0.0",
+				Port:                  8545,
+				AuthenticationEnabled: false,
+			},
+			WS: hyperledgerv1alpha1.PortConfig{
+				Enabled:               false,
+				Host:                  "0.0.0.0",
+				Port:                  8546,
+				AuthenticationEnabled: false,
+			},
+			GraphQl: hyperledgerv1alpha1.PortConfig{
+				Enabled:               false,
+				Host:                  "0.0.0.0",
+				Port:                  8547,
+				AuthenticationEnabled: false,
+			},
 		},
 	}
 	controllerutil.SetControllerReference(instance, node, r.scheme)

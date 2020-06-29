@@ -180,12 +180,6 @@ func (r *ReconcileBesuNode) Reconcile(request reconcile.Request) (reconcile.Resu
 		return *result, err
 	}
 
-	//ensure existence of config map child resources
-	// result, err = r.ensureConfigMap(request, instance, r.besunodeConfigMap(instance))
-	// if result != nil {
-	// 	return *result, err
-	// }
-
 	//ensure existence of service child resources
 	result, err = r.ensureService(request, instance, r.besunodeService(instance))
 	if result != nil {

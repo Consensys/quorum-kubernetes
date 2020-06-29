@@ -28,6 +28,7 @@ const (
 	SecretsVolumeMountPath       = "/secrets"
 	GenesisConfigVolumeName      = "genesis-config"
 	GenesisConfigVolumeMountPath = "/configs"
+	PodManagementPolicy          = "OrderedReady"
 )
 
 func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.BesuNode) *appsv1.StatefulSet {
@@ -206,7 +207,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas:            &replicas,
-			PodManagementPolicy: "OrderedReady",
+			PodManagementPolicy: PodManagementPolicy,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -226,12 +227,12 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 							ImagePullPolicy: ImagePullPolicy,
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("100m"),
-									corev1.ResourceMemory: resource.MustParse("1024Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemRequest),
 								},
 								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("500m"),
-									corev1.ResourceMemory: resource.MustParse("2048Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPULimit),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemLimit),
 								},
 							},
 							Env:          envVars,
@@ -239,27 +240,27 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "json-rpc",
-									ContainerPort: int32(8545),
+									ContainerPort: int32(instance.Spec.RPC.Port),
 									Protocol:      "TCP",
 								},
 								{
 									Name:          "ws",
-									ContainerPort: int32(8546),
+									ContainerPort: int32(instance.Spec.WS.Port),
 									Protocol:      "TCP",
 								},
 								{
 									Name:          "graphql",
-									ContainerPort: int32(8547),
+									ContainerPort: int32(instance.Spec.GraphQl.Port),
 									Protocol:      "TCP",
 								},
 								{
 									Name:          "rlpx",
-									ContainerPort: int32(30303),
+									ContainerPort: int32(instance.Spec.P2P.Port),
 									Protocol:      "TCP",
 								},
 								{
 									Name:          "discovery",
-									ContainerPort: int32(30303),
+									ContainerPort: int32(instance.Spec.P2P.Port),
 									Protocol:      "UDP",
 								},
 							},
@@ -374,32 +375,32 @@ func (r *ReconcileBesuNode) besunodeService(instance *hyperledgerv1alpha1.BesuNo
 				{
 					Name:       "discovery",
 					Protocol:   "UDP",
-					Port:       int32(30303),
-					TargetPort: intstr.FromInt(int(30303)),
+					Port:       int32(instance.Spec.P2P.Port),
+					TargetPort: intstr.FromInt(int(instance.Spec.P2P.Port)),
 				},
 				{
 					Name:       "rlpx",
 					Protocol:   "TCP",
-					Port:       int32(30303),
-					TargetPort: intstr.FromInt(int(30303)),
+					Port:       int32(instance.Spec.P2P.Port),
+					TargetPort: intstr.FromInt(int(instance.Spec.P2P.Port)),
 				},
 				{
 					Name:       "json-rpc",
 					Protocol:   "TCP",
-					Port:       int32(8545),
-					TargetPort: intstr.FromInt(int(8545)),
+					Port:       int32(instance.Spec.RPC.Port),
+					TargetPort: intstr.FromInt(int(instance.Spec.RPC.Port)),
 				},
 				{
 					Name:       "ws",
 					Protocol:   "TCP",
-					Port:       int32(8546),
-					TargetPort: intstr.FromInt(int(8546)),
+					Port:       int32(instance.Spec.WS.Port),
+					TargetPort: intstr.FromInt(int(instance.Spec.WS.Port)),
 				},
 				{
 					Name:       "graphql",
 					Protocol:   "TCP",
-					Port:       int32(8547),
-					TargetPort: intstr.FromInt(int(8547)),
+					Port:       int32(instance.Spec.GraphQl.Port),
+					TargetPort: intstr.FromInt(int(instance.Spec.GraphQl.Port)),
 				},
 			},
 		},

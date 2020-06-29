@@ -138,10 +138,6 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		instance.Status.HaveKeys = true
 	}
 
-	// for i, bootspec := range instance.Spec.Bootnodes {
-	// 	pubkeys["bootnode"+strconv.Itoa(i+1)+"pubkey"] = bootspec.PubKey
-	// }
-
 	result, err = r.ensureConfigMap(request, instance, r.besuConfigMap(instance))
 	if result != nil {
 		return *result, err
