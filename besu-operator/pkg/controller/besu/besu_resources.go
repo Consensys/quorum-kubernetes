@@ -349,3 +349,27 @@ func (r *ReconcileBesu) besuCleanupJob(instance *hyperledgerv1alpha1.Besu) *batc
 	controllerutil.SetControllerReference(instance, job, r.scheme)
 	return job
 }
+
+func (r *ReconcileBesu) newBesuNode(instance *hyperledgerv1alpha1.Besu,
+	name string,
+	nodeType string,
+	bootsCount int,
+) *hyperledgerv1alpha1.BesuNode {
+	node := &hyperledgerv1alpha1.BesuNode{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "BesuNode",
+			APIVersion: "hyperledger.org/v1alpha1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: instance.Namespace,
+		},
+		Spec: hyperledgerv1alpha1.BesuNodeSpec{
+			Type:      nodeType,
+			Bootnodes: bootsCount,
+			Replicas:  1,
+		},
+	}
+	controllerutil.SetControllerReference(instance, node, r.scheme)
+	return node
+}

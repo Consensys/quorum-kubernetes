@@ -7,13 +7,11 @@ import (
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
 	"github.com/Sumaid/besu-kubernetes/besu-operator/pkg/resources"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -150,22 +148,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 
 	for i := 0; i < instance.Spec.BootnodesCount; i++ {
-		node := &hyperledgerv1alpha1.BesuNode{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "BesuNode",
-				APIVersion: "hyperledger.org/v1alpha1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "bootnode" + strconv.Itoa(i+1),
-				Namespace: instance.Namespace,
-			},
-			Spec: hyperledgerv1alpha1.BesuNodeSpec{
-				Type:      "Bootnode",
-				Bootnodes: instance.Spec.BootnodesCount,
-			},
-		}
-		controllerutil.SetControllerReference(instance, node, r.scheme)
-		result, err = r.ensureBesuNode(request, instance, node)
+		result, err = r.ensureBesuNode(request, instance, r.newBesuNode(instance, "bootnode"+strconv.Itoa(i+1), "Bootnode", instance.Spec.BootnodesCount))
 		log.Error(err, "Failed to ensure bootnode BesuNode")
 		if result != nil {
 			return *result, err
@@ -173,45 +156,16 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 
 	for i := 0; i < instance.Spec.ValidatorsCount; i++ {
-		validatorNode := &hyperledgerv1alpha1.BesuNode{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "BesuNode",
-				APIVersion: "hyperledger.org/v1alpha1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "validator" + strconv.Itoa(i+1),
-				Namespace: instance.Namespace,
-			},
-			Spec: hyperledgerv1alpha1.BesuNodeSpec{
-				Type:      "Validator",
-				Bootnodes: instance.Spec.BootnodesCount,
-			},
-		}
-		controllerutil.SetControllerReference(instance, validatorNode, r.scheme)
-		result, err = r.ensureBesuNode(request, instance, validatorNode)
+		result, err = r.ensureBesuNode(request, instance, r.newBesuNode(instance, "validator"+strconv.Itoa(i+1), "Validator", instance.Spec.BootnodesCount))
 		if result != nil {
 			log.Error(err, "Failed to ensure validator BesuNode")
 			return *result, err
 		}
 	}
 
-	MemberNode := &hyperledgerv1alpha1.BesuNode{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "BesuNode",
-			APIVersion: "hyperledger.org/v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "member",
-			Namespace: instance.Namespace,
-		},
-		Spec: hyperledgerv1alpha1.BesuNodeSpec{
-			Replicas:  instance.Spec.Members,
-			Type:      "Member",
-			Bootnodes: instance.Spec.BootnodesCount,
-		},
-	}
-	controllerutil.SetControllerReference(instance, MemberNode, r.scheme)
-	result, err = r.ensureBesuNode(request, instance, MemberNode)
+	node := r.newBesuNode(instance, "member", "Member", instance.Spec.BootnodesCount)
+	node.Spec.Replicas = instance.Spec.Members
+	result, err = r.ensureBesuNode(request, instance, node)
 	if result != nil {
 		log.Error(err, "Failed to ensure member BesuNode")
 		return *result, err
