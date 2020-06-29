@@ -35,132 +35,15 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 	reqLogger := log.WithValues("Resource : ", "Statefulset")
 	reqLogger.Info("Ensuring BesuNode Statefulset")
 
-	annotations := make(map[string]string)
-	annotations["prometheus.io/scrape"] = "true"
-	annotations["prometheus.io/port"] = "9545"
-	annotations["prometheus.io/path"] = "/metrics"
-
-	labels := make(map[string]string)
-	labels["app"] = instance.ObjectMeta.Name
-
-	commandInitial := "exec /opt/besu/bin/besu --genesis-file=/configs/genesis.json "
-	keyFile := "--node-private-key-file=/secrets/private.key "
-	rpcOptions := "--rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545 --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} --rpc-http-api=ETH,NET,IBFT "
-	graphqlOptions := "--graphql-http-enabled --graphql-http-host=0.0.0.0 --graphql-http-port=8547 --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} "
-	rpcWsOptions := "--rpc-ws-enabled --rpc-ws-host=0.0.0.0 --rpc-ws-port=8546 "
-	metricsOptions := "--metrics-enabled=true --metrics-host=0.0.0.0 --metrics-port=9545 "
-	hostWhitelist := "--host-whitelist=${NODES_HOST_WHITELIST} "
-
-	bootEnodes := ""
-	curlCommandTemplate := "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${%s}:8545/liveness "
-	curlCommand := ""
-	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
-		bootEnodes += "enode://${BOOTNODE" + strconv.Itoa(i) + "_PUBKEY}@"
-		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_HOST}:"
-		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_PORT}"
-		curlCommand += fmt.Sprintf(curlCommandTemplate, "BESU_BOOTNODE"+strconv.Itoa(i)+"_SERVICE_HOST")
-		if i < instance.Spec.Bootnodes {
-			bootEnodes += ","
-			curlCommand += "&& "
-		}
-	}
-	reqLogger.Info("curlCommand : ")
-	reqLogger.Info(curlCommand)
-
-	enodeOption := "--bootnodes=" + bootEnodes
-
-	keyString := ""
-	if instance.Spec.Type != "Member" {
-		keyString = keyFile
-	}
-	command := commandInitial + keyString + rpcOptions + graphqlOptions + rpcWsOptions + metricsOptions + hostWhitelist + enodeOption
-
 	initContainers := []corev1.Container{}
 	if instance.Spec.Type != "Bootnode" {
-		initContainers = []corev1.Container{
-			corev1.Container{
-				Name:  "init-bootnode",
-				Image: "byrnedo/alpine-curl",
-				Command: []string{
-					"sh",
-					"-c",
-					curlCommand,
-				},
-			},
-		}
+		initContainers = r.getInitContainer(instance)
 	}
 
-	volumes := []corev1.Volume{
-		corev1.Volume{
-			Name: "genesis-config",
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "besu-configmap",
-					},
-					Items: []corev1.KeyToPath{
-						{
-							Key:  "genesisnode",
-							Path: "genesis.json",
-						},
-					},
-				},
-			},
-		},
-	}
-
-	volumeMounts := []corev1.VolumeMount{
-		corev1.VolumeMount{
-			Name:      GenesisConfigVolumeName,
-			MountPath: GenesisConfigVolumeMountPath,
-			ReadOnly:  VolumesReadOnly,
-		},
-	}
-
-	envVars := []corev1.EnvVar{
-		{
-			Name: "POD_IP",
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "status.podIP",
-				},
-			},
-		},
-		{
-			Name:  "NODES_HTTP_CORS_ORIGINS",
-			Value: "*",
-		},
-		{
-			Name:  "NODES_HOST_WHITELIST",
-			Value: "*",
-		},
-	}
-
-	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
-		reqLogger.Info("Bootnodes key environment binder : ")
-		envVars = append(envVars, corev1.EnvVar{
-			Name: "BOOTNODE" + strconv.Itoa(i) + "_PUBKEY",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					Key: "enode.key",
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "besu-bootnode" + strconv.Itoa(i) + "-key",
-					},
-				},
-			},
-		})
-	}
-
-	readinessProbe := &corev1.Probe{
-		Handler: corev1.Handler{
-			HTTPGet: &corev1.HTTPGetAction{
-				Path: "/readiness",
-				Port: intstr.FromInt(8545),
-			},
-		},
-		InitialDelaySeconds: int32(50),
-		PeriodSeconds:       int32(30),
-	}
+	volumes := r.getVolumes(instance)
+	volumeMounts := r.getVolumeMounts(instance)
+	envVars := r.getEnvVars(instance)
+	readinessProbe := r.getReadinessProbe(instance)
 
 	if instance.Spec.Type != "Member" {
 		envVars = append(envVars, corev1.EnvVar{
@@ -190,11 +73,6 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 		})
 	}
 
-	replicas := instance.Spec.Replicas
-	if replicas == 0 {
-		replicas = 1
-	}
-
 	sfs := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -203,19 +81,19 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      instance.ObjectMeta.Name,
 			Namespace: instance.Namespace,
-			Labels:    labels,
+			Labels:    r.getLabels(instance),
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas:            &replicas,
+			Replicas:            &instance.Spec.Replicas,
 			PodManagementPolicy: PodManagementPolicy,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: r.getLabels(instance),
 			},
 			ServiceName: "besu-" + instance.ObjectMeta.Name,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      labels,
-					Annotations: annotations,
+					Labels:      r.getLabels(instance),
+					Annotations: r.getPrometheusAnnotations(instance),
 				},
 				Spec: corev1.PodSpec{
 					ServiceAccountName: instance.ObjectMeta.Name + "-sa",
@@ -269,7 +147,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 								"-c",
 							},
 							Args: []string{
-								command,
+								r.getBesuCommand(instance),
 							},
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
@@ -355,9 +233,6 @@ func (r *ReconcileBesuNode) besunodeRoleBinding(instance *hyperledgerv1alpha1.Be
 
 func (r *ReconcileBesuNode) besunodeService(instance *hyperledgerv1alpha1.BesuNode) *corev1.Service {
 
-	labels := make(map[string]string)
-	labels["app"] = instance.ObjectMeta.Name
-
 	serv := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -366,11 +241,11 @@ func (r *ReconcileBesuNode) besunodeService(instance *hyperledgerv1alpha1.BesuNo
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "besu-" + instance.ObjectMeta.Name,
 			Namespace: instance.Namespace,
-			Labels:    labels,
+			Labels:    r.getLabels(instance),
 		},
 		Spec: corev1.ServiceSpec{
 			Type:     "ClusterIP",
-			Selector: labels,
+			Selector: r.getLabels(instance),
 			Ports: []corev1.ServicePort{
 				{
 					Name:       "discovery",
@@ -431,4 +306,162 @@ func (r *ReconcileBesuNode) besunodeSecret(instance *hyperledgerv1alpha1.BesuNod
 	}
 	controllerutil.SetControllerReference(instance, secr, r.scheme)
 	return secr
+}
+
+func (r *ReconcileBesuNode) getBesuCommand(instance *hyperledgerv1alpha1.BesuNode) string {
+	commandInitial := "exec /opt/besu/bin/besu "
+	genesisFile := fmt.Sprintf("--genesis-file=%s ", "/configs/genesis.json")
+	keyFile := fmt.Sprintf("--node-private-key-file=%s ", "/secrets/private.key")
+	rpcOptions := fmt.Sprintf("--rpc-http-enabled=%t --rpc-http-host=%s --rpc-http-port=%d --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} --rpc-http-api=ETH,NET,IBFT ",
+		instance.Spec.RPC.Enabled, instance.Spec.RPC.Host, instance.Spec.RPC.Port)
+	graphqlOptions := fmt.Sprintf("--graphql-http-enabled=%t --graphql-http-host=%s --graphql-http-port=%d --graphql-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} ",
+		instance.Spec.GraphQl.Enabled, instance.Spec.GraphQl.Host, instance.Spec.GraphQl.Port)
+	rpcWsOptions := fmt.Sprintf("--rpc-ws-enabled=%t --rpc-ws-host=%s --rpc-ws-port=%d ",
+		instance.Spec.WS.Enabled, instance.Spec.WS.Host, instance.Spec.WS.Port)
+	metricsOptions := fmt.Sprintf("--metrics-enabled=%t --metrics-host=%s --metrics-port=%d ",
+		instance.Spec.Metrics.Enabled, instance.Spec.Metrics.Host, instance.Spec.Metrics.Port)
+	hostWhitelist := "--host-whitelist=${NODES_HOST_WHITELIST} "
+
+	bootEnodes := ""
+	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
+		bootEnodes += "enode://${BOOTNODE" + strconv.Itoa(i) + "_PUBKEY}@"
+		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_HOST}:"
+		bootEnodes += "${BESU_BOOTNODE" + strconv.Itoa(i) + "_SERVICE_PORT}"
+		if i < instance.Spec.Bootnodes {
+			bootEnodes += ","
+		}
+	}
+	enodeOption := "--bootnodes=" + bootEnodes
+
+	keyString := ""
+	if instance.Spec.Type != "Member" {
+		keyString = keyFile
+	}
+	command := commandInitial + genesisFile + keyString + rpcOptions + graphqlOptions + rpcWsOptions + metricsOptions + hostWhitelist + enodeOption
+	return command
+}
+
+func (r *ReconcileBesuNode) getCurlCommand(instance *hyperledgerv1alpha1.BesuNode) string {
+	curlCommandTemplate := "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${%s}:8545/liveness "
+	curlCommand := ""
+	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
+		curlCommand += fmt.Sprintf(curlCommandTemplate, "BESU_BOOTNODE"+strconv.Itoa(i)+"_SERVICE_HOST")
+		if i < instance.Spec.Bootnodes {
+			curlCommand += "&& "
+		}
+	}
+	return curlCommand
+}
+
+func (r *ReconcileBesuNode) getPrometheusAnnotations(instance *hyperledgerv1alpha1.BesuNode) map[string]string {
+	annotations := make(map[string]string)
+	annotations["prometheus.io/scrape"] = "true"
+	annotations["prometheus.io/port"] = "9545"
+	annotations["prometheus.io/path"] = "/metrics"
+	return annotations
+}
+
+func (r *ReconcileBesuNode) getEnvVars(instance *hyperledgerv1alpha1.BesuNode) []corev1.EnvVar {
+	envVars := []corev1.EnvVar{
+		{
+			Name: "POD_IP",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.podIP",
+				},
+			},
+		},
+		{
+			Name:  "NODES_HTTP_CORS_ORIGINS",
+			Value: "*",
+		},
+		{
+			Name:  "NODES_HOST_WHITELIST",
+			Value: "*",
+		},
+	}
+
+	for i := 1; i < instance.Spec.Bootnodes+1; i++ {
+		envVars = append(envVars, corev1.EnvVar{
+			Name: "BOOTNODE" + strconv.Itoa(i) + "_PUBKEY",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "enode.key",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "besu-bootnode" + strconv.Itoa(i) + "-key",
+					},
+				},
+			},
+		})
+	}
+
+	return envVars
+}
+
+func (r *ReconcileBesuNode) getInitContainer(instance *hyperledgerv1alpha1.BesuNode) []corev1.Container {
+	initContainers := []corev1.Container{
+		corev1.Container{
+			Name:  "init-bootnode",
+			Image: "byrnedo/alpine-curl",
+			Command: []string{
+				"sh",
+				"-c",
+				r.getCurlCommand(instance),
+			},
+		},
+	}
+	return initContainers
+}
+
+func (r *ReconcileBesuNode) getVolumes(instance *hyperledgerv1alpha1.BesuNode) []corev1.Volume {
+	volumes := []corev1.Volume{
+		corev1.Volume{
+			Name: "genesis-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "besu-configmap",
+					},
+					Items: []corev1.KeyToPath{
+						{
+							Key:  "genesisnode",
+							Path: "genesis.json",
+						},
+					},
+				},
+			},
+		},
+	}
+	return volumes
+}
+
+func (r *ReconcileBesuNode) getVolumeMounts(instance *hyperledgerv1alpha1.BesuNode) []corev1.VolumeMount {
+	volumeMounts := []corev1.VolumeMount{
+		corev1.VolumeMount{
+			Name:      GenesisConfigVolumeName,
+			MountPath: GenesisConfigVolumeMountPath,
+			ReadOnly:  VolumesReadOnly,
+		},
+	}
+	return volumeMounts
+}
+
+func (r *ReconcileBesuNode) getReadinessProbe(instance *hyperledgerv1alpha1.BesuNode) *corev1.Probe {
+	readinessProbe := &corev1.Probe{
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: "/readiness",
+				Port: intstr.FromInt(8545),
+			},
+		},
+		InitialDelaySeconds: int32(50),
+		PeriodSeconds:       int32(30),
+	}
+	return readinessProbe
+}
+
+func (r *ReconcileBesuNode) getLabels(instance *hyperledgerv1alpha1.BesuNode) map[string]string {
+	labels := make(map[string]string)
+	labels["app"] = instance.ObjectMeta.Name
+	return labels
 }
