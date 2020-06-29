@@ -1,7 +1,7 @@
 ---
 image:
-  repository: pegasyseng/k8s-helper
-  tag: v1.18.4
+  repository: hyperledger/besu
+  tag: latest
   pullPolicy: IfNotPresent
 
 # the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)

@@ -73,6 +73,8 @@ spec:
       containers:
         - name: generate-genesis
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
             - name: raw-config
@@ -84,6 +86,8 @@ spec:
             - -c
           args:
             - |
+              apt-get update && apt-get install -y curl
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Creating config ..."
               /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
               echo "Creating genesis configmap in k8s ..."
@@ -153,12 +157,16 @@ spec:
       containers:
         - name: delete-genesis
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash
             - -c
           args:
             - |
+              apt-get update && apt-get install -y curl
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting genesis configmap in k8s ..."
               ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
               echo "Deleting validator secrets in k8s ..."
