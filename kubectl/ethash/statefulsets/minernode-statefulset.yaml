@@ -43,24 +43,24 @@ spec:
             - name: BOOTNODE1_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-bootnodes-configmap
                   key: bootnode1PubKey
             - name: BOOTNODE2_PUBKEY
               valueFrom:
                 configMapKeyRef:
-                  name: besu-configmap
+                  name: besu-bootnodes-configmap
                   key: bootnode2PubKey
             - name: MINER_COINBASE
               value: "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73"
-            - name: NODES_HOST_WHITELIST
-              valueFrom:
-                configMapKeyRef:
-                  name: besu-configmap
-                  key: nodesHostWhitelist
           volumeMounts:
             - name: genesis-config
-              mountPath: /configs
+              mountPath: /etc/genesis
               readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
           ports:
             - containerPort: 8545
               name: json-rpc
@@ -83,13 +83,9 @@ spec:
           args:
             - |
               exec /opt/besu/bin/besu \
-                --genesis-file=/configs/genesis.json \
+                --config-file=/etc/besu/config.toml \
                 --miner-enabled \
                 --miner-coinbase=${MINER_COINBASE} \
-                --metrics-enabled=true \
-                --metrics-host=0.0.0.0 \
-                --metrics-port=9545 \
-                --host-whitelist=${NODES_HOST_WHITELIST} \
                 --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
@@ -106,7 +102,10 @@ spec:
       volumes:
         - name: genesis-config
           configMap:
-            name: besu-configmap
-            items:
-              - key: genesis.json
-                path: genesis.json
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

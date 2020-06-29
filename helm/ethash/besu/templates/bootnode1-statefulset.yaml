@@ -67,6 +67,7 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: {{ $bootnodeNumber }}-sa
       containers:
       - name: {{ $bootnodeNumber }}
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}

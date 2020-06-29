@@ -67,6 +67,7 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+      serviceAccountName: {{ $bootnodeNumber }}-sa
       initContainers:
         - name: init-bootnode
           image: pegasyseng/k8s-helper:v1.18.4
