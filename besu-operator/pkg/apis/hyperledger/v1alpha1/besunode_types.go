@@ -15,12 +15,14 @@ type BesuNodeSpec struct {
 	Name string `json:"name"`
 
 	// Type of node, takes one of the values : Bootnode, Validator, Member
+	// +kubebuilder:validation:Enum:["Member", "Bootnode", "Validator"]
+	// +kubebuider:default:"Member"
 	// +optional
 	Type string `json:"type"`
 
 	// Number of replica pods corresponding to this node
-	// Defaults to : 1
 	// +optional
+	// +kubebuider:default:1
 	Replicas int32 `json:"replicas"`
 
 	// Public key
@@ -32,25 +34,23 @@ type BesuNodeSpec struct {
 	PrivKey string `json:"privkey"`
 
 	// Besu Image Configuration
-	// Defaults to :
-	//   repository: hyperledger/besu
-	//   tag: latest
-	//   pullPolicy: IfNotPresent
+	// +kubebuider:default:{repository: hyperledger/besu; tag: 1.4.6; pullPolicy: IfNotPresent}
 	// +optional
 	Image Image `json:"image"`
 
 	// 	Size of the Volume
-	// Defaults to : "1Gi"
+	// +kubebuider:default:1Gi
 	// +optional
 	PVCSizeLimit string `json:"pvcSizeLimit"`
 
 	// 	Storage class of the Volume
-	// Defaults to : "standard"
+	// +kubebuider:default:standard
 	// +optional
 	PVCStorageClass string `json:"pvcStorageClass"`
 
 	// Requests and limits
 	// +optional
+	// +kubebuider:default:{memRequest: 1024Mi; cpuRequest: 100m; memLimit: 2048Mi; cpuLimit: 500m}
 	Resources Resources `json:"resources"`
 
 	// P2P
@@ -83,11 +83,11 @@ type BesuNodeSpec struct {
 // PortConfig defines port configurations of different types of ports
 type PortConfig struct {
 	// Port is enabled or not
-	// Defaults to : true
+	// +kubebuider:default:true
 	Enabled bool `json:"enabled"`
 
 	// Host
-	// Defaults to : "0.0.0.0"
+	// +kubebuider:default:0.0.0.0
 	Host string `json:"host"`
 
 	// Port
@@ -109,19 +109,19 @@ type PortConfig struct {
 type Resources struct {
 
 	// Memory Request
-	// Defaults to 1024Mi
+	// +kubebuider:default:1024Mi
 	MemRequest string `json:"memRequest"`
 
 	// CPU Request
-	// Defaults to 100m
+	// +kubebuider:default:100m
 	CPURequest string `json:"cpuRequest"`
 
 	// Memory Limit
-	// Defaults to 2048Mi
+	// +kubebuider:default:2048Mi
 	MemLimit string `json:"memLimit"`
 
 	// CPU Limit
-	// Defaults to 500m
+	// +kubebuider:default:500m
 	CPULimit string `json:"cpuLimit"`
 }
 

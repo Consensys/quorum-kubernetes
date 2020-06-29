@@ -45,10 +45,10 @@ spec:
                   discovery:
                     type: boolean
                   enabled:
-                    description: 'Port is enabled or not Defaults to : true'
+                    description: Port is enabled or not
                     type: boolean
                   host:
-                    description: 'Host Defaults to : "0.0.0.0"'
+                    description: Host
                     type: string
                   port:
                     description: Port
@@ -63,17 +63,16 @@ spec:
                 description: Defaults to ["*"]
                 type: string
               image:
-                description: 'Besu Image Configuration Defaults to :   repository:
-                  hyperledger/besu   tag: latest   pullPolicy: IfNotPresent'
+                description: Besu Image Configuration
                 properties:
                   pullPolicy:
-                    description: 'Besu container image pull policy Defaults to : IfNotPresent'
+                    description: Besu container image pull policy
                     type: string
                   repository:
-                    description: 'Besu container image repository Defaults to : hyperledger/besu'
+                    description: Besu container image repository
                     type: string
                   tag:
-                    description: 'Besu container image tag Defaults to : latest'
+                    description: Besu container image tag
                     type: string
                 required:
                 - repository
@@ -92,10 +91,10 @@ spec:
                   discovery:
                     type: boolean
                   enabled:
-                    description: 'Port is enabled or not Defaults to : true'
+                    description: Port is enabled or not
                     type: boolean
                   host:
-                    description: 'Host Defaults to : "0.0.0.0"'
+                    description: Host
                     type: string
                   port:
                     description: Port
@@ -121,10 +120,10 @@ spec:
                   discovery:
                     type: boolean
                   enabled:
-                    description: 'Port is enabled or not Defaults to : true'
+                    description: Port is enabled or not
                     type: boolean
                   host:
-                    description: 'Host Defaults to : "0.0.0.0"'
+                    description: Host
                     type: string
                   port:
                     description: Port
@@ -142,31 +141,29 @@ spec:
                 description: Public key
                 type: string
               pvcSizeLimit:
-                description: "\tSize of the Volume Defaults to : \"1Gi\""
+                description: "\tSize of the Volume"
                 type: string
               pvcStorageClass:
-                description: "\tStorage class of the Volume Defaults to : \"standard\""
+                description: "\tStorage class of the Volume"
                 type: string
               replicas:
-                description: 'Number of replica pods corresponding to this node Defaults
-                  to : 1'
+                description: Number of replica pods corresponding to this node
                 format: int32
                 type: integer
-                default: 1
               resources:
                 description: Requests and limits
                 properties:
                   cpuLimit:
-                    description: CPU Limit Defaults to 500m
+                    description: CPU Limit
                     type: string
                   cpuRequest:
-                    description: CPU Request Defaults to 100m
+                    description: CPU Request
                     type: string
                   memLimit:
-                    description: Memory Limit Defaults to 2048Mi
+                    description: Memory Limit
                     type: string
                   memRequest:
-                    description: Memory Request Defaults to 1024Mi
+                    description: Memory Request
                     type: string
                 required:
                 - cpuLimit
@@ -186,10 +183,10 @@ spec:
                   discovery:
                     type: boolean
                   enabled:
-                    description: 'Port is enabled or not Defaults to : true'
+                    description: Port is enabled or not
                     type: boolean
                   host:
-                    description: 'Host Defaults to : "0.0.0.0"'
+                    description: Host
                     type: string
                   port:
                     description: Port
@@ -216,10 +213,10 @@ spec:
                   discovery:
                     type: boolean
                   enabled:
-                    description: 'Port is enabled or not Defaults to : true'
+                    description: Port is enabled or not
                     type: boolean
                   host:
-                    description: 'Host Defaults to : "0.0.0.0"'
+                    description: Host
                     type: string
                   port:
                     description: Port
