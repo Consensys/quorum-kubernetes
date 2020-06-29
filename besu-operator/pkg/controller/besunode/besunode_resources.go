@@ -205,7 +205,8 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 			Labels:    labels,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &replicas,
+			Replicas:            &replicas,
+			PodManagementPolicy: "OrderedReady",
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
