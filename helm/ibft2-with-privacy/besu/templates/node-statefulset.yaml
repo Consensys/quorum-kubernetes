@@ -74,6 +74,8 @@ spec:
               value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
             - name: VALIDATOR2_SERVICE_HOST
               value: "$({{ template "besu.upperfullname" . }}_VALIDATOR2_SERVICE_HOST)"
+            - name: NODE_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_NODE_SERVICE_HOST)"
           volumeMounts:
             - name: genesis-config
               mountPath: /etc/genesis
@@ -109,6 +111,7 @@ spec:
             - |
               exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
+                --p2p-host=${NODE_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-node \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

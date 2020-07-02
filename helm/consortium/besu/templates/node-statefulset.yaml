@@ -33,9 +33,6 @@ spec:
       initContainers:
         - name: init-bootnode
           image: pegasyseng/k8s-helper:v1.18.4
-          env:
-            - name: VALIDATOR1_SERVICE_HOST
-              value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
           volumeMounts:
             - name: bootnodes-init
               mountPath: /scripts/bootnodes-init.sh
@@ -80,6 +77,10 @@ spec:
               value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
             - name: VALIDATOR2_SERVICE_HOST
               value: "$({{ template "besu.upperfullname" . }}_VALIDATOR2_SERVICE_HOST)"
+            - name: P2P_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_NODE_SERVICE_HOST)"
+            - name: NAT_SERVICE_HOST
+              value: "{{ template "besu.fullname" . }}-node"
           volumeMounts:
             - name: genesis-config
               mountPath: /etc/genesis
