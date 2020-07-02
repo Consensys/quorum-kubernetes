@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: node1privacy
-          image: hyperledger/besu:latest
+          image: hyperledger/besu:1.5.1-SNAPSHOT
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -89,6 +89,7 @@ spec:
                 --privacy-enabled=true \
                 --privacy-url=http://${BESU_ORION1_SERVICE_HOST}:8888 \
                 --privacy-public-key-file=/configs/orion/orion.pub \
+                --p2p-host=${BESU_NODE1PRIVACY_SERVICE_HOST} --Xnat-kube-service-name=besu-node1privacy \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

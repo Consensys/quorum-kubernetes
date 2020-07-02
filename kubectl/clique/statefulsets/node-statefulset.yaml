@@ -30,7 +30,7 @@ spec:
             - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: node
-          image: hyperledger/besu:latest
+          image: hyperledger/besu:1.5.1-SNAPSHOT
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -83,6 +83,7 @@ spec:
             - |
               exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
+                --p2p-host=${BESU_NODE_SERVICE_HOST} --Xnat-kube-service-name=besu-node \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:
