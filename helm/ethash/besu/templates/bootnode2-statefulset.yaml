@@ -18,6 +18,9 @@ rules:
     resources: ["secrets"]
     resourceNames: [ {{ template "besu.fullname" . }}-{{ $bootnodeNumber }}-key ]
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
 
 ---
 

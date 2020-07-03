@@ -13,11 +13,13 @@ metadata:
   name: {{ $validatorNumber }}-key-read-role
   namespace: {{ .Values.namespace }}
 rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    resourceNames: [ {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key ]
-    verbs: ["get"]
-
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -140,6 +142,7 @@ spec:
             exec /opt/besu/bin/besu \
               --node-private-key-file=/secrets/key \
               --config-file=/etc/besu/config.toml \
+              --p2p-host=${VALIDATOR1_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $validatorNumber }} \
               --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
         livenessProbe:
           httpGet:

@@ -86,6 +86,8 @@ spec:
             # this allows us to pass in the orion service at runtime and make the script generic
             - name: BESU_ORION_SERVICE_HOST
               value: "$(ORION1_SERVICE_HOST)"
+            - name: NAT_SERVICE_HOST
+              value: "{{ template "besu.fullname" . }}-{{ $nodeNumber }}privacy"
           volumeMounts:
             - name: orion-pubkey
               mountPath: /configs/orion

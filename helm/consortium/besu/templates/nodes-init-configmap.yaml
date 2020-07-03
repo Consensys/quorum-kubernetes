@@ -13,4 +13,4 @@ metadata:
 data:
   nodes-init.sh: |
     #!/bin/bash
-    source /bootnodes/service_data.sh && /opt/besu/bin/besu --config-file=/etc/besu/config.toml --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
+    source /bootnodes/service_data.sh && /opt/besu/bin/besu --config-file=/etc/besu/config.toml --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303 --Xnat-kube-service-name=${NAT_SERVICE_HOST}

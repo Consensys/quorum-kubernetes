@@ -5,7 +5,7 @@ imagePullPolicy: IfNotPresent
 image:
   besu:
     repository: hyperledger/besu
-    tag: latest
+    tag: 1.5.1-SNAPSHOT
   orion:
     repository: pegasyseng/orion
     tag: develop
