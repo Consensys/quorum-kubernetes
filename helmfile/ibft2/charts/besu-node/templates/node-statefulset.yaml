@@ -153,7 +153,7 @@ spec:
             exec /opt/besu/bin/besu \
               --node-private-key-file=/secrets/private.key \
               --config-file=/etc/besu/config.toml \
-              --Xnat-kube-service-name={{ template "besu-node.name" . }} \
+              --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
 {{- if not .Values.bootnode.enabled }}
               --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BOOTNODE_1_BESU_NODE_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BOOTNODE_2_BESU_NODE_SERVICE_HOST}:30303
 {{ else }}

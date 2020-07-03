@@ -133,7 +133,7 @@ spec:
               exec /opt/besu/bin/besu \
                 --node-private-key-file=/secrets/key \
                 --config-file=/etc/besu/config.toml \
-                --p2p-host=${BESU_VALIDATOR2_SERVICE_HOST} --Xnat-kube-service-name=besu-validator2 \
+                --Xnat-kube-service-name=besu-validator2 \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

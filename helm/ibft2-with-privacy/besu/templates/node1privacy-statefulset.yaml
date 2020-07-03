@@ -120,7 +120,7 @@ spec:
                 --privacy-enabled=true \
                 --privacy-url=http://${ORION1_SERVICE_HOST}:8888 \
                 --privacy-public-key-file=/configs/orion/orion.pub \
-                --p2p-host=${NODE_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $nodeNumber }}privacy \
+                --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $nodeNumber }}privacy \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

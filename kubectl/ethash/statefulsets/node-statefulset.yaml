@@ -86,7 +86,7 @@ spec:
             - |
               exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
-                --p2p-host=${BESU_NODE_SERVICE_HOST} --Xnat-kube-service-name=besu-node \
+                --Xnat-kube-service-name=besu-node \
                 --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

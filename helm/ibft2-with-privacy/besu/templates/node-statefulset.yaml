@@ -111,7 +111,7 @@ spec:
             - |
               exec /opt/besu/bin/besu \
                 --config-file=/etc/besu/config.toml \
-                --p2p-host=${NODE_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-node \
+                --Xnat-kube-service-name={{ template "besu.fullname" . }}-node \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
           livenessProbe:
             httpGet:

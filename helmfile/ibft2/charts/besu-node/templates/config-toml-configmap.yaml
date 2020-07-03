@@ -44,7 +44,7 @@ data:
     # P2P network
     p2p-enabled={{ .Values.node.p2p.enabled }}
     discovery-enabled={{ .Values.node.p2p.discovery }}
-    p2p-host={{ .Values.node.p2p.host | quote }}
+    #p2p-host={{ .Values.node.p2p.host | quote }}
     p2p-port={{ .Values.node.p2p.port }}
     max-peers={{ .Values.node.p2p.maxPeers }}
     {{ end }}

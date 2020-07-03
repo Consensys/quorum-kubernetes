@@ -143,7 +143,7 @@ spec:
             exec /opt/besu/bin/besu \
               --node-private-key-file=/secrets/key \
               --config-file=/etc/besu/config.toml \
-              --p2p-host=${BOOTNODE1_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $bootnodeNumber }} \
+              --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $bootnodeNumber }} \
               --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BOOTNODE2_SERVICE_HOST}:30303
         livenessProbe:
           httpGet:
