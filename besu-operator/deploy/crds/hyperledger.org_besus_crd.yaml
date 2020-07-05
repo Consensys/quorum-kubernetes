@@ -286,15 +286,7 @@ spec:
                             description: "\tTimeout for each consensus round before
                               a round change."
                             type: integer
-                        required:
-                        - blockperiodseconds
-                        - epochlength
-                        - requesttimeoutseconds
                         type: object
-                    required:
-                    - chainId
-                    - constantinoplefixblock
-                    - ibft2
                     type: object
                   difficulty:
                     description: Specify a fixed difficulty in private networks
@@ -311,15 +303,6 @@ spec:
                   timestamp:
                     description: Timestamp
                     type: string
-                required:
-                - alloc
-                - coinbase
-                - config
-                - difficulty
-                - gasLimit
-                - mixHash
-                - nonce
-                - timestamp
                 type: object
               image:
                 description: Besu Image Configuration
