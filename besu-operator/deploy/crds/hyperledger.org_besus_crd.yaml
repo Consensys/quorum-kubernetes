@@ -237,72 +237,91 @@ spec:
               bootnodescount:
                 description: Number of bootnodes in the network
                 type: integer
-              genesis:
+              genesis.json:
                 description: Besu Network Genesis Configuration
                 properties:
-                  alloc:
-                    description: Predeploy contracts when starting Besu with Ether
-                    items:
-                      description: Transaction defines alloc
-                      properties:
-                        address:
-                          description: Address
-                          type: string
-                        balance:
-                          description: Balance
-                          type: string
-                      required:
-                      - address
-                      - balance
-                      type: object
-                    type: array
-                  coinbase:
-                    description: The coinbase address is the account to which mining
-                      rewards are paid.
-                    type: string
-                  config:
-                    description: "GenesisConfig Defaults to : chainId: 2018   constantinoplefixblock:
-                      0   ibft2:     blockperiodseconds: 2     epochlength: 30000
-                      \trequesttimeoutseconds: 10"
+                  blockchain:
+                    description: Blockchain defines number of network nodes
                     properties:
-                      chainId:
-                        description: The identifier of the private Ethereum network
-                        type: integer
-                      constantinoplefixblock:
-                        description: In private networks; the milestone block defines
-                          the protocol version for the network
-                        type: integer
-                      ibft2:
-                        description: Ibft2 configurations
+                      nodes:
+                        description: Nodes defines number of nodes in the network
                         properties:
-                          blockperiodseconds:
-                            description: Minimum block time in seconds.
+                          count:
                             type: integer
-                          epochlength:
-                            description: Number of blocks after which to reset all
-                              votes.
-                            type: integer
-                          requesttimeoutseconds:
-                            description: "\tTimeout for each consensus round before
-                              a round change."
-                            type: integer
+                          generate:
+                            type: boolean
                         type: object
                     type: object
-                  difficulty:
-                    description: Specify a fixed difficulty in private networks
-                    type: string
-                  gasLimit:
-                    description: Set the block size limit (measured in gas)
-                    type: string
-                  mixHash:
-                    description: Hash for Istanbul block identification (IBFT 2.0).
-                    type: string
-                  nonce:
-                    description: Nonce
-                    type: string
-                  timestamp:
-                    description: Timestamp
-                    type: string
+                  genesis:
+                    description: Genesis defines the desired configurations of genesis
+                    properties:
+                      alloc:
+                        additionalProperties:
+                          description: Transaction defines alloc
+                          properties:
+                            balance:
+                              description: Balance
+                              type: string
+                            comment:
+                              description: Comment
+                              type: string
+                            privateKey:
+                              description: privateKey
+                              type: string
+                          type: object
+                        description: Predeploy contracts when starting Besu with Ether
+                        type: object
+                      coinbase:
+                        description: The coinbase address is the account to which
+                          mining rewards are paid.
+                        type: string
+                      config:
+                        description: "GenesisConfig Defaults to : chainId: 2018   constantinoplefixblock:
+                          0   ibft2:     blockperiodseconds: 2     epochlength: 30000
+                          \t   requesttimeoutseconds: 10"
+                        properties:
+                          chainId:
+                            description: The identifier of the private Ethereum network
+                            type: integer
+                          constantinoplefixblock:
+                            description: In private networks; the milestone block
+                              defines the protocol version for the network
+                            type: integer
+                          ibft2:
+                            description: Ibft2 configurations
+                            properties:
+                              blockperiodseconds:
+                                description: Minimum block time in seconds.
+                                type: integer
+                              epochlength:
+                                description: Number of blocks after which to reset
+                                  all votes.
+                                type: integer
+                              requesttimeoutseconds:
+                                description: "\tTimeout for each consensus round before
+                                  a round change."
+                                type: integer
+                            type: object
+                        type: object
+                      difficulty:
+                        description: Specify a fixed difficulty in private networks
+                        type: string
+                      extraData:
+                        type: string
+                      gasLimit:
+                        description: Set the block size limit (measured in gas)
+                        type: string
+                      mixHash:
+                        description: Hash for Istanbul block identification (IBFT
+                          2.0).
+                        type: string
+                      nonce:
+                        description: Nonce
+                        type: string
+                      timestamp:
+                        description: Timestamp
+                        type: string
+                    type: object
                 type: object
               image:
                 description: Besu Image Configuration

@@ -38,7 +38,8 @@ type BesuSpec struct {
 
 	// Besu Network Genesis Configuration
 	// +optional
-	Genesis Genesis `json:"genesis,omitempty"`
+	// +kubebuider:default: {genesis: {config: {chainId: 2018; constantinoplefixblock: 0; ibft2: {blockperiodseconds: 5; epochlength: 30000; requesttimeoutseconds: 10}}; nonce: 0x0; timestamp: 0x58ee40ba; extraData: 0xf83ea00000000000000000000000000000000000000000000000000000000000000000d5949811ebc35d7b06b3fa8dc5809a1f9c52751e1deb808400000000c0; gasLimit: 0x1fffffffffffff; difficulty: 0x1; mixHash: 0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365; coinbase: 0x0000000000000000000000000000000000000000; alloc: {9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb: {balance: 0xad78ebc5ac6200000}}}}
+	GenesisJSON GenesisJSON `json:"genesis.json,omitempty"`
 }
 
 // Image defines the desired Besu Image configurations
@@ -58,6 +59,14 @@ type Image struct {
 	PullPolicy string `json:"pullPolicy"`
 }
 
+// GenesisJSON defines the genesis.json file
+type GenesisJSON struct {
+	// +optional
+	Genesis Genesis `json:"genesis,omitempty"`
+	// +optional
+	Blockchain Blockchain `json:"blockchain,omitempty"`
+}
+
 // Genesis defines the desired configurations of genesis
 type Genesis struct {
 
@@ -68,35 +77,57 @@ type Genesis struct {
 	//   ibft2:
 	//     blockperiodseconds: 2
 	//     epochlength: 30000
-	// 	requesttimeoutseconds: 10
+	// 	   requesttimeoutseconds: 10
+	// +optional
 	GenesisConfig GenesisConfig `json:"config"`
 
 	// Nonce
 	// +kubebuider:default:0x0
+	// +optional
 	Nonce string `json:"nonce"`
 
 	// Timestamp
 	// +kubebuider:default:0x58ee40ba
+	// +optional
 	Timestamp string `json:"timestamp"`
 
 	// Set the block size limit (measured in gas)
 	// +kubebuider:default:0x47b760
+	// +optional
 	GasLimit string `json:"gasLimit"`
 
 	// Specify a fixed difficulty in private networks
 	// +kubebuider:default:0x1
+	// +optional
 	Difficulty string `json:"difficulty"`
 
 	// Hash for Istanbul block identification (IBFT 2.0).
 	// +kubebuider:default:0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365
+	// +optional
 	MixHash string `json:"mixHash"`
 
 	// The coinbase address is the account to which mining rewards are paid.
 	// +kubebuider:default:0x0000000000000000000000000000000000000000
+	// +optional
 	CoinBase string `json:"coinbase"`
 
 	// Predeploy contracts when starting Besu with Ether
-	Alloc []Transaction `json:"alloc,omitempty"`
+	// +optional
+	Alloc map[string]Transaction `json:"alloc,omitempty"`
+
+	// +optional
+	ExtraData string `json:"extraData,omitempty"`
+}
+
+// Blockchain defines number of network nodes
+type Blockchain struct {
+	Nodes Nodes `json:"nodes,omitempty"`
+}
+
+// Nodes defines number of nodes in the network
+type Nodes struct {
+	Generate bool `json:"generate,omitempty"`
+	Count    int  `json:"count,omitempty"`
 }
 
 // GenesisConfig defines config options in genesis
@@ -104,14 +135,17 @@ type GenesisConfig struct {
 
 	// The identifier of the private Ethereum network
 	// +kubebuider:default:2018
+	// +optional
 	ChainID int `json:"chainId"`
 
 	// In private networks; the milestone block defines the protocol version for the network
 	// +kubebuider:default:0
+	// +optional
 	ConstantinopleFixBlock int `json:"constantinoplefixblock"`
 
 	// Ibft2 configurations
 	// +kubebuider:default: {blockperiodseconds:2; epochlength:30000; requesttimeoutseconds:10}
+	// +optional
 	Ibft2 Ibft2 `json:"ibft2"`
 }
 
@@ -120,24 +154,33 @@ type Ibft2 struct {
 
 	// Minimum block time in seconds.
 	// +kubebuider:default:2
+	// +optional
 	BlockPeriodSeconds int `json:"blockperiodseconds"`
 
 	// Number of blocks after which to reset all votes.
 	// +kubebuider:default:30000
+	// +optional
 	EpochLength int `json:"epochlength"`
 
 	// 	Timeout for each consensus round before a round change.
 	// +kubebuider:default:10
+	// +optional
 	RequestTimeoutSeconds int `json:"requesttimeoutseconds"`
 }
 
 // Transaction defines alloc
 type Transaction struct {
 
-	// Address
-	Address string `json:"address"`
+	// privateKey
+	// +optional
+	PrivateKey string `json:"privateKey"`
+
+	//Comment
+	// +optional
+	Comment string `json:"comment"`
 
 	// Balance
+	// +optional
 	Balance string `json:"balance"`
 }
 
