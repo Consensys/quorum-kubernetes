@@ -6,18 +6,24 @@ import (
 
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
 	"github.com/Sumaid/besu-kubernetes/besu-operator/pkg/resources"
+	"github.com/go-logr/logr"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
+
+const besuFinalizer = "finalizer.besu.hyperleger.org"
 
 var log = logf.Log.WithName("controller_besu")
 
@@ -98,6 +104,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			reqLogger.Info("Not found so maybe deleted")
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -107,6 +114,60 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		return reconcile.Result{}, err
 	}
 	var result *reconcile.Result
+
+	isBesuMarkedToBeDeleted := instance.GetDeletionTimestamp() != nil
+	if isBesuMarkedToBeDeleted {
+		if contains(instance.GetFinalizers(), besuFinalizer) {
+			// Run finalization logic for finalizer. If the
+			// finalization logic fails, don't remove the finalizer so
+			// that we can retry during the next reconciliation.
+			sfs := r.besuCleanupJob(instance)
+			found := &batchv1.Job{}
+			err := r.client.Get(context.TODO(), types.NamespacedName{
+				Name:      sfs.Name,
+				Namespace: instance.Namespace,
+			}, found)
+			if err != nil && errors.IsNotFound(err) {
+
+				// Create the Job
+				log.Info("Creating a new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
+				err = r.client.Create(context.TODO(), sfs)
+
+				if err != nil {
+					log.Error(err, "Failed to create new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
+					return reconcile.Result{}, err
+				} else {
+					return reconcile.Result{Requeue: true}, nil
+				}
+			} else if err != nil {
+				// Error that isn't due to the Job not existing
+				log.Error(err, "Failed to get Job")
+				return reconcile.Result{}, err
+			} else {
+				if found.Status.Succeeded == 0 {
+					log.Info("Job not completed yet")
+					return reconcile.Result{Requeue: true}, nil
+				}
+				log.Info("Job  completed yet")
+			}
+
+			// Remove finalizer. Once all finalizers have been
+			// removed, the object will be deleted.
+			controllerutil.RemoveFinalizer(instance, besuFinalizer)
+			err = r.client.Update(context.TODO(), instance)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+		return reconcile.Result{}, nil
+	}
+
+	// Add finalizer for this CR
+	if !contains(instance.GetFinalizers(), besuFinalizer) {
+		if err := r.addFinalizer(reqLogger, instance); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
 
 	if len(instance.Spec.Bootnodes) > 0 && instance.Spec.Bootnodes[0].PubKey != "" {
 		instance.Status.HaveKeys = true
@@ -169,4 +230,26 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileBesu) addFinalizer(reqLogger logr.Logger, instance *hyperledgerv1alpha1.Besu) error {
+	reqLogger.Info("Adding Finalizer for the Besu")
+	controllerutil.AddFinalizer(instance, besuFinalizer)
+
+	// Update CR
+	err := r.client.Update(context.TODO(), instance)
+	if err != nil {
+		reqLogger.Error(err, "Failed to update Besu with finalizer")
+		return err
+	}
+	return nil
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }

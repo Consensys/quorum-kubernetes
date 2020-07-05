@@ -1,6 +1,9 @@
 package besu
 
 import (
+	"fmt"
+	"strconv"
+
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -88,48 +91,48 @@ func (r *ReconcileBesu) besuRoleBinding(instance *hyperledgerv1alpha1.Besu) *rba
 func (r *ReconcileBesu) besuConfigMap(instance *hyperledgerv1alpha1.Besu) *corev1.ConfigMap {
 	data := make(map[string]string)
 	data["genesis.json"] =
-		`{
-		"genesis": {
-				"config": {
-				"chainId": 2018,
-				"constantinoplefixblock": 0,
-				"ibft2": {
-					"blockperiodseconds": 2,
-					"epochlength": 30000,
-					"requesttimeoutseconds": 10
-				}
-				},
-				"nonce": "0x0",
-				"timestamp": "0x58ee40ba",
-				"gasLimit": "0x47b760",
-				"difficulty": "0x1",
-				"mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
-				"coinbase": "0x0000000000000000000000000000000000000000",
-				"alloc": {
-				"fe3b557e8fb62b89f4916b721be55ceb828dbd73": {
-					"privateKey": "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
-					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-					"balance": "0xad78ebc5ac6200000"
-				},
-				"627306090abaB3A6e1400e9345bC60c78a8BEf57": {
+		fmt.Sprintf(`{
+			"genesis": {
+			  "config": {
+				 "chainId": 2018,
+				 "constantinoplefixblock": 0,
+				 "ibft2": {
+				   "blockperiodseconds": 2,
+				   "epochlength": 30000,
+				   "requesttimeoutseconds": 10
+				 }
+			   },
+			   "nonce": "0x0",
+			   "timestamp": "0x58ee40ba",
+			   "gasLimit": "0x47b760",
+			   "difficulty": "0x1",
+			   "mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
+			   "coinbase": "0x0000000000000000000000000000000000000000",
+			   "alloc": {
+				  "fe3b557e8fb62b89f4916b721be55ceb828dbd73": {
+					 "privateKey": "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
+					 "comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
+					 "balance": "0xad78ebc5ac6200000"
+				  },
+				  "627306090abaB3A6e1400e9345bC60c78a8BEf57": {
 					"privateKey": "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
 					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
 					"balance": "90000000000000000000000"
-				},
-				"f17f52151EbEF6C7334FAD080c5704D77216b732": {
+				  },
+				  "f17f52151EbEF6C7334FAD080c5704D77216b732": {
 					"privateKey": "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
 					"comment": "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
 					"balance": "90000000000000000000000"
-				}
-				},
+				  }
+				 }
 			},
-		"blockchain": {
-				"nodes": {
-					"generate" : true,
-					"count" : 4
-				}
+			"blockchain": {
+			  "nodes": {
+				"generate": true,
+				  "count": %d
+			  }
 			}
-		}`
+		}`, instance.Spec.BootnodesCount+instance.Spec.ValidatorsCount)
 
 	data["genesisnode"] = `
 	{
@@ -239,27 +242,34 @@ func (r *ReconcileBesu) besuInitJob(instance *hyperledgerv1alpha1.Besu) *batchv1
 								echo "Creating config ..."
 								/opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/genesis.json --to=/generated-config
 								echo "Creating genesis configmap in k8s ..."
-								./kubectl create configmap besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+								./kubectl create configmap --namespace ${NAMESPACE} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
 								echo "Creating validator secrets in k8s ..."
 								i=1
 								for f in /generated-config/keys/*; do
 								  if [ -d ${f} ]; then
 									echo $f
 									sed 's/^0x//' ${f}/key.pub > ${f}/enode.key
-									./kubectl create secret generic besu-validator${i}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
+									if [[ i -le ${BOOTNODES} ]]
+									then
+										./kubectl create secret --namespace ${NAMESPACE} generic besu-bootnode${i}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
+									else
+									    j=$((i - BOOTNODES))
+										./kubectl create secret --namespace ${NAMESPACE} generic besu-validator${j}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
+									fi
 									i=$((i+1))
 								  fi
 								done
-								echo "Creating bootnode keys ..."
-								for j in {1..2}
-								do
-								  /opt/besu/bin/besu public-key export --to=public${j}.key
-								  sed 's/^0x//' ./public${j}.key > enode${j}.key
-								  echo "Creating bootnode ${j} secrets in k8s ..."
-								  ./kubectl create secret generic besu-bootnode${j}-key --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode.key=./enode${j}.key
-								  rm ./public${j}.key ./enode${j}.key /opt/besu/key
-								done
 								echo "Completed ..."`,
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "NAMESPACE",
+									Value: instance.ObjectMeta.Namespace,
+								},
+								{
+									Name:  "BOOTNODES",
+									Value: strconv.Itoa(instance.Spec.BootnodesCount),
+								},
 							},
 						},
 					},
@@ -326,19 +336,38 @@ func (r *ReconcileBesu) besuCleanupJob(instance *hyperledgerv1alpha1.Besu) *batc
 								"-c",
 							},
 							Args: []string{
-								`echo "Deleting genesis configmap in k8s ..."
-								./kubectl delete configmap besu-genesis
-								echo "Deleting validator secrets in k8s ..."
-								for f in seq 1 {{ .Values.rawConfig.blockchain.nodes.count }}; do
+								`
+								apt-get update && apt-get install -y curl
+								curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+								echo "Deleting genesis configmap in k8s ..."
+								./kubectl delete configmap --namespace ${NAMESPACE} besu-genesis
+								for (( f=1; f<=${TOTAL}; f++ )); do
 								  echo $f
-								  ./kubectl delete secret besu-validator-${f}-keys
-								done
-								echo "Deleting bootnode secrets in k8s ..."
-								for j in {1..2}
-								do
-								  ./kubectl delete secret besu-bootnode-${j}-keys
+								  if [[ f -le ${BOOTNODES} ]]
+								  then
+								      echo "Deleting bootnode secret"
+									  ./kubectl delete secret --namespace ${NAMESPACE} besu-bootnode${f}-key
+								  else
+									  echo "Deleting validator secret"
+									  j=$((f - BOOTNODES))
+									  ./kubectl delete secret --namespace ${NAMESPACE} besu-validator${j}-key
+								  fi
 								done
 								echo "Completed ..."`,
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "NAMESPACE",
+									Value: instance.ObjectMeta.Namespace,
+								},
+								{
+									Name:  "BOOTNODES",
+									Value: strconv.Itoa(instance.Spec.BootnodesCount),
+								},
+								{
+									Name:  "TOTAL",
+									Value: strconv.Itoa(instance.Spec.BootnodesCount + instance.Spec.ValidatorsCount),
+								},
 							},
 						},
 					},
