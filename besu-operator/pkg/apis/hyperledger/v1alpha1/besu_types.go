@@ -25,20 +25,20 @@ type BesuSpec struct {
 
 	// Bootnodes configurations
 	// +optional
-	Bootnodes []BesuNodeSpec `json:"bootnodes"`
+	Bootnodes []BesuNodeSpec `json:"bootnodes,omitempty"`
 
 	// Validators configurations
 	// +optional
-	Validators []BesuNodeSpec `json:"validators"`
+	Validators []BesuNodeSpec `json:"validators,omitempty"`
 
 	// Besu Image Configuration
 	// +optional
 	// +kubebuider:default: {repository: hyperledger/besu; tag: 1.4.6; pullPolicy: IfNotPresent}
-	Image Image `json:"image"`
+	Image Image `json:"image,omitempty"`
 
 	// Besu Network Genesis Configuration
 	// +optional
-	Genesis Genesis `json:"genesis"`
+	Genesis Genesis `json:"genesis,omitempty"`
 }
 
 // Image defines the desired Besu Image configurations
@@ -96,7 +96,7 @@ type Genesis struct {
 	CoinBase string `json:"coinbase"`
 
 	// Predeploy contracts when starting Besu with Ether
-	Alloc []Transaction `json:"alloc"`
+	Alloc []Transaction `json:"alloc,omitempty"`
 }
 
 // GenesisConfig defines config options in genesis
