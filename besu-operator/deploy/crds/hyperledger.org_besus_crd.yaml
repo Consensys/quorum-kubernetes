@@ -234,6 +234,9 @@ spec:
                       type: object
                   type: object
                 type: array
+              bootnodesarevalidators:
+                description: Bootnodes are validators or not
+                type: boolean
               bootnodescount:
                 description: Number of bootnodes in the network
                 type: integer
