@@ -167,29 +167,11 @@ func (r *ReconcileBesu) besuConfigMap(instance *hyperledgerv1alpha1.Besu) *corev
 		sampleGenesis.Genesis.Alloc = inputGenesis.Genesis.Alloc
 	}
 
-	BootNodeGenesis := sampleGenesis
-	bootNodeJSON, er := json.Marshal(BootNodeGenesis)
-	if er != nil {
-		log.Error(er, "Failed to convert genesis to json", "Namespace", instance.Namespace, "Name", instance.Name)
-		return nil
-	}
-	data["bootnodegenesis"] = string(bootNodeJSON)
-
-	NodeGenesis := sampleGenesis
-	NodeGenesis.Genesis.ExtraData = "0xf87ea00000000000000000000000000000000000000000000000000000000000000000f85494ca6e9704586eb1fb38194308e2192e43b1e1979c94ce2276efc33fee3c321e634eac28a9476e53b71c94f466a7174230056004d11178d2647c12740fa58b94b83820d6cf4b7e5aa67a2b57969caa5cdf6dff49808400000000c0"
-	nodeJSON, er := json.Marshal(NodeGenesis)
-	if er != nil {
-		log.Error(er, "Failed to convert genesis to json", "Namespace", instance.Namespace, "Name", instance.Name)
-		return nil
-	}
-	data["genesisnode"] = string(nodeJSON)
-
 	GenesisObject := sampleGenesis
-	GenesisObject.Genesis.ExtraData = ""
 	GenesisObject.Blockchain = hyperledgerv1alpha1.Blockchain{
 		Nodes: hyperledgerv1alpha1.Nodes{
 			Generate: true,
-			Count:    instance.Spec.BootnodesCount + instance.Spec.ValidatorsCount,
+			Count:    instance.Spec.ValidatorsCount,
 		},
 	}
 	b, err := json.Marshal(GenesisObject)
@@ -277,16 +259,21 @@ func (r *ReconcileBesu) besuInitJob(instance *hyperledgerv1alpha1.Besu) *batchv1
 								  if [ -d ${f} ]; then
 									echo $f
 									sed 's/^0x//' ${f}/key.pub > ${f}/enode.key
-									if [[ i -le ${BOOTNODES} ]]
-									then
-										./kubectl create secret --namespace ${NAMESPACE} generic besu-bootnode${i}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
-									else
-									    j=$((i - BOOTNODES))
-										./kubectl create secret --namespace ${NAMESPACE} generic besu-validator${j}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
-									fi
+									./kubectl create secret --namespace ${NAMESPACE} generic besu-validator${i}-key --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
 									i=$((i+1))
 								  fi
 								done
+
+								echo "Creating bootnode keys ..."
+								for (( j=1; j<=${BOOTNODES}; j++ ));
+								do
+									/opt/besu/bin/besu public-key export --to=public${j}.key
+									sed 's/^0x//' ./public${j}.key > enode${j}.key
+									echo "Creating bootnode ${j} secrets in k8s ..."
+									./kubectl create secret generic besu-bootnode${j}-key --namespace ${NAMESPACE} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode.key=./enode${j}.key
+									rm ./public${j}.key ./enode${j}.key /opt/besu/key
+								done
+			  
 								echo "Completed ..."`,
 							},
 							Env: []corev1.EnvVar{

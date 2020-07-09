@@ -27,7 +27,7 @@ const (
 	SecretsVolumeName            = "key"
 	SecretsVolumeMountPath       = "/secrets"
 	GenesisConfigVolumeName      = "genesis-config"
-	GenesisConfigVolumeMountPath = "/configs"
+	GenesisConfigVolumeMountPath = "/etc/genesis"
 	PodManagementPolicy          = "OrderedReady"
 )
 
@@ -147,8 +147,7 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 								"-c",
 							},
 							Args: []string{
-								`/opt/besu/bin/besu operator generate-blockchain-config --config-file=/configs/genesis.json --to=/generated-config
-								` + r.getBesuCommand(instance),
+								r.getBesuCommand(instance),
 							},
 							LivenessProbe: &corev1.Probe{
 								Handler: corev1.Handler{
@@ -311,7 +310,7 @@ func (r *ReconcileBesuNode) besunodeSecret(instance *hyperledgerv1alpha1.BesuNod
 
 func (r *ReconcileBesuNode) getBesuCommand(instance *hyperledgerv1alpha1.BesuNode) string {
 	commandInitial := "exec /opt/besu/bin/besu "
-	genesisFile := fmt.Sprintf("--genesis-file=%s ", "/generated-config/genesis.json")
+	genesisFile := fmt.Sprintf("--genesis-file=%s ", GenesisConfigVolumeMountPath+"/genesis.json")
 	keyFile := fmt.Sprintf("--node-private-key-file=%s ", "/secrets/private.key")
 	rpcOptions := fmt.Sprintf("--rpc-http-enabled=%t --rpc-http-host=%s --rpc-http-port=%d --rpc-http-cors-origins=${NODES_HTTP_CORS_ORIGINS} --rpc-http-api=ETH,NET,IBFT ",
 		instance.Spec.RPC.Enabled, instance.Spec.RPC.Host, instance.Spec.RPC.Port)
@@ -415,27 +414,17 @@ func (r *ReconcileBesuNode) getInitContainer(instance *hyperledgerv1alpha1.BesuN
 }
 
 func (r *ReconcileBesuNode) getVolumes(instance *hyperledgerv1alpha1.BesuNode) []corev1.Volume {
-	key := "genesisnode"
-	if instance.Spec.Type == "Bootnode" {
-		key = "bootnodegenesis"
-	}
 	volumes := []corev1.Volume{
 		corev1.Volume{
-			Name: "generated-config",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{},
-			},
-		},
-		corev1.Volume{
-			Name: "genesis-config",
+			Name: GenesisConfigVolumeName,
 			VolumeSource: corev1.VolumeSource{
 				ConfigMap: &corev1.ConfigMapVolumeSource{
 					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "besu-configmap",
+						Name: "besu-genesis",
 					},
 					Items: []corev1.KeyToPath{
 						{
-							Key:  key,
+							Key:  "genesis.json",
 							Path: "genesis.json",
 						},
 					},
@@ -452,10 +441,6 @@ func (r *ReconcileBesuNode) getVolumeMounts(instance *hyperledgerv1alpha1.BesuNo
 			Name:      GenesisConfigVolumeName,
 			MountPath: GenesisConfigVolumeMountPath,
 			ReadOnly:  VolumesReadOnly,
-		},
-		corev1.VolumeMount{
-			Name:      "generated-config",
-			MountPath: "/generated-config",
 		},
 	}
 	return volumeMounts
