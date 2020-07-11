@@ -469,6 +469,11 @@ func (r *ReconcileBesu) newBesuNode(instance *hyperledgerv1alpha1.Besu,
 				Port:                  8547,
 				AuthenticationEnabled: false,
 			},
+			Metrics: hyperledgerv1alpha1.PortConfig{
+				Enabled: true,
+				Host:    "0.0.0.0",
+				Port:    9545,
+			},
 		},
 	}
 	controllerutil.SetControllerReference(instance, node, r.scheme)

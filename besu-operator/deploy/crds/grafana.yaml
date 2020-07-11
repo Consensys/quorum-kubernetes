@@ -1,0 +1,7 @@
+apiVersion: hyperledger.org/v1alpha1
+kind: Grafana
+metadata:
+  name: besu-grafana
+spec:
+  # Add fields here
+  size: 3

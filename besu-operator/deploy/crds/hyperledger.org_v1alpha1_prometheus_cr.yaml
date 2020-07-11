@@ -1,0 +1,7 @@
+apiVersion: hyperledger.org/v1alpha1
+kind: Prometheus
+metadata:
+  name: example-prometheus
+spec:
+  # Add fields here
+  size: 3

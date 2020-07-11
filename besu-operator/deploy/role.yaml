@@ -71,6 +71,8 @@ rules:
   resources:
   - '*'
   - besus
+  - grafanas
+  - prometheus
   verbs:
   - create
   - delete

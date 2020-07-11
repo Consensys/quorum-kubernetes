@@ -141,6 +141,11 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 									ContainerPort: int32(instance.Spec.P2P.Port),
 									Protocol:      "UDP",
 								},
+								{
+									Name:          "metrics",
+									ContainerPort: int32(instance.Spec.Metrics.Port),
+									Protocol:      "TCP",
+								},
 							},
 							Command: []string{
 								"/bin/sh",
