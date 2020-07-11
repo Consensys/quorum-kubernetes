@@ -211,3 +211,69 @@ func (r *ReconcileBesu) ensureJob(request reconcile.Request,
 
 	return nil, nil
 }
+
+func (r *ReconcileBesu) ensurePrometheus(request reconcile.Request,
+	instance *hyperledgerv1alpha1.Besu,
+	sfs *hyperledgerv1alpha1.Prometheus,
+) (*reconcile.Result, error) {
+
+	// See if Prometheus already exists and create if it doesn't
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      sfs.Name,
+		Namespace: instance.Namespace,
+	}, sfs)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the Prometheus
+		log.Info("Creating a new Prometheus", "Prometheus.Namespace", sfs.Namespace, "Prometheus.Name", sfs.Name)
+		err = r.client.Create(context.TODO(), sfs)
+
+		if err != nil {
+			// Prometheus failed
+			log.Error(err, "Failed to create new Prometheus", "Prometheus.Namespace", sfs.Namespace, "Prometheus.Name", sfs.Name)
+			return &reconcile.Result{}, err
+		} else {
+			// Prometheus was successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't due to the Prometheus not existing
+		log.Error(err, "Failed to get Prometheus")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}
+
+func (r *ReconcileBesu) ensureGrafana(request reconcile.Request,
+	instance *hyperledgerv1alpha1.Besu,
+	sfs *hyperledgerv1alpha1.Grafana,
+) (*reconcile.Result, error) {
+
+	// See if Grafana already exists and create if it doesn't
+	err := r.client.Get(context.TODO(), types.NamespacedName{
+		Name:      sfs.Name,
+		Namespace: instance.Namespace,
+	}, sfs)
+	if err != nil && errors.IsNotFound(err) {
+
+		// Create the Grafana
+		log.Info("Creating a new Grafana", "Grafana.Namespace", sfs.Namespace, "Grafana.Name", sfs.Name)
+		err = r.client.Create(context.TODO(), sfs)
+
+		if err != nil {
+			// Grafana failed
+			log.Error(err, "Failed to create new Grafana", "Grafana.Namespace", sfs.Namespace, "Grafana.Name", sfs.Name)
+			return &reconcile.Result{}, err
+		} else {
+			// Grafana was successful
+			return nil, nil
+		}
+	} else if err != nil {
+		// Error that isn't due to the Grafana not existing
+		log.Error(err, "Failed to get Grafana")
+		return &reconcile.Result{}, err
+	}
+
+	return nil, nil
+}

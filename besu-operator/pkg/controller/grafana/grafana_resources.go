@@ -1099,7 +1099,7 @@ func (r *ReconcileGrafana) grafanaDeployment(instance *hyperledgerv1alpha1.Grafa
 								},
 								{
 									Name:  "PROMETHEUS_SERVICE_HOST",
-									Value: "prometheus",
+									Value: instance.Spec.Owner + "-prometheus",
 								},
 								{
 									Name:  "NAMESPACE",

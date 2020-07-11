@@ -20,7 +20,7 @@ import (
 
 // Constants common across any instance
 const (
-	besunodeImage                = "hyperledger/besu:latest"
+	besunodeImage                = "hyperledger/besu:1.4.6"
 	ImagePullPolicy              = "IfNotPresent"
 	VolumesReadOnly              = true
 	MountPath                    = "/configs"
@@ -407,7 +407,7 @@ func (r *ReconcileBesuNode) getInitContainer(instance *hyperledgerv1alpha1.BesuN
 	initContainers := []corev1.Container{
 		corev1.Container{
 			Name:  "init-bootnode",
-			Image: "byrnedo/alpine-curl",
+			Image: "pegasyseng/k8s-helper:v1.18.4",
 			Command: []string{
 				"sh",
 				"-c",

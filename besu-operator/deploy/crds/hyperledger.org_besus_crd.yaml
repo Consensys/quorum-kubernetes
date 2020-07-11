@@ -326,6 +326,13 @@ spec:
                         type: string
                     type: object
                 type: object
+              grafana:
+                description: Defines grafana spec
+                properties:
+                  owner:
+                    description: Owner metadata name
+                    type: string
+                type: object
               image:
                 description: Besu Image Configuration
                 properties:
@@ -346,6 +353,13 @@ spec:
                 description: Number of members in the network
                 format: int32
                 type: integer
+              monitoring:
+                default: true
+                description: Deploy Grafana/Prometheus or not
+                type: boolean
+              prometheus:
+                description: Defines prometheus spec
+                type: object
               validators:
                 description: Validators configurations
                 items:

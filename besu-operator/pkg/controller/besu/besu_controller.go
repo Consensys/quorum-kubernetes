@@ -74,6 +74,22 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &hyperledgerv1alpha1.Grafana{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &hyperledgerv1alpha1.Besu{},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &hyperledgerv1alpha1.Prometheus{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &hyperledgerv1alpha1.Besu{},
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -226,6 +242,20 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	if result != nil {
 		log.Error(err, "Failed to ensure member BesuNode")
 		return *result, err
+	}
+
+	if instance.Spec.Monitoring {
+		result, err = r.ensureGrafana(request, instance, r.newGrafana(instance))
+		if result != nil {
+			log.Error(err, "Failed to ensure Grafana")
+			return *result, err
+		}
+
+		result, err = r.ensurePrometheus(request, instance, r.newPrometheus(instance))
+		if result != nil {
+			log.Error(err, "Failed to ensure Prometheus")
+			return *result, err
+		}
 	}
 
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")

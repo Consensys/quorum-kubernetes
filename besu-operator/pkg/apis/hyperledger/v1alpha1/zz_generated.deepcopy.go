@@ -184,6 +184,8 @@ func (in *BesuSpec) DeepCopyInto(out *BesuSpec) {
 	}
 	out.Image = in.Image
 	in.GenesisJSON.DeepCopyInto(&out.GenesisJSON)
+	out.Prometheus = in.Prometheus
+	out.Grafna = in.Grafna
 	return
 }
 
