@@ -1,0 +1,238 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: besunodes.hyperledger.org
+spec:
+  group: hyperledger.org
+  names:
+    kind: BesuNode
+    listKind: BesuNodeList
+    plural: besunodes
+    singular: besunode
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: BesuNode is the Schema for the besunodes API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BesuNodeSpec defines the desired state of BesuNode
+            properties:
+              bootnodes:
+                type: integer
+              graphql:
+                description: GraphQl
+                properties:
+                  api:
+                    type: string
+                  authenticationEnabled:
+                    type: boolean
+                  corsOrigins:
+                    type: string
+                  discovery:
+                    type: boolean
+                  enabled:
+                    description: Port is enabled or not
+                    type: boolean
+                  host:
+                    description: Host
+                    type: string
+                  port:
+                    description: Port
+                    type: integer
+                required:
+                - corsOrigins
+                - enabled
+                - host
+                - port
+                type: object
+              httpwhitelist:
+                description: Defaults to ["*"]
+                type: string
+              image:
+                description: Besu Image Configuration
+                properties:
+                  pullPolicy:
+                    description: Besu container image pull policy
+                    type: string
+                  repository:
+                    description: Besu container image repository
+                    type: string
+                  tag:
+                    description: Besu container image tag
+                    type: string
+                required:
+                - repository
+                - tag
+                type: object
+              metrics:
+                description: PortConfig defines port configurations of different types
+                  of ports
+                properties:
+                  api:
+                    type: string
+                  authenticationEnabled:
+                    type: boolean
+                  corsOrigins:
+                    type: string
+                  discovery:
+                    type: boolean
+                  enabled:
+                    description: Port is enabled or not
+                    type: boolean
+                  host:
+                    description: Host
+                    type: string
+                  port:
+                    description: Port
+                    type: integer
+                required:
+                - corsOrigins
+                - enabled
+                - host
+                - port
+                type: object
+              name:
+                description: Name of the node
+                type: string
+              p2p:
+                description: P2P
+                properties:
+                  api:
+                    type: string
+                  authenticationEnabled:
+                    type: boolean
+                  corsOrigins:
+                    type: string
+                  discovery:
+                    type: boolean
+                  enabled:
+                    description: Port is enabled or not
+                    type: boolean
+                  host:
+                    description: Host
+                    type: string
+                  port:
+                    description: Port
+                    type: integer
+                required:
+                - corsOrigins
+                - enabled
+                - host
+                - port
+                type: object
+              privkey:
+                description: Private key
+                type: string
+              pubkey:
+                description: Public key
+                type: string
+              pvcSizeLimit:
+                description: "\tSize of the Volume"
+                type: string
+              pvcStorageClass:
+                description: "\tStorage class of the Volume"
+                type: string
+              replicas:
+                description: Number of replica pods corresponding to this node
+                format: int32
+                type: integer
+              resources:
+                description: Requests and limits
+                properties:
+                  cpuLimit:
+                    description: CPU Limit
+                    type: string
+                  cpuRequest:
+                    description: CPU Request
+                    type: string
+                  memLimit:
+                    description: Memory Limit
+                    type: string
+                  memRequest:
+                    description: Memory Request
+                    type: string
+                required:
+                - cpuLimit
+                - cpuRequest
+                - memLimit
+                - memRequest
+                type: object
+              rpc:
+                description: RPC
+                properties:
+                  api:
+                    type: string
+                  authenticationEnabled:
+                    type: boolean
+                  corsOrigins:
+                    type: string
+                  discovery:
+                    type: boolean
+                  enabled:
+                    description: Port is enabled or not
+                    type: boolean
+                  host:
+                    description: Host
+                    type: string
+                  port:
+                    description: Port
+                    type: integer
+                required:
+                - corsOrigins
+                - enabled
+                - host
+                - port
+                type: object
+              type:
+                description: 'Type of node, takes one of the values : Bootnode, Validator,
+                  Member'
+                type: string
+              ws:
+                description: WS
+                properties:
+                  api:
+                    type: string
+                  authenticationEnabled:
+                    type: boolean
+                  corsOrigins:
+                    type: string
+                  discovery:
+                    type: boolean
+                  enabled:
+                    description: Port is enabled or not
+                    type: boolean
+                  host:
+                    description: Host
+                    type: string
+                  port:
+                    description: Port
+                    type: integer
+                required:
+                - corsOrigins
+                - enabled
+                - host
+                - port
+                type: object
+            type: object
+          status:
+            description: BesuNodeStatus defines the observed state of BesuNode
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
