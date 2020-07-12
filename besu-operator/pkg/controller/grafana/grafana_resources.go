@@ -1016,7 +1016,7 @@ func (r *ReconcileGrafana) grafanaService(instance *hyperledgerv1alpha1.Grafana)
 					Protocol:   "TCP",
 					Port:       int32(3000),
 					TargetPort: intstr.FromInt(int(3000)),
-					NodePort:   int32(30030),
+					NodePort:   int32(instance.Spec.NodePort),
 				},
 			},
 		},
@@ -1027,8 +1027,6 @@ func (r *ReconcileGrafana) grafanaService(instance *hyperledgerv1alpha1.Grafana)
 
 func (r *ReconcileGrafana) grafanaDeployment(instance *hyperledgerv1alpha1.Grafana) *appsv1.Deployment {
 
-	var replicas int32
-	replicas = 1
 	depl := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -1040,7 +1038,7 @@ func (r *ReconcileGrafana) grafanaDeployment(instance *hyperledgerv1alpha1.Grafa
 			Labels:    r.getLabels(instance, instance.ObjectMeta.Name),
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
+			Replicas: &instance.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: r.getLabels(instance, instance.ObjectMeta.Name),
 			},
@@ -1052,25 +1050,17 @@ func (r *ReconcileGrafana) grafanaDeployment(instance *hyperledgerv1alpha1.Grafa
 					Containers: []corev1.Container{
 						corev1.Container{
 							Name:            instance.ObjectMeta.Name,
-							Image:           "grafana/grafana:6.2.5",
-							ImagePullPolicy: "IfNotPresent",
+							Image:           instance.Spec.Image.Repository + ":" + instance.Spec.Image.Tag,
+							ImagePullPolicy: corev1.PullPolicy(instance.Spec.Image.PullPolicy),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("100m"),
-									corev1.ResourceMemory: resource.MustParse("256Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemRequest),
 								},
 								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("500m"),
-									corev1.ResourceMemory: resource.MustParse("512Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPULimit),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemLimit),
 								},
-								// Requests: corev1.ResourceList{
-								// 	corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
-								// 	corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemRequest),
-								// },
-								// Limits: corev1.ResourceList{
-								// 	corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPULimit),
-								// 	corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemLimit),
-								// },
 							},
 							Env: []corev1.EnvVar{
 								{

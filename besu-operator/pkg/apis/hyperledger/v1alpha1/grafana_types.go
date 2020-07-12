@@ -12,6 +12,26 @@ type GrafanaSpec struct {
 	// Owner metadata name
 	// +optional
 	Owner string `json:"owner,omitempty"`
+
+	// Grafana Requests and limits
+	// +optional
+	// +kubebuilder:default:={memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}
+	Resources Resources `json:"resources"`
+
+	// Grafana Image Configuration
+	// +optional
+	// +kubebuilder:default:={repository: grafana/grafana, tag: "6.2.5", pullPolicy: IfNotPresent}
+	Image Image `json:"image,omitempty"`
+
+	// Number of replica pods corresponding to grafana node
+	// +optional
+	// +kubebuilder:default:=1
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// NodePort
+	// +optional
+	// +kubebuilder:default:=30030
+	NodePort int32 `json:"nodeport,omitempty"`
 }
 
 // GrafanaStatus defines the observed state of Grafana
@@ -30,6 +50,7 @@ type Grafana struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// +kubebuilder:default:={resources: {memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}, image:{repository: grafana/grafana, tag: "6.2.5", pullPolicy: IfNotPresent}, replicas:1, nodeport:30030}
 	Spec   GrafanaSpec   `json:"spec,omitempty"`
 	Status GrafanaStatus `json:"status,omitempty"`
 }

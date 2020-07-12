@@ -1,9 +1,6 @@
 package prometheus
 
 import (
-	// "io/ioutil"
-	// "encoding/json"
-
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -114,7 +111,7 @@ func (r *ReconcilePrometheus) prometheusService(instance *hyperledgerv1alpha1.Pr
 					Protocol:   "TCP",
 					Port:       int32(9090),
 					TargetPort: intstr.FromInt(int(9090)),
-					NodePort:   int32(30090),
+					NodePort:   int32(instance.Spec.NodePort),
 				},
 			},
 		},
@@ -124,9 +121,6 @@ func (r *ReconcilePrometheus) prometheusService(instance *hyperledgerv1alpha1.Pr
 }
 
 func (r *ReconcilePrometheus) prometheusDeployment(instance *hyperledgerv1alpha1.Prometheus) *appsv1.Deployment {
-
-	var replicas int32
-	replicas = 1
 	depl := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -138,7 +132,7 @@ func (r *ReconcilePrometheus) prometheusDeployment(instance *hyperledgerv1alpha1
 			Labels:    r.getLabels(instance, instance.ObjectMeta.Name),
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
+			Replicas: &instance.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: r.getLabels(instance, instance.ObjectMeta.Name),
 			},
@@ -152,25 +146,17 @@ func (r *ReconcilePrometheus) prometheusDeployment(instance *hyperledgerv1alpha1
 					Containers: []corev1.Container{
 						corev1.Container{
 							Name:            instance.ObjectMeta.Name,
-							Image:           "prom/prometheus:v2.11.1",
-							ImagePullPolicy: "IfNotPresent",
+							Image:           instance.Spec.Image.Repository + ":" + instance.Spec.Image.Tag,
+							ImagePullPolicy: corev1.PullPolicy(instance.Spec.Image.PullPolicy),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("100m"),
-									corev1.ResourceMemory: resource.MustParse("256Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemRequest),
 								},
 								Limits: corev1.ResourceList{
-									corev1.ResourceCPU:    resource.MustParse("500m"),
-									corev1.ResourceMemory: resource.MustParse("512Mi"),
+									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPULimit),
+									corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemLimit),
 								},
-								// Requests: corev1.ResourceList{
-								// 	corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
-								// 	corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemRequest),
-								// },
-								// Limits: corev1.ResourceList{
-								// 	corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPULimit),
-								// 	corev1.ResourceMemory: resource.MustParse(instance.Spec.Resources.MemLimit),
-								// },
 							},
 							Env: []corev1.EnvVar{
 								{

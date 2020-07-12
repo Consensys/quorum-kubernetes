@@ -9,9 +9,26 @@ import (
 
 // PrometheusSpec defines the desired state of Prometheus
 type PrometheusSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// Requests and limits
+	// +optional
+	// +kubebuilder:default:={memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}
+	Resources Resources `json:"resources"`
+
+	// Prometheus Image Configuration
+	// +optional
+	// +kubebuilder:default:={repository: prom/prometheus, tag: v2.11.1, pullPolicy: IfNotPresent}
+	Image Image `json:"image,omitempty"`
+
+	// Number of replica pods corresponding to prometheus node
+	// +optional
+	// +kubebuilder:default:=1
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// NodePort
+	// +optional
+	// +kubebuilder:default:=30090
+	NodePort int32 `json:"nodeport,omitempty"`
 }
 
 // PrometheusStatus defines the observed state of Prometheus
@@ -30,6 +47,7 @@ type Prometheus struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// +kubebuilder:default:={resources: {memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}, image:{repository: prom/prometheus, tag: v2.11.1, pullPolicy: IfNotPresent}, replicas:1, nodeport:30090}
 	Spec   PrometheusSpec   `json:"spec,omitempty"`
 	Status PrometheusStatus `json:"status,omitempty"`
 }

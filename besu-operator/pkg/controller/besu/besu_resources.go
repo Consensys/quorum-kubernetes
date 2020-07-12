@@ -490,12 +490,15 @@ func (r *ReconcileBesu) newPrometheus(instance *hyperledgerv1alpha1.Besu) *hyper
 			Name:      instance.ObjectMeta.Name + "-prometheus",
 			Namespace: instance.Namespace,
 		},
+		Spec: instance.Spec.PrometheusSpec,
 	}
 	controllerutil.SetControllerReference(instance, prometheusNode, r.scheme)
 	return prometheusNode
 }
 
 func (r *ReconcileBesu) newGrafana(instance *hyperledgerv1alpha1.Besu) *hyperledgerv1alpha1.Grafana {
+	grafanaSpec := instance.Spec.GrafanaSpec
+	grafanaSpec.Owner = instance.ObjectMeta.Name
 	grafanaNode := &hyperledgerv1alpha1.Grafana{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Grafana",
@@ -505,9 +508,7 @@ func (r *ReconcileBesu) newGrafana(instance *hyperledgerv1alpha1.Besu) *hyperled
 			Name:      instance.ObjectMeta.Name + "-grafana",
 			Namespace: instance.Namespace,
 		},
-		Spec: hyperledgerv1alpha1.GrafanaSpec{
-			Owner: instance.ObjectMeta.Name,
-		},
+		Spec: grafanaSpec,
 	}
 	controllerutil.SetControllerReference(instance, grafanaNode, r.scheme)
 	return grafanaNode

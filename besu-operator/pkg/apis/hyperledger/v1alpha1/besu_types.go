@@ -53,25 +53,27 @@ type BesuSpec struct {
 
 	// Defines prometheus spec
 	// +optional
-	Prometheus PrometheusSpec `json:"prometheus,omitempty"`
+	// +kubebuilder:default:={resources: {memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}, image:{repository: prom/prometheus, tag: v2.11.1, pullPolicy: IfNotPresent}, replicas:1, nodeport:30090}
+	PrometheusSpec PrometheusSpec `json:"prometheusspec,omitempty"`
 
 	// Defines grafana spec
 	// +optional
-	Grafna GrafanaSpec `json:"grafana,omitempty"`
+	// +kubebuilder:default:={resources: {memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}, image:{repository: grafana/grafana, tag: "6.2.5", pullPolicy: IfNotPresent}, replicas:1, nodeport:30030}
+	GrafanaSpec GrafanaSpec `json:"grafanaspec,omitempty"`
 }
 
 // Image defines the desired Besu Image configurations
 type Image struct {
 
-	// Besu container image repository
-	// +kubebuilder:default:hyperledger/besu
+	// Image repository
+	// +optional
 	Repository string `json:"repository"`
 
-	// Besu container image tag
-	// +kubebuilder:default: 1.4.6
+	// Image tag
+	// +optional
 	Tag string `json:"tag"`
 
-	// Besu container image pull policy
+	// Image pull policy
 	// +kubebuilder:default:IfNotPresent
 	// +optional
 	PullPolicy string `json:"pullPolicy"`

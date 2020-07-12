@@ -66,17 +66,14 @@ spec:
                 description: Besu Image Configuration
                 properties:
                   pullPolicy:
-                    description: Besu container image pull policy
+                    description: Image pull policy
                     type: string
                   repository:
-                    description: Besu container image repository
+                    description: Image repository
                     type: string
                   tag:
-                    description: Besu container image tag
+                    description: Image tag
                     type: string
-                required:
-                - repository
-                - tag
                 type: object
               metrics:
                 description: PortConfig defines port configurations of different types
