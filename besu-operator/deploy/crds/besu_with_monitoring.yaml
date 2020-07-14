@@ -12,7 +12,7 @@ spec:
       pullPolicy: IfNotPresent
       repository: prom/prometheus
       tag: v2.11.1
-    nodeport: 30098
+    nodeport: 30090
     replicas: 1
     resources:
       cpuLimit: 500m
@@ -24,7 +24,7 @@ spec:
       pullPolicy: IfNotPresent
       repository: grafana/grafana
       tag: 6.2.5
-    nodeport: 30038
+    nodeport: 30030
     replicas: 1
     resources:
       cpuLimit: 500m
