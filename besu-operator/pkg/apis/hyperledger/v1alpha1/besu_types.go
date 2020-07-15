@@ -38,7 +38,7 @@ type BesuSpec struct {
 
 	// Besu Network Genesis Configuration
 	// +optional
-	// +kubebuilder:default:={genesis: {config: {chainId: 2018, constantinoplefixblock: 0, ibft2: {blockperiodseconds: 2, epochlength: 30000, requesttimeoutseconds: 10}}, nonce: "0x0", timestamp: "0x58ee40ba", gasLimit: "0x47b760", difficulty: "0x1", mixHash: "\"0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365\"", coinbase: "0x0000000000000000000000000000000000000000", alloc: {"\"9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb\"": {balance: "\"0xad78ebc5ac6200000\""}}}}
+	// +kubebuilder:default:={genesis: {config: {chainId: 2018, constantinoplefixblock: 0, ibft2: {blockperiodseconds: 2, epochlength: 30000, requesttimeoutseconds: 10}}, nonce: "0x0", timestamp: "0x58ee40ba", gasLimit: "0x47b760", difficulty: "0x1", mixHash: "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365", coinbase: "0x0000000000000000000000000000000000000000"}}
 	GenesisJSON GenesisJSON `json:"genesis.json,omitempty"`
 
 	// Bootnodes are validators or not

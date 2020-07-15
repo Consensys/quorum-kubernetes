@@ -483,9 +483,6 @@ spec:
               genesis.json:
                 default:
                   genesis:
-                    alloc:
-                      '"9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb"':
-                        balance: '"0xad78ebc5ac6200000"'
                     coinbase: "0x0000000000000000000000000000000000000000"
                     config:
                       chainId: 2018
@@ -496,7 +493,7 @@ spec:
                         requesttimeoutseconds: 10
                     difficulty: "0x1"
                     gasLimit: "0x47b760"
-                    mixHash: '"0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365"'
+                    mixHash: 0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365
                     nonce: "0x0"
                     timestamp: "0x58ee40ba"
                 description: Besu Network Genesis Configuration
