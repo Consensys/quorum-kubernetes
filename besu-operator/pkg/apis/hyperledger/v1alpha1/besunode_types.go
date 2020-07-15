@@ -10,20 +10,67 @@ import (
 // BesuNodeSpec defines the desired state of BesuNode
 type BesuNodeSpec struct {
 
-	// Name of the node
-	// +optional
-	Name string `json:"name"`
-
 	// Type of node, takes one of the values : Bootnode, Validator, Member
 	// +kubebuilder:validation:Enum:["Member", "Bootnode", "Validator"]
-	// +kubebuider:default:"Member"
+	// +kubebuilder:default:=Member
 	// +optional
 	Type string `json:"type"`
 
 	// Number of replica pods corresponding to this node
 	// +optional
-	// +kubebuider:default:1
+	// +kubebuilder:default:=2
 	Replicas int32 `json:"replicas"`
+
+	// Besu Image Configuration
+	// +optional
+	// +kubebuilder:default:={repository: hyperledger/besu, tag: "1.4.6", pullPolicy: IfNotPresent}
+	Image Image `json:"image"`
+
+	// Requests and limits
+	// +optional
+	// +kubebuilder:default:={memRequest: "1024Mi", cpuRequest: "100m", memLimit: "2048Mi", cpuLimit: "500m"}
+	Resources Resources `json:"resources"`
+
+	// P2P Port configuration
+	// +optional
+	// +kubebuilder:default:={enabled: true, host: "0.0.0.0", port: 30303, discovery: true, authenticationEnabled: false}
+	P2P PortConfig `json:"p2p"`
+
+	// RPC Port Configuration
+	// +optional
+	// +kubebuilder:default:={enabled: true, host: "0.0.0.0", port: 8545, authenticationEnabled: false}
+	RPC PortConfig `json:"rpc"`
+
+	// WS
+	// +optional
+	// +kubebuilder:default:={enabled: false, host: "0.0.0.0", port: 8546, authenticationEnabled: false}
+	WS PortConfig `json:"ws"`
+
+	// GraphQl
+	// +optional
+	// +kubebuilder:default:={enabled: false, host: "0.0.0.0", port: 8547, authenticationEnabled: false}
+	GraphQl PortConfig `json:"graphql"`
+
+	// +optional
+	// +kubebuilder:default:={enabled: true, host: "0.0.0.0", port: 9545}
+	Metrics PortConfig `json:"metrics"`
+
+	// Defaults to ["*"]
+	// +optional
+	HTTPWhitelist string `json:"httpwhitelist"`
+
+	// +optional
+	Bootnodes int `json:"bootnodes"`
+
+	// Size of the Volume
+	// +kubebuider:default:="1Gi"
+	// +optional
+	PVCSizeLimit string `json:"pvcSizeLimit"`
+
+	// Storage class of the Volume
+	// +kubebuider:default:="standard"
+	// +optional
+	PVCStorageClass string `json:"pvcStorageClass"`
 
 	// Public key
 	// +optional
@@ -32,70 +79,27 @@ type BesuNodeSpec struct {
 	// Private key
 	// +optional
 	PrivKey string `json:"privkey"`
-
-	// Besu Image Configuration
-	// +kubebuider:default:{repository: hyperledger/besu; tag: 1.4.6; pullPolicy: IfNotPresent}
-	// +optional
-	Image Image `json:"image"`
-
-	// 	Size of the Volume
-	// +kubebuider:default:1Gi
-	// +optional
-	PVCSizeLimit string `json:"pvcSizeLimit"`
-
-	// 	Storage class of the Volume
-	// +kubebuider:default:standard
-	// +optional
-	PVCStorageClass string `json:"pvcStorageClass"`
-
-	// Requests and limits
-	// +optional
-	// +kubebuider:default:{memRequest: 1024Mi; cpuRequest: 100m; memLimit: 2048Mi; cpuLimit: 500m}
-	Resources Resources `json:"resources"`
-
-	// P2P
-	// +optional
-	P2P PortConfig `json:"p2p"`
-
-	// RPC
-	// +optional
-	RPC PortConfig `json:"rpc"`
-
-	// WS
-	// +optional
-	WS PortConfig `json:"ws"`
-
-	// GraphQl
-	// +optional
-	GraphQl PortConfig `json:"graphql"`
-
-	// Defaults to ["*"]
-	// +optional
-	HTTPWhitelist string `json:"httpwhitelist"`
-
-	// +optional
-	Metrics PortConfig `json:"metrics"`
-
-	// +optional
-	Bootnodes int `json:"bootnodes"`
 }
 
 // PortConfig defines port configurations of different types of ports
 type PortConfig struct {
 	// Port is enabled or not
-	// +kubebuider:default:true
+	// +optional
 	Enabled bool `json:"enabled"`
 
 	// Host
-	// +kubebuider:default:0.0.0.0
+	// +kubebuider:default=0.0.0.0
+	// +optional
 	Host string `json:"host"`
 
 	// Port
+	// +optional
 	Port int `json:"port"`
 
 	// +optional
 	API string `json:"api"`
 
+	// +optional
 	CorsOrigins string `json:"corsOrigins"`
 
 	// +optional
@@ -109,19 +113,19 @@ type PortConfig struct {
 type Resources struct {
 
 	// Memory Request
-	// +kubebuider:default:1024Mi
+	// +optional
 	MemRequest string `json:"memRequest"`
 
 	// CPU Request
-	// +kubebuider:default:100m
+	// +optional
 	CPURequest string `json:"cpuRequest"`
 
 	// Memory Limit
-	// +kubebuider:default:2048Mi
+	// +optional
 	MemLimit string `json:"memLimit"`
 
 	// CPU Limit
-	// +kubebuider:default:500m
+	// +optional
 	CPULimit string `json:"cpuLimit"`
 }
 

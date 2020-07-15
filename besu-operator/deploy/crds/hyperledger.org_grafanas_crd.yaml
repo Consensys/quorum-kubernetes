@@ -51,6 +51,7 @@ spec:
                 description: Grafana Image Configuration
                 properties:
                   pullPolicy:
+                    default: IfNotPresent
                     description: Image pull policy
                     type: string
                   repository:
@@ -93,11 +94,6 @@ spec:
                   memRequest:
                     description: Memory Request
                     type: string
-                required:
-                - cpuLimit
-                - cpuRequest
-                - memLimit
-                - memRequest
                 type: object
             type: object
           status:

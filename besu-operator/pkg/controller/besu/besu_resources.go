@@ -88,86 +88,10 @@ func (r *ReconcileBesu) besuRoleBinding(instance *hyperledgerv1alpha1.Besu) *rba
 	return rb
 }
 
-func (r *ReconcileBesu) besuGenesis(instance *hyperledgerv1alpha1.Besu) *hyperledgerv1alpha1.GenesisJSON {
-	genesis := hyperledgerv1alpha1.GenesisJSON{
-		Genesis: hyperledgerv1alpha1.Genesis{
-			GenesisConfig: hyperledgerv1alpha1.GenesisConfig{
-				ChainID:                2018,
-				ConstantinopleFixBlock: 0,
-				Ibft2: hyperledgerv1alpha1.Ibft2{
-					BlockPeriodSeconds:    2,
-					EpochLength:           30000,
-					RequestTimeoutSeconds: 10,
-				},
-			},
-			Nonce:      "0x0",
-			Timestamp:  "0x58ee40ba",
-			GasLimit:   "0x47b760",
-			Difficulty: "0x1",
-			MixHash:    "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
-			CoinBase:   "0x0000000000000000000000000000000000000000",
-			Alloc: map[string]hyperledgerv1alpha1.Transaction{
-				"fe3b557e8fb62b89f4916b721be55ceb828dbd73": hyperledgerv1alpha1.Transaction{
-					PrivateKey: "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63",
-					Comment:    "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-					Balance:    "0xad78ebc5ac6200000",
-				},
-				"627306090abaB3A6e1400e9345bC60c78a8BEf57": hyperledgerv1alpha1.Transaction{
-					PrivateKey: "c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3",
-					Comment:    "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-					Balance:    "90000000000000000000000",
-				},
-				"f17f52151EbEF6C7334FAD080c5704D77216b732": hyperledgerv1alpha1.Transaction{
-					PrivateKey: "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-					Comment:    "private key and this comment are ignored.  In a real chain, the private key should NOT be stored",
-					Balance:    "90000000000000000000000",
-				},
-			},
-		},
-	}
-	return &genesis
-}
-
 func (r *ReconcileBesu) besuConfigMap(instance *hyperledgerv1alpha1.Besu) *corev1.ConfigMap {
 	data := make(map[string]string)
 
-	inputGenesis := instance.Spec.GenesisJSON
-	sampleGenesis := r.besuGenesis(instance)
-	if inputGenesis.Genesis.GenesisConfig.ChainID != 0 {
-		sampleGenesis.Genesis.GenesisConfig.ChainID = inputGenesis.Genesis.GenesisConfig.ChainID
-	}
-	if inputGenesis.Genesis.GenesisConfig.Ibft2.BlockPeriodSeconds != 0 {
-		sampleGenesis.Genesis.GenesisConfig.Ibft2.BlockPeriodSeconds = inputGenesis.Genesis.GenesisConfig.Ibft2.BlockPeriodSeconds
-	}
-	if inputGenesis.Genesis.GenesisConfig.Ibft2.EpochLength != 0 {
-		sampleGenesis.Genesis.GenesisConfig.Ibft2.EpochLength = inputGenesis.Genesis.GenesisConfig.Ibft2.EpochLength
-	}
-	if inputGenesis.Genesis.GenesisConfig.Ibft2.RequestTimeoutSeconds != 0 {
-		sampleGenesis.Genesis.GenesisConfig.Ibft2.RequestTimeoutSeconds = inputGenesis.Genesis.GenesisConfig.Ibft2.RequestTimeoutSeconds
-	}
-	if inputGenesis.Genesis.Nonce != "" {
-		sampleGenesis.Genesis.Nonce = inputGenesis.Genesis.Nonce
-	}
-	if inputGenesis.Genesis.Timestamp != "" {
-		sampleGenesis.Genesis.Timestamp = inputGenesis.Genesis.Timestamp
-	}
-	if inputGenesis.Genesis.GasLimit != "" {
-		sampleGenesis.Genesis.GasLimit = inputGenesis.Genesis.GasLimit
-	}
-	if inputGenesis.Genesis.Difficulty != "" {
-		sampleGenesis.Genesis.Difficulty = inputGenesis.Genesis.Difficulty
-	}
-	if inputGenesis.Genesis.MixHash != "" {
-		sampleGenesis.Genesis.MixHash = inputGenesis.Genesis.MixHash
-	}
-	if inputGenesis.Genesis.CoinBase != "" {
-		sampleGenesis.Genesis.CoinBase = inputGenesis.Genesis.CoinBase
-	}
-	if inputGenesis.Genesis.Alloc != nil {
-		sampleGenesis.Genesis.Alloc = inputGenesis.Genesis.Alloc
-	}
-
-	GenesisObject := sampleGenesis
+	GenesisObject := instance.Spec.GenesisJSON
 	count := instance.Spec.ValidatorsCount
 	if instance.Spec.BootnodesAreValidators {
 		count = count + instance.Spec.BootnodesCount
@@ -233,7 +157,7 @@ func (r *ReconcileBesu) besuInitJob(instance *hyperledgerv1alpha1.Besu) *batchv1
 					Containers: []corev1.Container{
 						corev1.Container{
 							Name:            instance.ObjectMeta.Name + "-generate-genesis",
-							Image:           "hyperledger/besu:1.4.6",
+							Image:           instance.Spec.BesuNodeSpec.Image.Repository + ":" + instance.Spec.BesuNodeSpec.Image.Tag,
 							ImagePullPolicy: "IfNotPresent",
 							VolumeMounts: []corev1.VolumeMount{
 								corev1.VolumeMount{
@@ -429,53 +353,10 @@ func (r *ReconcileBesu) newBesuNode(instance *hyperledgerv1alpha1.Besu,
 			Name:      name,
 			Namespace: instance.Namespace,
 		},
-		Spec: hyperledgerv1alpha1.BesuNodeSpec{
-			Type:      nodeType,
-			Bootnodes: bootsCount,
-			Replicas:  1,
-			Image: hyperledgerv1alpha1.Image{
-				Repository: "hyperledger/besu",
-				Tag:        "1.4.6",
-				PullPolicy: "IfNotPresent",
-			},
-			Resources: hyperledgerv1alpha1.Resources{
-				MemRequest: "1024Mi",
-				CPURequest: "100m",
-				MemLimit:   "2048Mi",
-				CPULimit:   "500m",
-			},
-			P2P: hyperledgerv1alpha1.PortConfig{
-				Enabled:               true,
-				Host:                  "0.0.0.0",
-				Port:                  30303,
-				Discovery:             true,
-				AuthenticationEnabled: false,
-			},
-			RPC: hyperledgerv1alpha1.PortConfig{
-				Enabled:               true,
-				Host:                  "0.0.0.0",
-				Port:                  8545,
-				AuthenticationEnabled: false,
-			},
-			WS: hyperledgerv1alpha1.PortConfig{
-				Enabled:               false,
-				Host:                  "0.0.0.0",
-				Port:                  8546,
-				AuthenticationEnabled: false,
-			},
-			GraphQl: hyperledgerv1alpha1.PortConfig{
-				Enabled:               false,
-				Host:                  "0.0.0.0",
-				Port:                  8547,
-				AuthenticationEnabled: false,
-			},
-			Metrics: hyperledgerv1alpha1.PortConfig{
-				Enabled: true,
-				Host:    "0.0.0.0",
-				Port:    9545,
-			},
-		},
+		Spec: instance.Spec.BesuNodeSpec,
 	}
+	node.Spec.Bootnodes = bootsCount
+	node.Spec.Type = nodeType
 	controllerutil.SetControllerReference(instance, node, r.scheme)
 	return node
 }

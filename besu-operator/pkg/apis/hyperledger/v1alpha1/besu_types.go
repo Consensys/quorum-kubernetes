@@ -11,16 +11,16 @@ import (
 type BesuSpec struct {
 
 	// Number of bootnodes in the network
-	// +kubebuilder:default:2
+	// +kubebuilder:default:=2
 	BootnodesCount int `json:"bootnodescount"`
 
 	// Number of validators in the network
-	// +kubebuilder:default:4
+	// +kubebuilder:default:=4
 	ValidatorsCount int `json:"validatorscount"`
 
 	// Number of members in the network
 	// +optional
-	// +kubebuilder:default:0
+	// +kubebuilder:default:=0
 	Members int32 `json:"members"`
 
 	// Bootnodes configurations
@@ -31,19 +31,19 @@ type BesuSpec struct {
 	// +optional
 	Validators []BesuNodeSpec `json:"validators,omitempty"`
 
-	// Besu Image Configuration
+	// Common Besu nodes configuration
 	// +optional
-	// +kubebuilder:default: {repository: hyperledger/besu; tag: 1.4.6; pullPolicy: IfNotPresent}
-	Image Image `json:"image,omitempty"`
+	// +kubebuilder:default:={replicas:2, image:{repository: hyperledger/besu, tag: "1.4.6", pullPolicy: IfNotPresent}, resources:{memRequest: "1024Mi", cpuRequest: "100m", memLimit: "2048Mi", cpuLimit: "500m"}, p2p: {enabled: true, host: "0.0.0.0", port: 30303, discovery: true, authenticationEnabled: false}, rpc:{enabled: true, host: "0.0.0.0", port: 8545, authenticationEnabled: false}, ws: {enabled: false, host: "0.0.0.0", port: 8546, authenticationEnabled: false}, graphql: {enabled: false, host: "0.0.0.0", port: 8547, authenticationEnabled: false}, metrics: {enabled: true, host: "0.0.0.0", port: 9545}}
+	BesuNodeSpec BesuNodeSpec `json:"besunodespec,omitempty"`
 
 	// Besu Network Genesis Configuration
 	// +optional
-	// +kubebuilder:default: {genesis: {config: {chainId: 2018; constantinoplefixblock: 0; ibft2: {blockperiodseconds: 5; epochlength: 30000; requesttimeoutseconds: 10}}; nonce: 0x0; timestamp: 0x58ee40ba; extraData: 0xf83ea00000000000000000000000000000000000000000000000000000000000000000d5949811ebc35d7b06b3fa8dc5809a1f9c52751e1deb808400000000c0; gasLimit: 0x1fffffffffffff; difficulty: 0x1; mixHash: 0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365; coinbase: 0x0000000000000000000000000000000000000000; alloc: {9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb: {balance: 0xad78ebc5ac6200000}}}}
+	// +kubebuilder:default:={genesis: {config: {chainId: 2018, constantinoplefixblock: 0, ibft2: {blockperiodseconds: 2, epochlength: 30000, requesttimeoutseconds: 10}}, nonce: "0x0", timestamp: "0x58ee40ba", gasLimit: "0x47b760", difficulty: "0x1", mixHash: "\"0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365\"", coinbase: "0x0000000000000000000000000000000000000000", alloc: {"\"9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb\"": {balance: "\"0xad78ebc5ac6200000\""}}}}
 	GenesisJSON GenesisJSON `json:"genesis.json,omitempty"`
 
 	// Bootnodes are validators or not
 	// +optional
-	// +kubebuilder:default:false
+	// +kubebuilder:default:=false
 	BootnodesAreValidators bool `json:"bootnodesarevalidators,omitempty"`
 
 	// Deploy Grafana/Prometheus or not
@@ -74,7 +74,7 @@ type Image struct {
 	Tag string `json:"tag"`
 
 	// Image pull policy
-	// +kubebuilder:default:IfNotPresent
+	// +kubebuilder:default:=IfNotPresent
 	// +optional
 	PullPolicy string `json:"pullPolicy"`
 }
@@ -91,43 +91,36 @@ type GenesisJSON struct {
 type Genesis struct {
 
 	// GenesisConfig
-	// Defaults to :
-	// chainId: 2018
-	//   constantinoplefixblock: 0
-	//   ibft2:
-	//     blockperiodseconds: 2
-	//     epochlength: 30000
-	// 	   requesttimeoutseconds: 10
 	// +optional
 	GenesisConfig GenesisConfig `json:"config"`
 
 	// Nonce
-	// +kubebuilder:default:0x0
+	// +kubebuilder:default:="0x0"
 	// +optional
 	Nonce string `json:"nonce"`
 
 	// Timestamp
-	// +kubebuilder:default:0x58ee40ba
+	// +kubebuilder:default:="0x58ee40ba"
 	// +optional
 	Timestamp string `json:"timestamp"`
 
 	// Set the block size limit (measured in gas)
-	// +kubebuilder:default:0x47b760
+	// +kubebuilder:default:="0x47b760"
 	// +optional
 	GasLimit string `json:"gasLimit"`
 
 	// Specify a fixed difficulty in private networks
-	// +kubebuilder:default:0x1
+	// +kubebuilder:default:="0x1"
 	// +optional
 	Difficulty string `json:"difficulty"`
 
 	// Hash for Istanbul block identification (IBFT 2.0).
-	// +kubebuilder:default:0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365
+	// +kubebuilder:default:="\"0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365\""
 	// +optional
 	MixHash string `json:"mixHash"`
 
 	// The coinbase address is the account to which mining rewards are paid.
-	// +kubebuilder:default:0x0000000000000000000000000000000000000000
+	// +kubebuilder:default:="0x0000000000000000000000000000000000000000"
 	// +optional
 	CoinBase string `json:"coinbase"`
 
@@ -154,17 +147,17 @@ type Nodes struct {
 type GenesisConfig struct {
 
 	// The identifier of the private Ethereum network
-	// +kubebuilder:default:2018
+	// +kubebuilder:default:=2018
 	// +optional
 	ChainID int `json:"chainId"`
 
-	// In private networks; the milestone block defines the protocol version for the network
-	// +kubebuilder:default:0
+	// In private networks, the milestone block defines the protocol version for the network
+	// +kubebuilder:default:=0
 	// +optional
 	ConstantinopleFixBlock int `json:"constantinoplefixblock"`
 
 	// Ibft2 configurations
-	// +kubebuilder:default: {blockperiodseconds:2; epochlength:30000; requesttimeoutseconds:10}
+	// +kubebuilder:default:={blockperiodseconds:2, epochlength:30000, requesttimeoutseconds:10}
 	// +optional
 	Ibft2 Ibft2 `json:"ibft2"`
 }
@@ -173,17 +166,17 @@ type GenesisConfig struct {
 type Ibft2 struct {
 
 	// Minimum block time in seconds.
-	// +kubebuilder:default:2
+	// +kubebuilder:default:=2
 	// +optional
 	BlockPeriodSeconds int `json:"blockperiodseconds"`
 
 	// Number of blocks after which to reset all votes.
-	// +kubebuilder:default:30000
+	// +kubebuilder:default:=30000
 	// +optional
 	EpochLength int `json:"epochlength"`
 
 	// 	Timeout for each consensus round before a round change.
-	// +kubebuilder:default:10
+	// +kubebuilder:default:=10
 	// +optional
 	RequestTimeoutSeconds int `json:"requesttimeoutseconds"`
 }

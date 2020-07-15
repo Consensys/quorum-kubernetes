@@ -182,7 +182,7 @@ func (in *BesuSpec) DeepCopyInto(out *BesuSpec) {
 		*out = make([]BesuNodeSpec, len(*in))
 		copy(*out, *in)
 	}
-	out.Image = in.Image
+	out.BesuNodeSpec = in.BesuNodeSpec
 	in.GenesisJSON.DeepCopyInto(&out.GenesisJSON)
 	out.PrometheusSpec = in.PrometheusSpec
 	out.GrafanaSpec = in.GrafanaSpec

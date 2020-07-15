@@ -72,7 +72,6 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 			ReadOnly:  VolumesReadOnly,
 		})
 	}
-
 	sfs := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -101,8 +100,8 @@ func (r *ReconcileBesuNode) besunodeStatefulSet(instance *hyperledgerv1alpha1.Be
 					Containers: []corev1.Container{
 						corev1.Container{
 							Name:            instance.ObjectMeta.Name,
-							Image:           besunodeImage,
-							ImagePullPolicy: ImagePullPolicy,
+							Image:           instance.Spec.Image.Repository + ":" + instance.Spec.Image.Tag,
+							ImagePullPolicy: corev1.PullPolicy(instance.Spec.Image.PullPolicy),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse(instance.Spec.Resources.CPURequest),
