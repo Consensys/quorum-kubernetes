@@ -1,7 +1,7 @@
 ---
 image:
   repository: hyperledger/besu
-  tag: 1.5.1-SNAPSHOT
+  tag: latest
   pullPolicy: IfNotPresent
 
 bootnode:

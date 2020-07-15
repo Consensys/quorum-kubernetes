@@ -26,7 +26,7 @@ spec:
             - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $BESU_BOOTNODE1_SERVICE_HOST:8545"
       containers:
         - name: minernode
-          image: hyperledger/besu:1.5.1-SNAPSHOT
+          image: hyperledger/besu:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
