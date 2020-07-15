@@ -123,61 +123,12 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 	var result *reconcile.Result
 
-	isBesuMarkedToBeDeleted := instance.GetDeletionTimestamp() != nil
-	if isBesuMarkedToBeDeleted {
-		if contains(instance.GetFinalizers(), besuFinalizer) {
-			// Run finalization logic for finalizer. If the
-			// finalization logic fails, don't remove the finalizer so
-			// that we can retry during the next reconciliation.
-			sfs := r.besuCleanupJob(instance)
-			found := &batchv1.Job{}
-			err := r.client.Get(context.TODO(), types.NamespacedName{
-				Name:      sfs.Name,
-				Namespace: instance.Namespace,
-			}, found)
-			if err != nil && errors.IsNotFound(err) {
-
-				// Create the Job
-				log.Info("Creating a new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
-				err = r.client.Create(context.TODO(), sfs)
-
-				if err != nil {
-					log.Error(err, "Failed to create new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
-					return reconcile.Result{}, err
-				} else {
-					return reconcile.Result{Requeue: true}, nil
-				}
-			} else if err != nil {
-				// Error that isn't due to the Job not existing
-				log.Error(err, "Failed to get Job")
-				return reconcile.Result{}, err
-			} else {
-				if found.Status.Succeeded == 0 {
-					log.Info("Job not completed yet")
-					return reconcile.Result{Requeue: true}, nil
-				}
-				log.Info("Job  completed yet")
-			}
-
-			// Remove finalizer. Once all finalizers have been
-			// removed, the object will be deleted.
-			controllerutil.RemoveFinalizer(instance, besuFinalizer)
-			err = r.client.Update(context.TODO(), instance)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-		}
-		return reconcile.Result{}, nil
+	result, err = r.handleCleanupFinalizer(reqLogger, instance)
+	if result != nil {
+		return *result, err
 	}
 
-	// Add finalizer for this CR
-	if !contains(instance.GetFinalizers(), besuFinalizer) {
-		if err := r.addFinalizer(reqLogger, instance); err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	if len(instance.Spec.Bootnodes) > 0 && instance.Spec.Bootnodes[0].PubKey != "" {
+	if len(instance.Spec.BootnodeKeys) > 0 {
 		instance.Status.HaveKeys = true
 	} else {
 		instance.Status.HaveKeys = false
@@ -252,6 +203,63 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
+}
+func (r *ReconcileBesu) handleCleanupFinalizer(reqLogger logr.Logger, instance *hyperledgerv1alpha1.Besu) (*reconcile.Result, error) {
+	isBesuMarkedToBeDeleted := instance.GetDeletionTimestamp() != nil
+	if isBesuMarkedToBeDeleted {
+		if contains(instance.GetFinalizers(), besuFinalizer) {
+			// Run finalization logic for finalizer. If the
+			// finalization logic fails, don't remove the finalizer so
+			// that we can retry during the next reconciliation.
+			sfs := r.besuCleanupJob(instance)
+			found := &batchv1.Job{}
+			err := r.client.Get(context.TODO(), types.NamespacedName{
+				Name:      sfs.Name,
+				Namespace: instance.Namespace,
+			}, found)
+			if err != nil && errors.IsNotFound(err) {
+
+				// Create the Job
+				log.Info("Creating a new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
+				err = r.client.Create(context.TODO(), sfs)
+
+				if err != nil {
+					log.Error(err, "Failed to create new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
+					return &reconcile.Result{}, err
+				} else {
+					return &reconcile.Result{Requeue: true}, nil
+				}
+			} else if err != nil {
+				// Error that isn't due to the Job not existing
+				log.Error(err, "Failed to get Job")
+				return &reconcile.Result{}, err
+			} else {
+				if found.Status.Succeeded == 0 {
+					log.Info("Cleanup Job not completed yet")
+					return &reconcile.Result{Requeue: true}, nil
+				}
+				log.Info("Cleanup Job completed")
+			}
+
+			// Remove finalizer. Once all finalizers have been
+			// removed, the object will be deleted.
+			controllerutil.RemoveFinalizer(instance, besuFinalizer)
+			err = r.client.Update(context.TODO(), instance)
+			if err != nil {
+				return &reconcile.Result{}, err
+			}
+		}
+		return &reconcile.Result{}, nil
+	}
+
+	// Add finalizer for this CR
+	if !contains(instance.GetFinalizers(), besuFinalizer) {
+		if err := r.addFinalizer(reqLogger, instance); err != nil {
+			return &reconcile.Result{}, err
+		}
+	}
+
+	return nil, nil
 }
 
 func (r *ReconcileBesu) addFinalizer(reqLogger logr.Logger, instance *hyperledgerv1alpha1.Besu) error {
