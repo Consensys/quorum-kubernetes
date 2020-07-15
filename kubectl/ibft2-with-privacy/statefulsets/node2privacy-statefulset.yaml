@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: node2privacy
-          image: hyperledger/besu:1.5.1-SNAPSHOT
+          image: hyperledger/besu:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:

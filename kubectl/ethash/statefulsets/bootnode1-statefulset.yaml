@@ -61,7 +61,7 @@ spec:
       serviceAccountName: bootnode1-sa
       containers:
         - name: bootnode1
-          image: hyperledger/besu:1.5.1-SNAPSHOT
+          image: hyperledger/besu:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
