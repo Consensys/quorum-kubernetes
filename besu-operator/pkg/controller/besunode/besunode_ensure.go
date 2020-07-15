@@ -20,8 +20,8 @@ func (r *ReconcileBesuNode) ensureStatefulSet(request reconcile.Request,
 	// See if StatefulSet already exists and create if it doesn't
 	found := &appsv1.StatefulSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -54,8 +54,8 @@ func (r *ReconcileBesuNode) ensureServiceAccount(request reconcile.Request,
 	// See if SecretAccount already exists and create if it doesn't
 	found := &corev1.ServiceAccount{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -88,8 +88,8 @@ func (r *ReconcileBesuNode) ensureRole(request reconcile.Request,
 	// See if Role already exists and create if it doesn't
 	found := &rbacv1.Role{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -122,8 +122,8 @@ func (r *ReconcileBesuNode) ensureRoleBinding(request reconcile.Request,
 	// See if RoleBinding already exists and create if it doesn't
 	found := &rbacv1.RoleBinding{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -153,8 +153,8 @@ func (r *ReconcileBesuNode) ensureService(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -185,8 +185,8 @@ func (r *ReconcileBesuNode) ensureSecret(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.Secret{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 		// Create the secret
@@ -216,8 +216,8 @@ func (r *ReconcileBesuNode) ensureConfigMap(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.ConfigMap{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 		// Create the ConfigMap

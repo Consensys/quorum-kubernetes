@@ -212,8 +212,9 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 
 	for i := 0; i < instance.Spec.BootnodesCount; i++ {
-		result, err = r.ensureBesuNode(request, instance, r.newBesuNode(instance, "bootnode"+strconv.Itoa(i+1), "Bootnode", instance.Spec.BootnodesCount))
-		log.Error(err, "Failed to ensure bootnode BesuNode")
+		node := r.newBesuNode(instance, "bootnode"+strconv.Itoa(i+1), "Bootnode", instance.Spec.BootnodesCount)
+		result, err = r.ensureBesuNode(request, instance, node)
+		log.Error(err, "Failed to ensure bootnode BesuNode", "BesuNode.Namespace", instance.Namespace, "BesuNode.Name", "bootnode"+strconv.Itoa(i+1))
 		if result != nil {
 			return *result, err
 		}

@@ -17,8 +17,8 @@ func (r *ReconcileGrafana) ensureConfigMap(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.ConfigMap{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 		// Create the ConfigMap
@@ -48,8 +48,8 @@ func (r *ReconcileGrafana) ensureService(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.Service{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -80,8 +80,8 @@ func (r *ReconcileGrafana) ensureDeployment(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &appsv1.Deployment{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 

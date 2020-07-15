@@ -18,10 +18,11 @@ func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 ) (*reconcile.Result, error) {
 
 	// See if BesuNode already exists and create if it doesn't
+	found := &hyperledgerv1alpha1.BesuNode{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
-	}, sfs)
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
+	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
 		// Create the BesuNode
@@ -38,10 +39,10 @@ func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 		}
 	} else if err != nil {
 		// Error that isn't due to the BesuNode not existing
-		log.Error(err, "Failed to get BesuNode")
+		log.Error(err, "Failed to get BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
 		return &reconcile.Result{}, err
 	}
-
+	log.Info("ensureBesuNode", "All went  :", "well", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
 	return nil, nil
 }
 
@@ -51,8 +52,8 @@ func (r *ReconcileBesu) ensureConfigMap(request reconcile.Request,
 ) (*reconcile.Result, error) {
 	found := &corev1.ConfigMap{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.Name,
-		Namespace: instance.Namespace,
+		Name:      s.ObjectMeta.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 		// Create the ConfigMap
@@ -84,8 +85,8 @@ func (r *ReconcileBesu) ensureServiceAccount(request reconcile.Request,
 	// See if SecretAccount already exists and create if it doesn't
 	found := &corev1.ServiceAccount{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -118,8 +119,8 @@ func (r *ReconcileBesu) ensureRole(request reconcile.Request,
 	// See if Role already exists and create if it doesn't
 	found := &rbacv1.Role{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -152,8 +153,8 @@ func (r *ReconcileBesu) ensureRoleBinding(request reconcile.Request,
 	// See if RoleBinding already exists and create if it doesn't
 	found := &rbacv1.RoleBinding{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -186,8 +187,8 @@ func (r *ReconcileBesu) ensureJob(request reconcile.Request,
 	// See if Job already exists and create if it doesn't
 	found := &batchv1.Job{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
@@ -218,10 +219,11 @@ func (r *ReconcileBesu) ensurePrometheus(request reconcile.Request,
 ) (*reconcile.Result, error) {
 
 	// See if Prometheus already exists and create if it doesn't
+	found := &hyperledgerv1alpha1.Prometheus{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
-	}, sfs)
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
+	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
 		// Create the Prometheus
@@ -251,10 +253,11 @@ func (r *ReconcileBesu) ensureGrafana(request reconcile.Request,
 ) (*reconcile.Result, error) {
 
 	// See if Grafana already exists and create if it doesn't
+	found := &hyperledgerv1alpha1.Grafana{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      sfs.Name,
-		Namespace: instance.Namespace,
-	}, sfs)
+		Name:      sfs.ObjectMeta.Name,
+		Namespace: sfs.ObjectMeta.Namespace,
+	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
 		// Create the Grafana
