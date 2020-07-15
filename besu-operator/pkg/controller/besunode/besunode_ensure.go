@@ -43,6 +43,26 @@ func (r *ReconcileBesuNode) ensureStatefulSet(request reconcile.Request,
 		return &reconcile.Result{}, err
 	}
 
+	var result *reconcile.Result
+	result, err = r.handleStatefulSetChanges(instance, found)
+	if result != nil || err != nil {
+		return result, err
+	}
+
+	return nil, nil
+}
+
+func (r *ReconcileBesuNode) handleStatefulSetChanges(instance *hyperledgerv1alpha1.BesuNode, found *appsv1.StatefulSet) (*reconcile.Result, error) {
+	if instance.Spec.Image.Repository+":"+instance.Spec.Image.Tag != found.Spec.Template.Spec.Containers[0].Image {
+		found.Spec.Template.Spec.Containers[0].Image = instance.Spec.Image.Repository + ":" + instance.Spec.Image.Tag
+		err := r.client.Update(context.TODO(), found)
+		if err != nil {
+			log.Error(err, "Failed to update Statefulset.", "Statefulset.Namespace", found.Namespace, "Statefulset.Name", found.Name)
+			return &reconcile.Result{}, err
+		}
+		// Spec updated - return and requeue
+		return &reconcile.Result{Requeue: true}, nil
+	}
 	return nil, nil
 }
 

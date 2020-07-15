@@ -42,7 +42,28 @@ func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 		log.Error(err, "Failed to get BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
 		return &reconcile.Result{}, err
 	}
+
+	var result *reconcile.Result
+	result, err = r.handleBesuNodeChanges(instance, found)
+	if result != nil || err != nil {
+		return result, err
+	}
+
 	log.Info("ensureBesuNode", "All went  :", "well", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
+	return nil, nil
+}
+
+func (r *ReconcileBesu) handleBesuNodeChanges(instance *hyperledgerv1alpha1.Besu, found *hyperledgerv1alpha1.BesuNode) (*reconcile.Result, error) {
+	if instance.Spec.BesuNodeSpec.Image.Tag != found.Spec.Image.Tag || instance.Spec.BesuNodeSpec.Image.Repository != found.Spec.Image.Repository {
+		found.Spec.Image = instance.Spec.BesuNodeSpec.Image
+		err := r.client.Update(context.TODO(), found)
+		if err != nil {
+			log.Error(err, "Failed to update BesuNode.", "BesuNode.Namespace", found.Namespace, "BesuNode.Name", found.Name)
+			return &reconcile.Result{}, err
+		}
+		// Spec updated - return and requeue
+		return &reconcile.Result{Requeue: true}, nil
+	}
 	return nil, nil
 }
 
