@@ -1,0 +1,45 @@
+apiVersion: hyperledger.org/v1alpha1
+kind: Besu
+metadata:
+  name: besu
+spec:
+  bootnodescount: 2
+  validatorscount: 2
+  members: 1
+  besunodespec:
+    replicas: 2
+    image:
+      pullPolicy: IfNotPresent
+      repository: hyperledger/besu
+      tag: 1.4.6
+    resources:
+      cpuLimit: 500m
+      cpuRequest: 100m
+      memLimit: 2048Mi
+      memRequest: 1024Mi
+    graphql:
+      authenticationEnabled: false
+      enabled: false
+      host: 0.0.0.0
+      port: 8547
+    metrics:
+      enabled: true
+      host: 0.0.0.0
+      port: 9545
+    p2p:
+      authenticationEnabled: false
+      discovery: true
+      enabled: true
+      host: 0.0.0.0
+      port: 30303
+    rpc:
+      authenticationEnabled: false
+      enabled: true
+      host: 0.0.0.0
+      port: 8545
+    ws:
+      authenticationEnabled: false
+      enabled: false
+      host: 0.0.0.0
+      port: 8546
+
