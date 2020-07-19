@@ -51,8 +51,27 @@ func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 }
 
 func (r *ReconcileBesu) handleBesuNodeChanges(instance *hyperledgerv1alpha1.Besu, found *hyperledgerv1alpha1.BesuNode) (*reconcile.Result, error) {
+	updated := false
 	if instance.Spec.BesuNodeSpec.Image.Tag != found.Spec.Image.Tag || instance.Spec.BesuNodeSpec.Image.Repository != found.Spec.Image.Repository {
 		found.Spec.Image = instance.Spec.BesuNodeSpec.Image
+		updated = true
+	}
+
+	// replicas handling
+	if found.Spec.Type == "Member" {
+		if instance.Spec.Members != found.Spec.Replicas {
+			found.Spec.Replicas = instance.Spec.Members
+			updated = true
+		}
+
+	} else {
+		if instance.Spec.BesuNodeSpec.Replicas != found.Spec.Replicas {
+			found.Spec.Replicas = instance.Spec.BesuNodeSpec.Replicas
+			updated = true
+		}
+	}
+
+	if updated {
 		err := r.client.Update(context.TODO(), found)
 		if err != nil {
 			log.Error(err, "Failed to update BesuNode.", "BesuNode.Namespace", found.Namespace, "BesuNode.Name", found.Name)

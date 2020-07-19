@@ -65,8 +65,16 @@ func (r *ReconcileBesuNode) updateBesuNodeStatus(instance *hyperledgerv1alpha1.B
 }
 
 func (r *ReconcileBesuNode) handleStatefulSetChanges(instance *hyperledgerv1alpha1.BesuNode, found *appsv1.StatefulSet) (*reconcile.Result, error) {
+	updated := false
 	if instance.Spec.Image.Repository+":"+instance.Spec.Image.Tag != found.Spec.Template.Spec.Containers[0].Image {
 		found.Spec.Template.Spec.Containers[0].Image = instance.Spec.Image.Repository + ":" + instance.Spec.Image.Tag
+		updated = true
+	}
+	if instance.Spec.Replicas != *found.Spec.Replicas {
+		found.Spec.Replicas = &instance.Spec.Replicas
+		updated = true
+	}
+	if updated {
 		err := r.client.Update(context.TODO(), found)
 		if err != nil {
 			log.Error(err, "Failed to update Statefulset.", "Statefulset.Namespace", found.Namespace, "Statefulset.Name", found.Name)

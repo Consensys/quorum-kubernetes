@@ -208,8 +208,11 @@
 
 ## Version upgrade
 
-- Supports upgraging besu version
-- Besu image or repository can be updated by `kubectl edit besu <besu_name>`
+- Supports upgraging besu version or changing replicas or changing number of member nodes
+- `kubectl edit besu <besu_name>` :
+    - For changing besu image, change spec:besunodespec:image
+    - For changing member nodes, change spec:members
+    - For changing replicas of validator or bootnodes, change spec:besunodespec:replicas
 
 
 ## Development
