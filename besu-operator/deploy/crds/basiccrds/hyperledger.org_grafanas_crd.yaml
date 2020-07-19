@@ -29,11 +29,72 @@ spec:
           metadata:
             type: object
           spec:
+            default:
+              image:
+                pullPolicy: IfNotPresent
+                repository: grafana/grafana
+                tag: 6.2.5
+              nodeport: 30030
+              replicas: 1
+              resources:
+                cpuLimit: 500m
+                cpuRequest: 100m
+                memLimit: 512Mi
+                memRequest: 256Mi
             description: GrafanaSpec defines the desired state of Grafana
             properties:
+              image:
+                default:
+                  pullPolicy: IfNotPresent
+                  repository: grafana/grafana
+                  tag: 6.2.5
+                description: Grafana Image Configuration
+                properties:
+                  pullPolicy:
+                    default: IfNotPresent
+                    description: Image pull policy
+                    type: string
+                  repository:
+                    description: Image repository
+                    type: string
+                  tag:
+                    description: Image tag
+                    type: string
+                type: object
+              nodeport:
+                default: 30030
+                description: NodePort
+                format: int32
+                type: integer
               owner:
                 description: Owner metadata name
                 type: string
+              replicas:
+                default: 1
+                description: Number of replica pods corresponding to grafana node
+                format: int32
+                type: integer
+              resources:
+                default:
+                  cpuLimit: 500m
+                  cpuRequest: 100m
+                  memLimit: 512Mi
+                  memRequest: 256Mi
+                description: Grafana Requests and limits
+                properties:
+                  cpuLimit:
+                    description: CPU Limit
+                    type: string
+                  cpuRequest:
+                    description: CPU Request
+                    type: string
+                  memLimit:
+                    description: Memory Limit
+                    type: string
+                  memRequest:
+                    description: Memory Request
+                    type: string
+                type: object
             type: object
           status:
             description: GrafanaStatus defines the observed state of Grafana

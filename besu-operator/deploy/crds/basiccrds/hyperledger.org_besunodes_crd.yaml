@@ -34,6 +34,11 @@ spec:
               bootnodes:
                 type: integer
               graphql:
+                default:
+                  authenticationEnabled: false
+                  enabled: false
+                  host: 0.0.0.0
+                  port: 8547
                 description: GraphQl
                 properties:
                   api:
@@ -53,32 +58,33 @@ spec:
                   port:
                     description: Port
                     type: integer
-                required:
-                - corsOrigins
-                - enabled
-                - host
-                - port
                 type: object
               httpwhitelist:
                 description: Defaults to ["*"]
                 type: string
               image:
+                default:
+                  pullPolicy: IfNotPresent
+                  repository: hyperledger/besu
+                  tag: 1.4.6
                 description: Besu Image Configuration
                 properties:
                   pullPolicy:
-                    description: Besu container image pull policy
+                    default: IfNotPresent
+                    description: Image pull policy
                     type: string
                   repository:
-                    description: Besu container image repository
+                    description: Image repository
                     type: string
                   tag:
-                    description: Besu container image tag
+                    description: Image tag
                     type: string
-                required:
-                - repository
-                - tag
                 type: object
               metrics:
+                default:
+                  enabled: true
+                  host: 0.0.0.0
+                  port: 9545
                 description: PortConfig defines port configurations of different types
                   of ports
                 properties:
@@ -99,17 +105,15 @@ spec:
                   port:
                     description: Port
                     type: integer
-                required:
-                - corsOrigins
-                - enabled
-                - host
-                - port
                 type: object
-              name:
-                description: Name of the node
-                type: string
               p2p:
-                description: P2P
+                default:
+                  authenticationEnabled: false
+                  discovery: true
+                  enabled: true
+                  host: 0.0.0.0
+                  port: 30303
+                description: P2P Port configuration
                 properties:
                   api:
                     type: string
@@ -128,29 +132,24 @@ spec:
                   port:
                     description: Port
                     type: integer
-                required:
-                - corsOrigins
-                - enabled
-                - host
-                - port
                 type: object
-              privkey:
-                description: Private key
-                type: string
-              pubkey:
-                description: Public key
-                type: string
               pvcSizeLimit:
-                description: "\tSize of the Volume"
+                description: Size of the Volume
                 type: string
               pvcStorageClass:
-                description: "\tStorage class of the Volume"
+                description: Storage class of the Volume
                 type: string
               replicas:
+                default: 2
                 description: Number of replica pods corresponding to this node
                 format: int32
                 type: integer
               resources:
+                default:
+                  cpuLimit: 500m
+                  cpuRequest: 100m
+                  memLimit: 2048Mi
+                  memRequest: 1024Mi
                 description: Requests and limits
                 properties:
                   cpuLimit:
@@ -165,14 +164,14 @@ spec:
                   memRequest:
                     description: Memory Request
                     type: string
-                required:
-                - cpuLimit
-                - cpuRequest
-                - memLimit
-                - memRequest
                 type: object
               rpc:
-                description: RPC
+                default:
+                  authenticationEnabled: false
+                  enabled: true
+                  host: 0.0.0.0
+                  port: 8545
+                description: RPC Port Configuration
                 properties:
                   api:
                     type: string
@@ -191,17 +190,18 @@ spec:
                   port:
                     description: Port
                     type: integer
-                required:
-                - corsOrigins
-                - enabled
-                - host
-                - port
                 type: object
               type:
+                default: Member
                 description: 'Type of node, takes one of the values : Bootnode, Validator,
                   Member'
                 type: string
               ws:
+                default:
+                  authenticationEnabled: false
+                  enabled: false
+                  host: 0.0.0.0
+                  port: 8546
                 description: WS
                 properties:
                   api:
@@ -221,11 +221,6 @@ spec:
                   port:
                     description: Port
                     type: integer
-                required:
-                - corsOrigins
-                - enabled
-                - host
-                - port
                 type: object
             type: object
           status:
