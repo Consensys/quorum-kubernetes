@@ -148,13 +148,6 @@ func (r *ReconcileBesuNode) Reconcile(request reconcile.Request) (reconcile.Resu
 		if result != nil {
 			return *result, err
 		}
-
-		if instance.Spec.PrivKey != "" {
-			result, err = r.ensureSecret(request, instance, r.besunodeSecret(instance))
-			if result != nil {
-				return *result, err
-			}
-		}
 	}
 
 	result, err = r.ensureServiceAccount(request, instance, resources.NewServiceAccount(instance.ObjectMeta.Name+"-sa", namespace))

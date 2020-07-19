@@ -71,14 +71,6 @@ type BesuNodeSpec struct {
 	// +kubebuider:default:="standard"
 	// +optional
 	PVCStorageClass string `json:"pvcStorageClass"`
-
-	// Public key
-	// +optional
-	PubKey string `json:"pubkey"`
-
-	// Private key
-	// +optional
-	PrivKey string `json:"privkey"`
 }
 
 // PortConfig defines port configurations of different types of ports

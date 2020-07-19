@@ -2,20 +2,18 @@ package besu
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"strconv"
 
 	hyperledgerv1alpha1 "github.com/Sumaid/besu-kubernetes/besu-operator/pkg/apis/hyperledger/v1alpha1"
-	"github.com/Sumaid/besu-kubernetes/besu-operator/pkg/resources"
-	"github.com/go-logr/logr"
-	batchv1 "k8s.io/api/batch/v1"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	corev1 "k8s.io/api/core/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -123,41 +121,39 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 	var result *reconcile.Result
 
-	result, err = r.handleCleanupFinalizer(reqLogger, instance)
-	if result != nil {
-		return *result, err
+	// If user has provided more keys than required, then only consider first count keys
+	bootnodeKeys := instance.Spec.BootnodeKeys[:min(instance.Spec.BootnodesCount, len(instance.Spec.BootnodeKeys))]
+	validatorKeys := instance.Spec.ValidatorKeys[:min(instance.Spec.ValidatorsCount, len(instance.Spec.ValidatorKeys))]
+
+	// If user has provided less keys than, reqdKeys is extra keys which need to be generated
+	reqdBootnodeKeys := instance.Spec.BootnodesCount - len(bootnodeKeys)
+	reqdValidatorKeys := instance.Spec.ValidatorsCount - len(validatorKeys)
+
+	for i := 0; i < reqdBootnodeKeys; i++ {
+		privkey, pubkey := r.generateKeyPair()
+		bootnodeKeys = append(bootnodeKeys, hyperledgerv1alpha1.Key{PubKey: pubkey, PrivKey: privkey})
 	}
 
-	if len(instance.Spec.BootnodeKeys) > 0 {
-		instance.Status.HaveKeys = true
-	} else {
-		instance.Status.HaveKeys = false
+	for i := 0; i < reqdValidatorKeys; i++ {
+		privkey, pubkey := r.generateKeyPair()
+		validatorKeys = append(validatorKeys, hyperledgerv1alpha1.Key{PubKey: pubkey, PrivKey: privkey})
 	}
 
-	if instance.Status.HaveKeys == false {
-		result, err = r.ensureRole(request, instance, r.besuRole(instance))
+	for i, key := range bootnodeKeys {
+		result, err = r.ensureSecret(request, instance, r.besuSecret(instance, "bootnode"+strconv.Itoa(i+1), key.PrivKey, key.PubKey))
 		if result != nil {
 			return *result, err
 		}
-
-		result, err = r.ensureRoleBinding(request, instance, r.besuRoleBinding(instance))
-		if result != nil {
-			return *result, err
-		}
-
-		result, err = r.ensureServiceAccount(request, instance, resources.NewServiceAccount(instance.ObjectMeta.Name+"-sa", instance.GetNamespace()))
-		if result != nil {
-			return *result, err
-		}
-
-		result, err = r.ensureJob(request, instance, r.besuInitJob(instance))
-		if result != nil {
-			return *result, err
-		}
-		instance.Status.HaveKeys = true
 	}
 
-	result, err = r.ensureConfigMap(request, instance, r.besuConfigMap(instance))
+	for i, key := range validatorKeys {
+		result, err = r.ensureSecret(request, instance, r.besuSecret(instance, "validator"+strconv.Itoa(i+1), key.PrivKey, key.PubKey))
+		if result != nil {
+			return *result, err
+		}
+	}
+
+	result, err = r.ensureConfigMap(request, instance, r.besuGenesisConfigMap(instance))
 	if result != nil {
 		return *result, err
 	}
@@ -172,9 +168,10 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	}
 
 	for i := 0; i < instance.Spec.ValidatorsCount; i++ {
-		result, err = r.ensureBesuNode(request, instance, r.newBesuNode(instance, "validator"+strconv.Itoa(i+1), "Validator", instance.Spec.BootnodesCount))
+		node := r.newBesuNode(instance, "validator"+strconv.Itoa(i+1), "Validator", instance.Spec.BootnodesCount)
+		result, err = r.ensureBesuNode(request, instance, node)
+		log.Error(err, "Failed to ensure bootnode BesuNode", "BesuNode.Namespace", instance.Namespace, "BesuNode.Name", "bootnode"+strconv.Itoa(i+1))
 		if result != nil {
-			log.Error(err, "Failed to ensure validator BesuNode")
 			return *result, err
 		}
 	}
@@ -204,81 +201,30 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
 }
-func (r *ReconcileBesu) handleCleanupFinalizer(reqLogger logr.Logger, instance *hyperledgerv1alpha1.Besu) (*reconcile.Result, error) {
-	isBesuMarkedToBeDeleted := instance.GetDeletionTimestamp() != nil
-	if isBesuMarkedToBeDeleted {
-		if contains(instance.GetFinalizers(), besuFinalizer) {
-			// Run finalization logic for finalizer. If the
-			// finalization logic fails, don't remove the finalizer so
-			// that we can retry during the next reconciliation.
-			sfs := r.besuCleanupJob(instance)
-			found := &batchv1.Job{}
-			err := r.client.Get(context.TODO(), types.NamespacedName{
-				Name:      sfs.Name,
-				Namespace: instance.Namespace,
-			}, found)
-			if err != nil && errors.IsNotFound(err) {
 
-				// Create the Job
-				log.Info("Creating a new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
-				err = r.client.Create(context.TODO(), sfs)
-
-				if err != nil {
-					log.Error(err, "Failed to create new Job", "Job.Namespace", sfs.Namespace, "Job.Name", sfs.Name)
-					return &reconcile.Result{}, err
-				} else {
-					return &reconcile.Result{Requeue: true}, nil
-				}
-			} else if err != nil {
-				// Error that isn't due to the Job not existing
-				log.Error(err, "Failed to get Job")
-				return &reconcile.Result{}, err
-			} else {
-				if found.Status.Succeeded == 0 {
-					log.Info("Cleanup Job not completed yet")
-					return &reconcile.Result{Requeue: true}, nil
-				}
-				log.Info("Cleanup Job completed")
-			}
-
-			// Remove finalizer. Once all finalizers have been
-			// removed, the object will be deleted.
-			controllerutil.RemoveFinalizer(instance, besuFinalizer)
-			err = r.client.Update(context.TODO(), instance)
-			if err != nil {
-				return &reconcile.Result{}, err
-			}
-		}
-		return &reconcile.Result{}, nil
-	}
-
-	// Add finalizer for this CR
-	if !contains(instance.GetFinalizers(), besuFinalizer) {
-		if err := r.addFinalizer(reqLogger, instance); err != nil {
-			return &reconcile.Result{}, err
-		}
-	}
-
-	return nil, nil
-}
-
-func (r *ReconcileBesu) addFinalizer(reqLogger logr.Logger, instance *hyperledgerv1alpha1.Besu) error {
-	reqLogger.Info("Adding Finalizer for the Besu")
-	controllerutil.AddFinalizer(instance, besuFinalizer)
-
-	err := r.client.Update(context.TODO(), instance)
+func (r *ReconcileBesu) generateKeyPair() (string, string) {
+	privateKey, err := crypto.GenerateKey()
 	if err != nil {
-		reqLogger.Error(err, "Failed to update Besu with finalizer")
-		return err
+		log.Error(err, "Failed to generate private key")
 	}
-	return nil
+
+	privateKeyBytes := crypto.FromECDSA(privateKey)
+	privkey := hexutil.Encode(privateKeyBytes)[2:]
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Error(err, "Failed to retrieve public key")
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+	pubkey := hexutil.Encode(publicKeyBytes)[4:]
+	return privkey, pubkey
 }
 
-func contains(list []string, s string) bool {
-	for _, v := range list {
-		if v == s {
-			return true
-		}
+func min(a int, b int) int {
+	if a < b {
+		return a
 	}
-	return false
+	return b
 }

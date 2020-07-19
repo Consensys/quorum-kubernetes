@@ -133,12 +133,6 @@ spec:
                     description: Port
                     type: integer
                 type: object
-              privkey:
-                description: Private key
-                type: string
-              pubkey:
-                description: Public key
-                type: string
               pvcSizeLimit:
                 description: Size of the Volume
                 type: string

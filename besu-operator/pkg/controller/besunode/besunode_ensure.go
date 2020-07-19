@@ -199,37 +199,6 @@ func (r *ReconcileBesuNode) ensureService(request reconcile.Request,
 	return nil, nil
 }
 
-func (r *ReconcileBesuNode) ensureSecret(request reconcile.Request,
-	instance *hyperledgerv1alpha1.BesuNode,
-	s *corev1.Secret,
-) (*reconcile.Result, error) {
-	found := &corev1.Secret{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name:      s.ObjectMeta.Name,
-		Namespace: s.ObjectMeta.Namespace,
-	}, found)
-	if err != nil && errors.IsNotFound(err) {
-		// Create the secret
-		log.Info("Creating a new secret", "Secret.Namespace", s.Namespace, "Secret.Name", s.Name)
-		err = r.client.Create(context.TODO(), s)
-
-		if err != nil {
-			// Creation failed
-			log.Error(err, "Failed to create new Secret", "Secret.Namespace", s.Namespace, "Secret.Name", s.Name)
-			return &reconcile.Result{}, err
-		} else {
-			// Creation was successful
-			return nil, nil
-		}
-	} else if err != nil {
-		// Error that isn't due to the secret not existing
-		log.Error(err, "Failed to get Secret")
-		return &reconcile.Result{}, err
-	}
-
-	return nil, nil
-}
-
 func (r *ReconcileBesuNode) ensureConfigMap(request reconcile.Request,
 	instance *hyperledgerv1alpha1.BesuNode,
 	s *corev1.ConfigMap,

@@ -288,30 +288,6 @@ func (r *ReconcileBesuNode) besunodeService(instance *hyperledgerv1alpha1.BesuNo
 	return serv
 }
 
-func (r *ReconcileBesuNode) besunodeSecret(instance *hyperledgerv1alpha1.BesuNode) *corev1.Secret {
-	secr := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "besu-" + instance.ObjectMeta.Name + "-key",
-			Namespace: instance.Namespace,
-			Labels: map[string]string{
-				"app": "besu-" + instance.ObjectMeta.Name + "-key",
-			},
-		},
-		Type: "Opaque",
-		StringData: map[string]string{
-			"private.key": instance.Spec.PrivKey,
-			"public.key":  instance.Spec.PubKey,
-			"enode.key":   instance.Spec.PubKey,
-		},
-	}
-	controllerutil.SetControllerReference(instance, secr, r.scheme)
-	return secr
-}
-
 func (r *ReconcileBesuNode) getBesuCommand(instance *hyperledgerv1alpha1.BesuNode) string {
 	commandInitial := "exec /opt/besu/bin/besu "
 	genesisFile := fmt.Sprintf("--genesis-file=%s ", GenesisConfigVolumeMountPath+"/genesis.json")

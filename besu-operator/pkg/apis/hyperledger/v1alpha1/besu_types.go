@@ -23,13 +23,13 @@ type BesuSpec struct {
 	// +kubebuilder:default:=0
 	Members int32 `json:"members"`
 
-	// Bootnodes configurations
+	// Bootnodes keys
 	// +optional
-	Bootnodes []BesuNodeSpec `json:"bootnodes,omitempty"`
+	BootnodeKeys []Key `json:"bootnodeKeys,omitempty"`
 
-	// Validators configurations
+	// Validators keys
 	// +optional
-	Validators []BesuNodeSpec `json:"validators,omitempty"`
+	ValidatorKeys []Key `json:"validatorKeys,omitempty"`
 
 	// Common Besu nodes configuration
 	// +optional
@@ -60,6 +60,15 @@ type BesuSpec struct {
 	// +optional
 	// +kubebuilder:default:={resources: {memRequest: "256Mi", cpuRequest: "100m", memLimit: "512Mi", cpuLimit: "500m"}, image:{repository: grafana/grafana, tag: "6.2.5", pullPolicy: IfNotPresent}, replicas:1, nodeport:30030}
 	GrafanaSpec GrafanaSpec `json:"grafanaspec,omitempty"`
+}
+
+// Key defines the private & public keys of bootnodes & validators
+type Key struct {
+	// Public key
+	PubKey string `json:"pubkey"`
+
+	// Private key
+	PrivKey string `json:"privkey"`
 }
 
 // Image defines the desired Besu Image configurations
