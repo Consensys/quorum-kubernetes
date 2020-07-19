@@ -48,8 +48,20 @@ func (r *ReconcileBesuNode) ensureStatefulSet(request reconcile.Request,
 	if result != nil || err != nil {
 		return result, err
 	}
-
+	err = r.updateBesuNodeStatus(instance, found.Status.Replicas, found.Status.ReadyReplicas)
+	if err != nil {
+		log.Error(err, "Failed to update besu node status")
+	}
 	return nil, nil
+}
+
+func (r *ReconcileBesuNode) updateBesuNodeStatus(instance *hyperledgerv1alpha1.BesuNode,
+	replicas int32,
+	readyreplicas int32) error {
+	instance.Status.Replicas = replicas
+	instance.Status.ReadyReplicas = readyreplicas
+	err := r.client.Status().Update(context.TODO(), instance)
+	return err
 }
 
 func (r *ReconcileBesuNode) handleStatefulSetChanges(instance *hyperledgerv1alpha1.BesuNode, found *appsv1.StatefulSet) (*reconcile.Result, error) {

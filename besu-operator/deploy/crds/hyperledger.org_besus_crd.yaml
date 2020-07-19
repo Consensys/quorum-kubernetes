@@ -11,7 +11,17 @@ spec:
     singular: besu
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.bootnodesready
+      name: BootnodesReady
+      type: string
+    - jsonPath: .status.validatorsready
+      name: ValidatorsReady
+      type: string
+    - jsonPath: .status.membersready
+      name: MembersReady
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Besu is the Schema for the besus API
@@ -572,12 +582,18 @@ spec:
           status:
             description: BesuStatus defines the observed state of Besu
             properties:
-              havekeys:
-                description: Field to show whether child besu node resources have
-                  keys or not
-                type: boolean
-            required:
-            - havekeys
+              besustate:
+                description: Field to show current configurations of besu node
+                type: string
+              bootnodesready:
+                description: Shows how many bootnodes are ready
+                type: string
+              membersready:
+                description: Shows how many members are ready
+                type: string
+              validatorsready:
+                description: Shows how many validators are ready
+                type: string
             type: object
         type: object
     served: true

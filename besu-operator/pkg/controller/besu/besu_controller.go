@@ -157,10 +157,15 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	if result != nil {
 		return *result, err
 	}
-
+	bootsready := 0
+	valsready := 0
+	memsready := 0
 	for i := 0; i < instance.Spec.BootnodesCount; i++ {
 		node := r.newBesuNode(instance, "bootnode"+strconv.Itoa(i+1), "Bootnode", instance.Spec.BootnodesCount)
-		result, err = r.ensureBesuNode(request, instance, node)
+		result, err, _, ready := r.ensureBesuNode(request, instance, node)
+		if ready > 0 {
+			bootsready++
+		}
 		log.Error(err, "Failed to ensure bootnode BesuNode", "BesuNode.Namespace", instance.Namespace, "BesuNode.Name", "bootnode"+strconv.Itoa(i+1))
 		if result != nil {
 			return *result, err
@@ -169,7 +174,10 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	for i := 0; i < instance.Spec.ValidatorsCount; i++ {
 		node := r.newBesuNode(instance, "validator"+strconv.Itoa(i+1), "Validator", instance.Spec.BootnodesCount)
-		result, err = r.ensureBesuNode(request, instance, node)
+		result, err, _, ready := r.ensureBesuNode(request, instance, node)
+		if ready > 0 {
+			valsready++
+		}
 		log.Error(err, "Failed to ensure bootnode BesuNode", "BesuNode.Namespace", instance.Namespace, "BesuNode.Name", "bootnode"+strconv.Itoa(i+1))
 		if result != nil {
 			return *result, err
@@ -178,7 +186,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	node := r.newBesuNode(instance, "member", "Member", instance.Spec.BootnodesCount)
 	node.Spec.Replicas = instance.Spec.Members
-	result, err = r.ensureBesuNode(request, instance, node)
+	result, err, totalmems, memsready := r.ensureBesuNode(request, instance, node)
 	if result != nil {
 		log.Error(err, "Failed to ensure member BesuNode")
 		return *result, err
@@ -198,8 +206,26 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
+	err = r.updateBesuStatus(instance,
+		instance.Spec.BootnodesCount, bootsready,
+		instance.Spec.ValidatorsCount, valsready,
+		totalmems, memsready)
+	if err != nil {
+		log.Error(err, "Failed to update besu status")
+	}
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileBesu) updateBesuStatus(instance *hyperledgerv1alpha1.Besu,
+	boots int, bootsready int,
+	vals int, valsready int,
+	mems int, memsready int) error {
+	instance.Status.BootnodesReady = strconv.Itoa(bootsready) + "/" + strconv.Itoa(boots)
+	instance.Status.ValidatorsReady = strconv.Itoa(valsready) + "/" + strconv.Itoa(vals)
+	instance.Status.MembersReady = strconv.Itoa(memsready) + "/" + strconv.Itoa(mems)
+	err := r.client.Status().Update(context.TODO(), instance)
+	return err
 }
 
 func (r *ReconcileBesu) generateKeyPair() (string, string) {

@@ -13,7 +13,7 @@ import (
 func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 	instance *hyperledgerv1alpha1.Besu,
 	sfs *hyperledgerv1alpha1.BesuNode,
-) (*reconcile.Result, error) {
+) (*reconcile.Result, error, int, int) {
 
 	// See if BesuNode already exists and create if it doesn't
 	found := &hyperledgerv1alpha1.BesuNode{}
@@ -30,25 +30,24 @@ func (r *ReconcileBesu) ensureBesuNode(request reconcile.Request,
 		if err != nil {
 			// BesuNode failed
 			log.Error(err, "Failed to create new BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
-			return &reconcile.Result{}, err
+			return &reconcile.Result{}, err, int(found.Status.Replicas), int(found.Status.ReadyReplicas)
 		} else {
 			// BesuNode was successful
-			return nil, nil
+			return nil, nil, int(found.Status.Replicas), int(found.Status.ReadyReplicas)
 		}
 	} else if err != nil {
 		// Error that isn't due to the BesuNode not existing
 		log.Error(err, "Failed to get BesuNode", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
-		return &reconcile.Result{}, err
+		return &reconcile.Result{}, err, int(found.Status.Replicas), int(found.Status.ReadyReplicas)
 	}
 
 	var result *reconcile.Result
 	result, err = r.handleBesuNodeChanges(instance, found)
 	if result != nil || err != nil {
-		return result, err
+		return result, err, int(found.Status.Replicas), int(found.Status.ReadyReplicas)
 	}
-
 	log.Info("ensureBesuNode", "All went  :", "well", "BesuNode.Namespace", sfs.Namespace, "BesuNode.Name", sfs.Name)
-	return nil, nil
+	return nil, nil, int(found.Status.Replicas), int(found.Status.ReadyReplicas)
 }
 
 func (r *ReconcileBesu) handleBesuNodeChanges(instance *hyperledgerv1alpha1.Besu, found *hyperledgerv1alpha1.BesuNode) (*reconcile.Result, error) {

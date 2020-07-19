@@ -209,8 +209,14 @@ type Transaction struct {
 // BesuStatus defines the observed state of Besu
 type BesuStatus struct {
 
-	// Field to show whether child besu node resources have keys or not
-	HaveKeys bool `json:"havekeys"`
+	// Shows how many bootnodes are ready
+	BootnodesReady string `json:"bootnodesready,omitempty"`
+
+	// Shows how many validators are ready
+	ValidatorsReady string `json:"validatorsready,omitempty"`
+
+	// Shows how many members are ready
+	MembersReady string `json:"membersready,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -218,6 +224,9 @@ type BesuStatus struct {
 // Besu is the Schema for the besus API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=besus,scope=Namespaced
+// +kubebuilder:printcolumn:name="BootnodesReady",type=string,JSONPath=`.status.bootnodesready`
+// +kubebuilder:printcolumn:name="ValidatorsReady",type=string,JSONPath=`.status.validatorsready`
+// +kubebuilder:printcolumn:name="MembersReady",type=string,JSONPath=`.status.membersready`
 type Besu struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

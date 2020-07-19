@@ -225,6 +225,16 @@ spec:
             type: object
           status:
             description: BesuNodeStatus defines the observed state of BesuNode
+            properties:
+              readyreplicas:
+                format: int32
+                type: integer
+              replicas:
+                format: int32
+                type: integer
+            required:
+            - readyreplicas
+            - replicas
             type: object
         type: object
     served: true
