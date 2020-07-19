@@ -15,7 +15,6 @@ spec:
       serviceAccountName: besu-operator
       containers:
         - name: besu-operator
-          # Replace this with the built image name
           image: hyperledgerbesu/operators:v1alpha1
           command:
           - besu-operator

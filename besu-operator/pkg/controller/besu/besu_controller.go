@@ -139,6 +139,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		validatorKeys = append(validatorKeys, hyperledgerv1alpha1.Key{PubKey: pubkey, PrivKey: privkey})
 	}
 
+	// Ensure secrets corresponding to keys to be used by besu nodes
 	for i, key := range bootnodeKeys {
 		result, err = r.ensureSecret(request, instance, r.besuSecret(instance, "bootnode"+strconv.Itoa(i+1), key.PrivKey, key.PubKey))
 		if result != nil {
@@ -153,13 +154,16 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
+	// Ensure genesis.json and add it in a configmap
 	result, err = r.ensureConfigMap(request, instance, r.besuGenesisConfigMap(instance))
 	if result != nil {
 		return *result, err
 	}
+
 	bootsready := 0
 	valsready := 0
 	memsready := 0
+	// Ensure bootnodes
 	for i := 0; i < instance.Spec.BootnodesCount; i++ {
 		node := r.newBesuNode(instance, "bootnode"+strconv.Itoa(i+1), "Bootnode", instance.Spec.BootnodesCount)
 		result, err, _, ready := r.ensureBesuNode(request, instance, node)
@@ -172,6 +176,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
+	// Ensure validators
 	for i := 0; i < instance.Spec.ValidatorsCount; i++ {
 		node := r.newBesuNode(instance, "validator"+strconv.Itoa(i+1), "Validator", instance.Spec.BootnodesCount)
 		result, err, _, ready := r.ensureBesuNode(request, instance, node)
@@ -184,6 +189,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
+	// Ensure n member nodes
 	node := r.newBesuNode(instance, "member", "Member", instance.Spec.BootnodesCount)
 	node.Spec.Replicas = instance.Spec.Members
 	result, err, totalmems, memsready := r.ensureBesuNode(request, instance, node)
@@ -192,6 +198,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		return *result, err
 	}
 
+	// Deploy grafana and prometheus if monitoring is enabled
 	if instance.Spec.Monitoring {
 		result, err = r.ensureGrafana(request, instance, r.newGrafana(instance))
 		if result != nil {
@@ -206,6 +213,7 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 		}
 	}
 
+	// Update Besu status with ready count of nodes
 	err = r.updateBesuStatus(instance,
 		instance.Spec.BootnodesCount, bootsready,
 		instance.Spec.ValidatorsCount, valsready,

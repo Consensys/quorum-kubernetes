@@ -167,17 +167,6 @@ func (r *ReconcileBesuNode) Reconcile(request reconcile.Request) (reconcile.Resu
 		return *result, err
 	}
 
-	// err = r.updateBesuNodeStatus(instance)
-	// if err != nil {
-	// 	// Requeue the request
-	// 	return reconcile.Result{}, err
-	// }
-
-	// result, err = r.handleBesuNodeChanges(instance)
-	// if result != nil {
-	// 	return *result, err
-	// }
-
 	// == Finish ==========
 	// Everything went fine, don't requeue
 	reqLogger.Info("BesuNode Reconciled ended : Everything went fine")
