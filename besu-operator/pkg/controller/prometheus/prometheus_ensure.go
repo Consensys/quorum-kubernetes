@@ -43,23 +43,24 @@ func (r *ReconcilePrometheus) ensureConfigMap(request reconcile.Request,
 	return nil, nil
 }
 
-func (r *ReconcilePrometheus) ensureClusterRole(request reconcile.Request,
+func (r *ReconcilePrometheus) ensureRole(request reconcile.Request,
 	instance *hyperledgerv1alpha1.Prometheus,
-	s *rbacv1.ClusterRole,
+	s *rbacv1.Role,
 ) (*reconcile.Result, error) {
-	found := &rbacv1.ClusterRole{}
+	found := &rbacv1.Role{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name: s.Name,
+		Name:      s.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
 		// Create the service
-		log.Info("Creating a new ClusterRole", "ClusterRole.Namespace", s.Namespace, "ClusterRole.Name", s.Name)
+		log.Info("Creating a new Role", "Role.Namespace", s.Namespace, "Role.Name", s.Name)
 		err = r.client.Create(context.TODO(), s)
 
 		if err != nil {
 			// Creation failed
-			log.Error(err, "Failed to create new ClusterRole", "ClusterRole.Namespace", s.Namespace, "ClusterRole.Name", s.Name)
+			log.Error(err, "Failed to create new Role", "Role.Namespace", s.Namespace, "Role.Name", s.Name)
 			return &reconcile.Result{}, err
 		} else {
 			// Creation was successful
@@ -67,7 +68,7 @@ func (r *ReconcilePrometheus) ensureClusterRole(request reconcile.Request,
 		}
 	} else if err != nil {
 		// Error that isn't due to the service not existing
-		log.Error(err, "Failed to get ClusterRole")
+		log.Error(err, "Failed to get Role")
 		return &reconcile.Result{}, err
 	}
 
@@ -106,23 +107,24 @@ func (r *ReconcilePrometheus) ensureServiceAccount(request reconcile.Request,
 	return nil, nil
 }
 
-func (r *ReconcilePrometheus) ensureClusterRoleBinding(request reconcile.Request,
+func (r *ReconcilePrometheus) ensureRoleBinding(request reconcile.Request,
 	instance *hyperledgerv1alpha1.Prometheus,
-	s *rbacv1.ClusterRoleBinding,
+	s *rbacv1.RoleBinding,
 ) (*reconcile.Result, error) {
-	found := &rbacv1.ClusterRoleBinding{}
+	found := &rbacv1.RoleBinding{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{
-		Name: s.Name,
+		Name:      s.Name,
+		Namespace: s.ObjectMeta.Namespace,
 	}, found)
 	if err != nil && errors.IsNotFound(err) {
 
 		// Create the service
-		log.Info("Creating a new ClusterRoleBinding", "ClusterRoleBinding.Namespace", s.Namespace, "ClusterRoleBinding.Name", s.Name)
+		log.Info("Creating a new RoleBinding", "RoleBinding.Namespace", s.Namespace, "RoleBinding.Name", s.Name)
 		err = r.client.Create(context.TODO(), s)
 
 		if err != nil {
 			// Creation failed
-			log.Error(err, "Failed to create new ClusterRoleBinding", "ClusterRoleBinding.Namespace", s.Namespace, "ClusterRoleBinding.Name", s.Name)
+			log.Error(err, "Failed to create new RoleBinding", "RoleBinding.Namespace", s.Namespace, "RoleBinding.Name", s.Name)
 			return &reconcile.Result{}, err
 		} else {
 			// Creation was successful
@@ -130,7 +132,7 @@ func (r *ReconcilePrometheus) ensureClusterRoleBinding(request reconcile.Request
 		}
 	} else if err != nil {
 		// Error that isn't due to the service not existing
-		log.Error(err, "Failed to get ClusterRoleBinding")
+		log.Error(err, "Failed to get RoleBinding")
 		return &reconcile.Result{}, err
 	}
 

@@ -79,7 +79,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &rbacv1.ClusterRole{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &rbacv1.Role{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &hyperledgerv1alpha1.Prometheus{},
 	})
@@ -87,7 +87,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &rbacv1.ClusterRoleBinding{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &rbacv1.RoleBinding{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &hyperledgerv1alpha1.Prometheus{},
 	})
@@ -143,12 +143,12 @@ func (r *ReconcilePrometheus) Reconcile(request reconcile.Request) (reconcile.Re
 		return *result, err
 	}
 
-	result, err = r.ensureClusterRole(request, instance, r.prometheusClusterRole(instance))
+	result, err = r.ensureRole(request, instance, r.prometheusRole(instance))
 	if result != nil {
 		return *result, err
 	}
 
-	result, err = r.ensureClusterRoleBinding(request, instance, r.prometheusClusterRoleBinding(instance))
+	result, err = r.ensureRoleBinding(request, instance, r.prometheusRoleBinding(instance))
 	if result != nil {
 		return *result, err
 	}

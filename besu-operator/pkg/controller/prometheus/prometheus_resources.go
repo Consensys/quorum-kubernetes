@@ -224,15 +224,16 @@ func (r *ReconcilePrometheus) prometheusDeployment(instance *hyperledgerv1alpha1
 	return depl
 }
 
-func (r *ReconcilePrometheus) prometheusClusterRole(instance *hyperledgerv1alpha1.Prometheus) *rbacv1.ClusterRole {
+func (r *ReconcilePrometheus) prometheusRole(instance *hyperledgerv1alpha1.Prometheus) *rbacv1.Role {
 
-	role := &rbacv1.ClusterRole{
+	role := &rbacv1.Role{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "ClusterRole",
+			Kind:       "Role",
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: instance.ObjectMeta.Name + "-role",
+			Name:      instance.ObjectMeta.Name + "-role",
+			Namespace: instance.ObjectMeta.Namespace,
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
@@ -265,33 +266,26 @@ func (r *ReconcilePrometheus) prometheusClusterRole(instance *hyperledgerv1alpha
 					"watch",
 				},
 			},
-			{
-				NonResourceURLs: []string{
-					"/metrics",
-				},
-				Verbs: []string{
-					"get",
-				},
-			},
 		},
 	}
 	controllerutil.SetControllerReference(instance, role, r.scheme)
 	return role
 }
 
-func (r *ReconcilePrometheus) prometheusClusterRoleBinding(instance *hyperledgerv1alpha1.Prometheus) *rbacv1.ClusterRoleBinding {
+func (r *ReconcilePrometheus) prometheusRoleBinding(instance *hyperledgerv1alpha1.Prometheus) *rbacv1.RoleBinding {
 
-	rb := &rbacv1.ClusterRoleBinding{
+	rb := &rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "ClusterRoleBinding",
+			Kind:       "RoleBinding",
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: instance.ObjectMeta.Name + "-rb",
+			Name:      instance.ObjectMeta.Name + "-rb",
+			Namespace: instance.ObjectMeta.Namespace,
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
+			Kind:     "Role",
 			Name:     instance.ObjectMeta.Name + "-role",
 		},
 		Subjects: []rbacv1.Subject{
