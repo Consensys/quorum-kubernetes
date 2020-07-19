@@ -16,7 +16,7 @@ spec:
       containers:
         - name: besu-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: hyperledgerbesu/operators:v1alpha1
           command:
           - besu-operator
           imagePullPolicy: Always

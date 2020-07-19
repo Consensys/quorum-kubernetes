@@ -5,9 +5,33 @@ metadata:
   name: besu-operator
 rules:
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - ""
   resources:
+  - nodes
+  - nodes/proxy
   - pods
+  - serviceaccounts
   - services
   - services/finalizers
   - endpoints
