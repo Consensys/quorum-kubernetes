@@ -133,6 +133,8 @@ type BesuNodeStatus struct {
 // BesuNode is the Schema for the besunodes API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=besunodes,scope=Namespaced
+// +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.status.replicas`
+// +kubebuilder:printcolumn:name="ReadyReplicas",type=string,JSONPath=`.status.readyreplicas`
 type BesuNode struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

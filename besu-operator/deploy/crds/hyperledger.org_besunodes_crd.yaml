@@ -11,7 +11,14 @@ spec:
     singular: besunode
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.replicas
+      name: Replicas
+      type: string
+    - jsonPath: .status.readyreplicas
+      name: ReadyReplicas
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: BesuNode is the Schema for the besunodes API
@@ -225,6 +232,16 @@ spec:
             type: object
           status:
             description: BesuNodeStatus defines the observed state of BesuNode
+            properties:
+              readyreplicas:
+                format: int32
+                type: integer
+              replicas:
+                format: int32
+                type: integer
+            required:
+            - readyreplicas
+            - replicas
             type: object
         type: object
     served: true
