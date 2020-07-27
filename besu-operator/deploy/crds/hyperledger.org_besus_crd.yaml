@@ -21,6 +21,12 @@ spec:
     - jsonPath: .status.membersready
       name: MembersReady
       type: string
+    - jsonPath: .spec.besunodespec.image.repository
+      name: Repository
+      type: string
+    - jsonPath: .spec.besunodespec.image.tag
+      name: Tag
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -582,9 +588,6 @@ spec:
           status:
             description: BesuStatus defines the observed state of Besu
             properties:
-              besustate:
-                description: Field to show current configurations of besu node
-                type: string
               bootnodesready:
                 description: Shows how many bootnodes are ready
                 type: string

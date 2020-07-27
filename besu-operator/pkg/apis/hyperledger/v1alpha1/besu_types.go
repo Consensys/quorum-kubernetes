@@ -227,6 +227,8 @@ type BesuStatus struct {
 // +kubebuilder:printcolumn:name="BootnodesReady",type=string,JSONPath=`.status.bootnodesready`
 // +kubebuilder:printcolumn:name="ValidatorsReady",type=string,JSONPath=`.status.validatorsready`
 // +kubebuilder:printcolumn:name="MembersReady",type=string,JSONPath=`.status.membersready`
+// +kubebuilder:printcolumn:name="Repository",type=string,JSONPath=`.spec.besunodespec.image.repository`
+// +kubebuilder:printcolumn:name="Tag",type=string,JSONPath=`.spec.besunodespec.image.tag`
 type Besu struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
