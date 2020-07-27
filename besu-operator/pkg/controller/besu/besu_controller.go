@@ -221,6 +221,10 @@ func (r *ReconcileBesu) Reconcile(request reconcile.Request) (reconcile.Result, 
 	if err != nil {
 		log.Error(err, "Failed to update besu status")
 	}
+	if instance.Spec.BootnodesCount != bootsready || instance.Spec.ValidatorsCount != valsready || totalmems != memsready {
+		reqLogger.Info("Besu nodes not ready yet!")
+		return reconcile.Result{Requeue: true}, nil
+	}
 	reqLogger.Info("Besu Reconciled ended : Everything went fine")
 	return reconcile.Result{}, nil
 }
