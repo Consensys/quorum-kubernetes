@@ -4,22 +4,28 @@
 
 ## Besu Configuration Options
 
-| Field | Type | Description | 
-| --- | --- | --- |
-| BootnodesCount | Integer | Number of bootnodes in the besu network |
-| ValidatorsCount | Integer | Number of validators in the besu network |
-| Members | Integer | Number of member nodes in the besu network |
-| BootnodeKeys | Key(PrivKey,PubKey) | Optional field to specify bootnodes keys, if not specified operator will generate keys |
-| ValidatorKeys | Key(PrivKey,PubKey) | Optional field to specify validators keys, if not specified operator will generate keys |
-| BesuNodeSpec | BesuNodeSpec(Image,Resources,etc) | Optional field to specify common besu node configuration |
-| GenesisJSON | GenesisJSON | Configuration for genesis block |
-| BootnodesAreValidators | Boolean | Specifies whether bootnodes are validators or not, by default set to false |
-| Monitoring | Boolean | Specifies whether to deploy grafana/prometheus or not |
-| PrometheusSpec | PrometheusSpec(Image,Resources,etc) | Prometheus configuration options |
-| GrafanaSpec | GrafanaSpec(Image,Resources,etc) | Grafana configuration options |
-
+| Field                  | Type                                | Description                                                                             |
+| ---------------------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| BootnodesCount         | Integer                             | Number of bootnodes in the besu network                                                 |
+| ValidatorsCount        | Integer                             | Number of validators in the besu network                                                |
+| Members                | Integer                             | Number of member nodes in the besu network                                              |
+| BootnodeKeys           | Key(PrivKey,PubKey)                 | Optional field to specify bootnodes keys, if not specified operator will generate keys  |
+| ValidatorKeys          | Key(PrivKey,PubKey)                 | Optional field to specify validators keys, if not specified operator will generate keys |
+| BesuNodeSpec           | BesuNodeSpec(Image,Resources,etc)   | Optional field to specify common besu node configuration                                |
+| GenesisJSON            | GenesisJSON                         | Configuration for genesis block                                                         |
+| BootnodesAreValidators | Boolean                             | Specifies whether bootnodes are validators or not, by default set to false              |
+| Monitoring             | Boolean                             | Specifies whether to deploy grafana/prometheus or not                                   |
+| PrometheusSpec         | PrometheusSpec(Image,Resources,etc) | Prometheus configuration options                                                        |
+| GrafanaSpec            | GrafanaSpec(Image,Resources,etc)    | Grafana configuration options                                                           |
 
 ## Running operator as docker image
+
+### Prerequisites
+
+1. kubectl version v1.11.3+.
+2. Access to a Kubernetes v1.11.3+ cluster.
+
+### Steps
 
 1. `kubectl apply -f deploy/service_account.yaml`
 2. `kubectl apply -f deploy/role.yaml`
@@ -28,8 +34,17 @@
 5. `kubectl apply -f deploy/operator.yaml`
 6. `kubectl apply -f deploy/crds/besu_without_keys.yaml`
 
-
 ## Running operator locally
+
+### Prerequisites
+
+1. go version v1.13+.
+2. docker version 17.03+.
+3. kubectl version v1.11.3+.
+4. kustomize v3.1.0+
+5. Access to a Kubernetes v1.11.3+ cluster.
+
+### Steps
 
 1. `kubectl apply -f deploy/crds/basiccrds/`
 2. `kubectl apply -f deploy/crds/besu_without_keys.yaml`
@@ -37,7 +52,7 @@
 
 ## Sample Configurations
 
-1. Without keys : 
+1.  Without keys :
 
         apiVersion: hyperledger.org/v1alpha1
         kind: Besu
@@ -48,7 +63,7 @@
           validatorscount: 2
           members: 1
 
-2. With keys : 
+2.  With keys :
 
 - If user provides more keys than required, then first m or n ( bootnodes or validators count ) keys will be used
 - If user provides less keys than required, then new keys will be generated
@@ -71,7 +86,6 @@
             - pubkey: "5fc1f8dc9f0c03087128e4bd724530e883d7de1a431269876dff9c95b8952f73c7e85ac7b49d85a2ad4950e967319482af435e07a0eab0a98d98449437787a00"
               privkey: "0xfb122a05ab1897ff144e1c9efb0bb3144f1e7f319aa5c55e20ef3d8d8464f4e8"
           members: 1
-
 
 3. Bootnodes are validators or not
 
@@ -114,7 +128,7 @@
                 difficulty: "0x1"
                 mixHash: "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365"
                 coinbase: "0x0000000000000000000000000000000000000000"
-                alloc: 
+                alloc:
                     "9811ebc35d7b06b3fa8dc5809a1f9c52751e1deb":
                     balance: "0xad78ebc5ac6200000"
 
@@ -167,10 +181,9 @@
                     host: 0.0.0.0
                     port: 8546
 
-
 6. With monitoring configurations
 
-- By default monitoring will be set to true and following default values will be considered, they can be configured like below 
+- By default monitoring will be set to true and following default values will be considered, they can be configured like below
 
         apiVersion: hyperledger.org/v1alpha1
         kind: Besu
@@ -210,10 +223,9 @@
 
 - Supports upgraging besu version or changing replicas or changing number of member nodes
 - `kubectl edit besu <besu_name>` :
-    - For changing besu image, change spec:besunodespec:image
-    - For changing member nodes, change spec:members
-    - For changing replicas of validator or bootnodes, change spec:besunodespec:replicas
-
+  - For changing besu image, change spec:besunodespec:image
+  - For changing member nodes, change spec:members
+  - For changing replicas of validator or bootnodes, change spec:besunodespec:replicas
 
 ## Development
 
@@ -254,66 +266,63 @@
         resources/
             common.go  # Common functions required across different controllers
 
-
-### CRD Structure 
+### CRD Structure
 
 1. Besu
 
-    Spec Fields 
+   Spec Fields
 
-| Field | Type | Description | 
-| --- | --- | --- |
-| BootnodesCount | Integer | Number of bootnodes in the besu network |
-| ValidatorsCount | Integer | Number of validators in the besu network |
-| Members | Integer | Number of member nodes in the besu network |
-| BootnodeKeys | Key(PrivKey,PubKey) | Optional field to specify bootnodes keys, if not specified operator will generate keys |
-| ValidatorKeys | Key(PrivKey,PubKey) | Optional field to specify validators keys, if not specified operator will generate keys |
-| BesuNodeSpec | BesuNodeSpec(Image,Resources,etc) | Optional field to specify common besu node configuration |
-| GenesisJSON | GenesisJSON | Configuration for genesis block |
-| BootnodesAreValidators | Boolean | Specifies whether bootnodes are validators or not, by default set to false |
-| Monitoring | Boolean | Specifies whether to deploy grafana/prometheus or not |
-| PrometheusSpec | PrometheusSpec(Image,Resources,etc) | Prometheus configuration options |
-| GrafanaSpec | GrafanaSpec(Image,Resources,etc) | Grafana configuration options |
+| Field                  | Type                                | Description                                                                             |
+| ---------------------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| BootnodesCount         | Integer                             | Number of bootnodes in the besu network                                                 |
+| ValidatorsCount        | Integer                             | Number of validators in the besu network                                                |
+| Members                | Integer                             | Number of member nodes in the besu network                                              |
+| BootnodeKeys           | Key(PrivKey,PubKey)                 | Optional field to specify bootnodes keys, if not specified operator will generate keys  |
+| ValidatorKeys          | Key(PrivKey,PubKey)                 | Optional field to specify validators keys, if not specified operator will generate keys |
+| BesuNodeSpec           | BesuNodeSpec(Image,Resources,etc)   | Optional field to specify common besu node configuration                                |
+| GenesisJSON            | GenesisJSON                         | Configuration for genesis block                                                         |
+| BootnodesAreValidators | Boolean                             | Specifies whether bootnodes are validators or not, by default set to false              |
+| Monitoring             | Boolean                             | Specifies whether to deploy grafana/prometheus or not                                   |
+| PrometheusSpec         | PrometheusSpec(Image,Resources,etc) | Prometheus configuration options                                                        |
+| GrafanaSpec            | GrafanaSpec(Image,Resources,etc)    | Grafana configuration options                                                           |
 
 2. BesuNode
 
-    Spec Fields 
+   Spec Fields
 
-| Field | Type | Description | 
-| --- | --- | --- |
-| Type | String:["Member", "Bootnode", "Validator"] | Specifies type of besunode |
-| Replicas | Integer | Number of replicas of pods of the besunode |
-| Image | Image | Specifies image repository, tag, and image pull policy |
-| Resources | Resources | Specifies CPU & Memory requests & limits |
-| P2P | PortConfig | Specifies port configurations for P2P |
-| RPC | PortConfig | Specifies port configurations for RPC |
-| WS | PortConfig | Specifies port configurations for WS |
-| GraphQl | PortConfig | Specifies port configurations for GraphQl |
-| Metrics | PortConfig | Specifies port configurations for Metrics |
-
+| Field     | Type                                       | Description                                            |
+| --------- | ------------------------------------------ | ------------------------------------------------------ |
+| Type      | String:["Member", "Bootnode", "Validator"] | Specifies type of besunode                             |
+| Replicas  | Integer                                    | Number of replicas of pods of the besunode             |
+| Image     | Image                                      | Specifies image repository, tag, and image pull policy |
+| Resources | Resources                                  | Specifies CPU & Memory requests & limits               |
+| P2P       | PortConfig                                 | Specifies port configurations for P2P                  |
+| RPC       | PortConfig                                 | Specifies port configurations for RPC                  |
+| WS        | PortConfig                                 | Specifies port configurations for WS                   |
+| GraphQl   | PortConfig                                 | Specifies port configurations for GraphQl              |
+| Metrics   | PortConfig                                 | Specifies port configurations for Metrics              |
 
 3. Grafana
 
-    Spec Fields 
+   Spec Fields
 
-| Field | Type | Description | 
-| --- | --- | --- |
-| Replicas | Integer | Number of replicas of pods of the besunode |
-| Image | Image | Specifies image repository, tag, and image pull policy |
-| Resources | Resources | Specifies CPU & Memory requests & limits |
-| NodePort | Integer | Specifies nodeport |
-
+| Field     | Type      | Description                                            |
+| --------- | --------- | ------------------------------------------------------ |
+| Replicas  | Integer   | Number of replicas of pods of the besunode             |
+| Image     | Image     | Specifies image repository, tag, and image pull policy |
+| Resources | Resources | Specifies CPU & Memory requests & limits               |
+| NodePort  | Integer   | Specifies nodeport                                     |
 
 4. Prometheus
 
-    Spec Fields 
+   Spec Fields
 
-| Field | Type | Description | 
-| --- | --- | --- |
-| Replicas | Integer | Number of replicas of pods of the besunode |
-| Image | Image | Specifies image repository, tag, and image pull policy |
-| Resources | Resources | Specifies CPU & Memory requests & limits |
-| NodePort | Integer | Specifies nodeport |
+| Field     | Type      | Description                                            |
+| --------- | --------- | ------------------------------------------------------ |
+| Replicas  | Integer   | Number of replicas of pods of the besunode             |
+| Image     | Image     | Specifies image repository, tag, and image pull policy |
+| Resources | Resources | Specifies CPU & Memory requests & limits               |
+| NodePort  | Integer   | Specifies nodeport                                     |
 
 ### Useful commands
 
@@ -321,5 +330,5 @@
 2. Push docker image to docker hub repository : `docker push <docker repo>`
 3. Make sure to update tag in operator.yaml before deploying any new version
 4. If types are changed
-    - `operator generate crds; operator generate k8s`
-    - Redeploy corresponding CRDs
+   - `operator generate crds; operator generate k8s`
+   - Redeploy corresponding CRDs
