@@ -109,8 +109,10 @@ spec:
             readOnly: true
           - name: config-toml
             mountPath: /etc/besu
+          {{- if .Values.besuConfig.permissions.nodes.enabled }}
           - name: node-permissions
-            mountPath: /etc/permissions
+            mountPath: {{ .Values.besuConfig.permissions.nodes.filePath }}
+          {{- end }}            
           - name: data
             mountPath: /data
         ports:
@@ -141,7 +143,6 @@ spec:
               --node-private-key-file=/secrets/key \
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $validatorNumber }}\
-              --permissions-nodes-config-file-enabled=true --permissions-nodes-config-file=/etc/permissions/nodes-whitelist.yml \
               --bootnodes=enode://${VALIDATOR1_PUBKEY}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303
         livenessProbe:
           httpGet:
@@ -162,9 +163,11 @@ spec:
       - name: config-toml
         configMap:
           name: {{ template "besu.fullname" . }}-config-toml-configmap
+      {{- if .Values.besuConfig.permissions.nodes.enabled }}
       - name: node-permissions
         configMap:
           name: {{ template "besu.fullname" . }}-node-permissions-configmap
+      {{- end }}     
       - name: data
         emptyDir:
           sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"

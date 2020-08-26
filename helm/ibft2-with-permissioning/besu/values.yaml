@@ -93,16 +93,15 @@ besuConfig:
     url: "http://127.0.0.1:8888"
     precompiledAddress: 9
   permissions:
-    enabled: false
+    enabled: true
     nodes:
-      enabled: false
-      whitelist: ["enode://6f8a80d14311c39f35f516fa664deaaaa13e85b2f7493f37f6144d86991ec012937307647bd3b9a82abe2974e1407241d54947bbb39763a4cac9f77166ad92a0@192.168.0.9:4567","enode://6f8a80d14311c39f35f516fa664deaaaa13e85b2f7493f37f6144d86991ec012937307647bd3b9a82abe2974e1407241d54947bbb39763a4cac9f77166ad92a0@192.169.0.9:4568"]
+      enabled: true
+      filePath: "/etc/permissions"
     nodesContract:
       enabled: false
       address: "0x0000000000000000000000000000000000001234"
     accounts:
       enabled: false
-      whitelist: ["0x0000000000000000000000000000000000000009"]
 
 
 
