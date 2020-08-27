@@ -51,11 +51,11 @@ spec:
                 configMapKeyRef:
                   name: besu-configmap
                   key: nodesHttpCorsOrigins
-            - name: NODES_HOST_WHITELIST
+            - name: NODES_HOST_ALLOWLIST
               valueFrom:
                 configMapKeyRef:
                   name: besu-configmap
-                  key: nodesHostWhitelist
+                  key: nodesHostAllowList
           volumeMounts:
             - name: genesis-config
               mountPath: /configs
@@ -101,7 +101,7 @@ spec:
               --metrics-enabled=true \
               --metrics-host=0.0.0.0 \
               --metrics-port=9545 \
-              --host-whitelist=${NODES_HOST_WHITELIST} \
+              --host-allowlist=${NODES_HOST_ALLOWLIST} \
               --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303 \
               --privacy-enabled=true \
               --privacy-url=http://${BESU_ORION1_SERVICE_HOST}:8888 \
