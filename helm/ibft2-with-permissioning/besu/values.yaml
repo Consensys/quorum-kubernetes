@@ -77,7 +77,7 @@ besuConfig:
     retentionHours: 999
     maxSize: 1024
   http:
-    whitelist: '["*"]'
+    allowlist: '["*"]'
   metrics:
     enabled: true
     host: "0.0.0.0"
