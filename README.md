@@ -1,5 +1,3 @@
-
-
 # Besu-Kubernetes (k8s)
 
 The following repo has example reference implementations of private networks using k8s. This is intended to get developers and ops people familiar with how to run a private ethereum network in k8s and understand the concepts involved.
