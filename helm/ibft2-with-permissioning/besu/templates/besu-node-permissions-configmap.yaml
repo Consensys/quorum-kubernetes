@@ -13,7 +13,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   nodes-allowlist.yml: |-
-    nodes-whitelist=[
+    nodes-allowlist=[
       "enode://{{ trimPrefix "0x" .Values.validators.validator1.publicKey }}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303",
       "enode://{{ trimPrefix "0x" .Values.validators.validator2.publicKey }}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303",
       "enode://{{ trimPrefix "0x" .Values.validators.validator3.publicKey }}@{{ template "besu.name" . }}-validator3-0.{{ template "besu.name" . }}-validator3.{{ .Values.namespace }}.svc.cluster.local:30303",

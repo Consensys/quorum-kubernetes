@@ -50,7 +50,7 @@ data:
     {{ end }}
 
     {{ if or .Values.node.rpc.enabled .Values.node.graphql.enabled .Values.node.ws.enabled }}
-    host-whitelist={{ .Values.node.http.whitelist }}
+    host-allowlist={{ .Values.node.http.allowlist }}
     {{ end }}
 
     {{ if  .Values.node.rpc.enabled -}}
