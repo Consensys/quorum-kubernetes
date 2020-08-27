@@ -38,7 +38,7 @@ data:
     p2p-port=30303
     max-peers=25
 
-    host-whitelist=["*"]
+    host-allowlist=["*"]
 
     # JSON-RPC
     rpc-http-enabled=true
