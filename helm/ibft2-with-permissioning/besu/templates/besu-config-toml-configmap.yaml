@@ -72,7 +72,6 @@ data:
     rpc-ws-host={{ .Values.besuConfig.ws.host | quote }}
     rpc-ws-port={{ .Values.besuConfig.ws.port }}
     rpc-ws-api={{ .Values.besuConfig.ws.api }}
-    #rpc-ws-apis=["DEBUG","ETH"]
     rpc-ws-authentication-enabled={{ .Values.besuConfig.ws.authenticationEnabled }}
     {{ end }}
 
@@ -81,7 +80,7 @@ data:
     permissions-nodes-config-file-enabled={{ .Values.besuConfig.permissions.nodes.enabled }}
     permissions-nodes-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/nodes-allowlist.yml"
     permissions-accounts-config-file-enabled={{ .Values.besuConfig.permissions.accounts.enabled }}
-    permissions-nodes-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/accounts-allowlist.yml"
+    permissions-accounts-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/accounts-allowlist.yml"
     permissions-nodes-contract-enabled={{ .Values.besuConfig.permissions.nodesContract.enabled }}
     permissions-nodes-contract-address={{ .Values.besuConfig.permissions.nodesContract.address | quote }}
     {{ end }}
