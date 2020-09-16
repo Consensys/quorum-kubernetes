@@ -4,6 +4,7 @@
 *~.nib
 *.iml
 *.launch
+.history/*
 *.swp
 *.log
 .classpath
