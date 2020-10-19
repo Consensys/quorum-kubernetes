@@ -3,19 +3,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: validator1-sa
+  name: validator2-sa
   namespace: quorum
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: validator1-keys-read-role
+  name: validator2-keys-read-role
   namespace: quorum
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: [ "quorum-validator1-nodekey", "quorum-validator1-accountkey" ]
+  resourceNames: [ "quorum-validator2-nodekey", "quorum-validator2-accountkey" ]
   verbs: ["get"]
 - apiGroups: [""]
   resources: ["services"]
@@ -24,44 +24,44 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: validator1-rb
+  name: validator2-rb
   namespace: quorum
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: validator1-keys-read-role
+  name: validator2-keys-read-role
 subjects:
 - kind: ServiceAccount
-  name: validator1-sa
+  name: validator2-sa
   namespace: quorum
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: validator1
+  name: validator2
   labels:
-    app: validator1
+    app: validator2
   namespace: quorum
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: validator1
-  serviceName: quorum-validator1
+      app: validator2
+  serviceName: quorum-validator2
   template:
     metadata:
       labels:
-        app: validator1
+        app: validator2
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9125"
+        prometheus.io/port: "9126"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: validator1-sa
+      serviceAccountName: validator2-sa
       containers:
-        - name: validator1
+        - name: validator2
           image: quorumengineering/quorum:2.7.0
           imagePullPolicy: IfNotPresent
           resources:
@@ -153,10 +153,10 @@ spec:
       volumes:
         - name: nodekey
           secret:
-            secretName: quorum-validator1-nodekey
+            secretName: quorum-validator2-nodekey
         - name: accountkey
           secret:
-            secretName: quorum-validator1-accountkey
+            secretName: quorum-validator2-accountkey
         - name: genesis-file
           configMap:
             name: quorum-genesis-configmap
