@@ -60,6 +60,21 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: validator4-sa
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec 
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator1.quorum.svc.cluster.local:8545
+              sleep 20
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator2.quorum.svc.cluster.local:8545
+              sleep 20
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator3.quorum.svc.cluster.local:8545
+              sleep 20
       containers:
         - name: validator4
           image: quorumengineering/quorum:2.7.0
