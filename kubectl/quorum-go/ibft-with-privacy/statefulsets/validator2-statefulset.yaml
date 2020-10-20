@@ -15,7 +15,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: [ "quorum-validator2-nodekey", "quorum-validator2-accountkey" ]
+  resourceNames: [ "quorum-validator2-keys" ]
   verbs: ["get"]
 - apiGroups: [""]
   resources: ["services"]
@@ -96,12 +96,9 @@ spec:
             - name: PRIVATE_CONFIG
               value: ignore      
           volumeMounts:
-            - name: nodekey
-              mountPath: /config/keys/nodekey
-              readOnly: true
-            - name: accountkey
-              mountPath: /config/keys/accountkey       
-              readOnly: true      
+            - name: keys
+              mountPath: /config/keys/
+              readOnly: true     
             - name: static-nodes-file
               mountPath: /config/static-nodes
               readOnly: true
@@ -139,8 +136,8 @@ spec:
               cp /config/permissions-nodes/*.json /data/
               cp /config/quorum/genesis.json /data/
               geth --datadir=/data init /config/quorum/genesis.json
-              cp /config/keys/accountkey/key /data/keystore/key
-              cp /config/keys/nodekey/key /data/geth/nodekey
+              cp /config/keys/accountkey /data/keystore/key
+              cp /config/keys/nodekey /data/geth/nodekey
 
               geth \
               --datadir /data \
@@ -159,12 +156,12 @@ spec:
               --unlock 0 \
               --allow-insecure-unlock \
               --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
-              --password /config/keys/accountkey/password.txt | tee -a /data/logs/quorum.log
+              --password /config/keys/password.txt | tee -a /data/logs/quorum.log
 
       volumes:
-        - name: nodekey
+        - name: keys
           secret:
-            secretName: quorum-validator2-nodekey
+            secretName: quorum-validator2-keys
         - name: accountkey
           secret:
             secretName: quorum-validator2-accountkey

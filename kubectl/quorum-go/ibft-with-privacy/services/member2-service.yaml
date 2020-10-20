@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: quorum-node2privacy
+  name: quorum-member2
   labels:
-    app: node2privacy
+    app: member2
   namespace: quorum
 spec:
   type: ClusterIP
   selector:
-    app: node2privacy
+    app: member2
   ports:
     - port: 30303
       targetPort: 30303
@@ -33,9 +33,9 @@ spec:
     - port: 9000
       targetPort: 9000
       protocol: TCP
-      name: tm-tessera
+      name: tessera
     - port: 9080
       targetPort: 9080
       protocol: TCP
-      name: tm-tessera-third-party
+      name: tessera-tp
             
