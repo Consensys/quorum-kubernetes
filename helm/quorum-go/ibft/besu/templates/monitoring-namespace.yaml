@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app: {{ template "besu.fullname" . }}-monitoring-namespace
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring

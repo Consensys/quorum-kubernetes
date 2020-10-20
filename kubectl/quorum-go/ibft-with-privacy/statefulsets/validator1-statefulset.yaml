@@ -134,7 +134,7 @@ spec:
               geth \
               --datadir /data \
               --nodiscover \
-              --nat=none \
+              --nat=any \
               --permissioned \
               --emitcheckpoints \
               --verbosity 5 \

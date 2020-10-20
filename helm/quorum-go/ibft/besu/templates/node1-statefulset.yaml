@@ -1,0 +1,185 @@
+{{- $nodeNumber := "node1" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $nodeNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $nodeNumber }}-key-read-role
+  namespace: {{ .Values.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ {{ template "besu.fullname" . }}-{{ $nodeNumber }}-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ $nodeNumber }}-rb
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $nodeNumber }}-key-read-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $nodeNumber }}-sa
+    namespace: {{ .Values.namespace }}
+
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "besu.fullname" . }}-{{ $nodeNumber }}
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ $nodeNumber }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "besu.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ $nodeNumber }}
+  serviceName: {{ template "besu.fullname" . }}-{{ $nodeNumber }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu.name" . }}
+        release: {{ .Release.Name }}
+        component: {{ $nodeNumber }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ $nodeNumber }}-sa
+      initContainers:
+      - name: init-bootnode
+        image: byrnedo/alpine-curl
+        env:
+          - name: VALIDATOR1_SERVICE_HOST
+            value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
+        command:
+          - "sh"
+          - "-c"
+          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: {{ $nodeNumber }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          resources:
+            requests:
+              cpu: "{{ .Values.nodes.cpuRequest }}"
+              memory: "{{ .Values.nodes.memRequest }}"
+            limits:
+              cpu: "{{ .Values.nodes.cpuLimit }}"
+              memory: "{{ .Values.nodes.memLimit }}"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "besu.fullname" . }}-validators-configmap
+                  key: validator1PubKey
+            - name: VALIDATOR2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "besu.fullname" . }}-validators-configmap
+                  key: validator2PubKey
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+            {{- if .Values.besuConfig.permissions.nodes.enabled }}
+            - name: node-permissions
+              mountPath: {{ .Values.besuConfig.permissions.nodes.filePath }}
+            {{- end }}    
+            - name: data
+              mountPath: /data
+          ports:
+            - name: json-rpc
+              containerPort: {{ .Values.besuConfig.rpc.port }}
+              protocol: TCP
+            - name: ws
+              containerPort: {{ .Values.besuConfig.ws.port }}
+              protocol: TCP
+            - name: graphql
+              containerPort: {{ .Values.besuConfig.graphql.port }}
+              protocol: TCP
+            - name: rlpx
+              containerPort: {{ .Values.besuConfig.p2p.port }}
+              protocol: TCP
+            - name: discovery
+              containerPort: {{ .Values.besuConfig.p2p.port }}
+              protocol: UDP
+            - name: metrics
+              containerPort: {{ .Values.besuConfig.metrics.port }}
+              protocol: TCP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --node-private-key-file=/secrets/key \
+                --config-file=/etc/besu/config.toml \
+                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $nodeNumber }}\
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+
+      volumes:
+        - name: key
+          secret:
+            secretName: {{ template "besu.fullname" . }}-{{ $nodeNumber }}-key
+        - name: genesis-config
+          configMap:
+            name: {{ template "besu.fullname" . }}-genesis-configmap
+            items:
+              - key: genesis.json
+                path: genesis.json
+        - name: config-toml
+          configMap:
+            name: {{ template "besu.fullname" . }}-config-toml-configmap
+        {{- if .Values.besuConfig.permissions.nodes.enabled }}
+        - name: node-permissions
+          configMap:
+            name: {{ template "besu.fullname" . }}-node-permissions-configmap
+        {{- end }}   
+        - name: data
+          emptyDir:
+            sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"
+

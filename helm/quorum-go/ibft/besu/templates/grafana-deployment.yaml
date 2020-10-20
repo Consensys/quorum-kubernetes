@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "besu.fullname" . }}-grafana
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    namespace: monitoring
+    heritage: {{ .Release.Service }}
+    component: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: grafana
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu.name" . }}
+        release: {{ .Release.Name }}
+        component: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:6.2.5
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "password"
+            - name: PROMETHEUS_SERVICE_HOST
+              value: {{ template "besu.upperfullname" . }}-prometheus
+          volumeMounts:
+            - name: grafana-configmap-datasources
+              mountPath: /etc/grafana/provisioning/datasources/prometheus.yml
+              subPath: prometheus.yml
+              readOnly: true
+            - name: grafana-configmap-dashboards-dashboard
+              mountPath: /etc/grafana/provisioning/dashboards/dashboard.yml
+              subPath: dashboard.yml
+              readOnly: true
+            - name: grafana-configmap-dashboards-besu
+              mountPath: /etc/grafana/provisioning/dashboards/besu.json
+              subPath: besu.json
+              readOnly: true
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+      volumes:
+        - name: grafana-configmap-datasources
+          configMap:
+            name: {{ template "besu.fullname" . }}-grafana-configmap-datasources
+        - name: grafana-configmap-dashboards-dashboard
+          configMap:
+            name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-dashboard
+        - name: grafana-configmap-dashboards-besu
+          configMap:
+            name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-besu

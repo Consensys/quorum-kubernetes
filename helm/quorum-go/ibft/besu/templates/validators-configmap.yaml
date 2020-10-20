@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-validators-configmap
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+data:
+  {{ if regexMatch "^0x" .Values.validators.validator1.publicKey }}
+  validator1PubKey: {{ trimPrefix "0x" .Values.validators.validator1.publicKey | quote }}
+  {{ else }}
+  validator1PubKey: {{ .Values.validators.validator1.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.validators.validator2.publicKey }}
+  validator2PubKey: {{ trimPrefix "0x" .Values.validators.validator2.publicKey | quote }}
+  {{ else }}
+  validator2PubKey: {{ .Values.validators.validator2.publicKey | quote }}
+  {{ end }}

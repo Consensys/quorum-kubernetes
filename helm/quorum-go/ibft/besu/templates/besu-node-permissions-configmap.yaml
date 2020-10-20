@@ -1,0 +1,24 @@
+{{- if .Values.besuConfig.permissions.nodes.enabled -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-node-permissions-configmap
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+data:
+  nodes-allowlist.yml: |-
+    nodes-allowlist=[
+      "enode://{{ trimPrefix "0x" .Values.validators.validator1.publicKey }}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303",
+      "enode://{{ trimPrefix "0x" .Values.validators.validator2.publicKey }}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303",
+      "enode://{{ trimPrefix "0x" .Values.validators.validator3.publicKey }}@{{ template "besu.name" . }}-validator3-0.{{ template "besu.name" . }}-validator3.{{ .Values.namespace }}.svc.cluster.local:30303",
+      "enode://{{ trimPrefix "0x" .Values.validators.validator4.publicKey }}@{{ template "besu.name" . }}-validator4-0.{{ template "besu.name" . }}-validator4.{{ .Values.namespace }}.svc.cluster.local:30303",
+      "enode://{{ trimPrefix "0x" .Values.nodes.node1.publicKey }}@{{ template "besu.name" . }}-node1-0.{{ template "besu.name" . }}-node1.{{ .Values.namespace }}.svc.cluster.local:30303"
+    ]
+
+{{- end -}}

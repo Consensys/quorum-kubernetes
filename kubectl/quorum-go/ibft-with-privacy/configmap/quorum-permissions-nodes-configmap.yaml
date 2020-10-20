@@ -9,10 +9,10 @@ data:
 
   permissioned-nodes.json: |-
     [
-      "enode://8208a3f344695d44e9cf2c023683cbea7b9343e2f70a5e804bd2c93858e945f8f91439eef96a4ab6c47ff06637d6fbe6472f96de1655a1bee57ea896654f3a22@validator1-0.quorum-validator1.quorum.svc.cluster.local:30303?discport=0",
-      "enode://b9050e002aa42464e6b07c811a1f9dfec01249af03f67b753e8415420649b184447bb2a784863ccbf327ad9e31aaba803464979dfe6a7facc669151a5fa6ad1b@validator2-0.quorum-validator2.quorum.svc.cluster.local:30303?discport=0",
-      "enode://59cf0c623c582fa9b19bdf70fb6bade07f4ae32218dd4d1c7e2c7e65acf87da45cf2ab55d16d27360aafef17622c37c09db60d7680ebcc17b78867f4c05bcaa4@validator3-0.quorum-validator3.quorum.svc.cluster.local:30303?discport=0",
-      "enode://2fd5b5b6ad529f55b71602026d1849d0036f06482368b5812fa793014195d3571b0840dbc4175617de2a12db8f1222c012420d471ae5c0d982118625cae58868@validator4-0.quorum-validator4.quorum.svc.cluster.local:30303?discport=0"    
+      "enode://8208a3f344695d44e9cf2c023683cbea7b9343e2f70a5e804bd2c93858e945f8f91439eef96a4ab6c47ff06637d6fbe6472f96de1655a1bee57ea896654f3a22@172.18.0.8:30303?discport=0",
+      "enode://b9050e002aa42464e6b07c811a1f9dfec01249af03f67b753e8415420649b184447bb2a784863ccbf327ad9e31aaba803464979dfe6a7facc669151a5fa6ad1b@172.18.0.9:30303?discport=0",
+      "enode://59cf0c623c582fa9b19bdf70fb6bade07f4ae32218dd4d1c7e2c7e65acf87da45cf2ab55d16d27360aafef17622c37c09db60d7680ebcc17b78867f4c05bcaa4@172.18.0.10:30303?discport=0",
+      "enode://2fd5b5b6ad529f55b71602026d1849d0036f06482368b5812fa793014195d3571b0840dbc4175617de2a12db8f1222c012420d471ae5c0d982118625cae58868@172.18.0.11:30303?discport=0"    
     ]
 
   disallowed-nodes.json: |-

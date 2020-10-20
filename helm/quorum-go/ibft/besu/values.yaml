@@ -1,0 +1,108 @@
+# Default values for besu.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+imagePullPolicy: IfNotPresent
+image:
+  repository: hyperledger/besu
+  tag: develop
+
+namespace: besu
+
+# config specific to node-statefulset ie. replicas, storage etc
+nodes:
+  pvcSizeLimit: "10Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+  node1:
+    privateKey: "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+    publicKey: "0xce7edc292d7b747fab2f23584bbafaffde5c8ff17cf689969614441e0527b90015ea9fee96aed6d9c0fc2fbe0bd1883dee223b3200246ff1e21976bdbc9a0fc8"
+
+validators:
+  pvcSizeLimit: "10Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+  validator1:
+    privateKey: "0x8457b1dc606d05308cc96f604dbde54ad85cb4de508742c8e265080b9e08b48c"
+    publicKey: "0x5d812c3c25ff398ab416968fce9009c2be7ed70a87abc8ea30bd667ce17a9287a6341fbf6ce757bb8148436c39c71296639ea81afcc94cdf908b6e1344f26188"
+
+  validator2:
+    privateKey: "0xa53a0dea5e51a9e0735e331b336af65d60f516c7080a52da683f6fd96342be42"
+    publicKey: "0xb2fba529681ea7f4619556753d40c8689b936fb1c621bc91f94d2938eb58c285d4911457ae4887b9c3bd593b2d608d319c6dc384d6acae2d043a4657029178d3"
+
+  validator3:
+    privateKey: "0x28021485044bf6870160f90b82ab6bbd14c691d4414140a63d047a7e3362c64e"
+    publicKey: "0x00b20ab6a385a2403d64637b3d93cb6d83215a08f29adb6feb4b8bf03387b734444e8b060f53150dea4b9b897823540d19918c13d6f57a5153d190b5fad7bf51"
+
+  validator4:
+    privateKey: "0xfb122a05ab1897ff144e1c9efb0bb3144f1e7f319aa5c55e20ef3d8d8464f4e8"
+    publicKey: "0x5fc1f8dc9f0c03087128e4bd724530e883d7de1a431269876dff9c95b8952f73c7e85ac7b49d85a2ad4950e967319482af435e07a0eab0a98d98449437787a00"
+
+
+# common parameters to all nodes
+besuConfig:
+  dataPath: "/data"
+  genesisFilePath: "/etc/genesis/genesis.json"
+  logging: INFO
+  p2p:
+    enabled: true
+    host: "0.0.0.0"
+    port: 30303
+    discovery: true
+    maxPeers: 25
+  rpc:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8545
+    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+    corsOrigins: '["all"]'
+    authenticationEnabled: false
+  ws:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8546
+    api: '["DEBUG", "ETH", "WEB3", "NET"]'
+    authenticationEnabled: false
+  graphql:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8547
+    corsOrigins: '["all"]'
+  txPool:
+    retentionHours: 999
+    maxSize: 1024
+  http:
+    allowlist: '["*"]'
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+  metricsPush:
+    enabled: false
+    host: "5.5.5.5"
+    port: 9091
+    interval: 15
+    prometheusJob: "besu"
+  privacy:
+    enabled: false
+    url: "http://127.0.0.1:8888"
+    precompiledAddress: 9
+  permissions:
+    enabled: true
+    nodes:
+      enabled: true
+      filePath: "/etc/permissions"
+    nodesContract:
+      enabled: false
+      address: "0x0000000000000000000000000000000000001234"
+    accounts:
+      enabled: false
+
+
+
+

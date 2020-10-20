@@ -1,0 +1,173 @@
+{{- $validatorNumber := "validator1" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $validatorNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ $validatorNumber }}-key-read-role
+  namespace: {{ .Values.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ $validatorNumber }}-rb
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $validatorNumber }}-key-read-role
+subjects:
+- kind: ServiceAccount
+  name: {{ $validatorNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "besu.fullname" . }}-{{ $validatorNumber }}
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+    component: {{ $validatorNumber }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "besu.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ $validatorNumber }}
+  serviceName: {{ template "besu.fullname" . }}-{{ $validatorNumber }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu.name" . }}
+        release: {{ .Release.Name }}
+        component: {{ $validatorNumber }}
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ $validatorNumber }}-sa
+      containers:
+      - name: {{ $validatorNumber }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.validators.cpuRequest }}"
+            memory: "{{ .Values.validators.memRequest }}"
+          limits:
+            cpu: "{{ .Values.validators.cpuLimit }}"
+            memory: "{{ .Values.validators.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: VALIDATOR1_PUBKEY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "besu.fullname" . }}-validators-configmap
+                key: validator1PubKey
+          - name: VALIDATOR2_PUBKEY
+            valueFrom:
+              configMapKeyRef:
+                name: {{ template "besu.fullname" . }}-validators-configmap
+                key: validator2PubKey
+        volumeMounts:
+          - name: key
+            mountPath: /secrets
+            readOnly: true
+          - name: genesis-config
+            mountPath: /etc/genesis
+            readOnly: true
+          - name: config-toml
+            mountPath: /etc/besu
+          {{- if .Values.besuConfig.permissions.nodes.enabled }}
+          - name: node-permissions
+            mountPath: {{ .Values.besuConfig.permissions.nodes.filePath }}
+          {{- end }}            
+          - name: data
+            mountPath: /data
+        ports:
+          - name: json-rpc
+            containerPort: {{ .Values.besuConfig.rpc.port }}
+            protocol: TCP
+          - name: ws
+            containerPort: {{ .Values.besuConfig.ws.port }}
+            protocol: TCP
+          - name: graphql
+            containerPort: {{ .Values.besuConfig.graphql.port }}
+            protocol: TCP
+          - name: rlpx
+            containerPort: {{ .Values.besuConfig.p2p.port }}
+            protocol: TCP
+          - name: discovery
+            containerPort: {{ .Values.besuConfig.p2p.port }}
+            protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.besuConfig.metrics.port }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec /opt/besu/bin/besu \
+              --node-private-key-file=/secrets/key \
+              --config-file=/etc/besu/config.toml \
+              --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $validatorNumber }}\
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8545
+          initialDelaySeconds: 60
+          periodSeconds: 30              
+      volumes:
+      - name: key
+        secret:
+          secretName: {{ template "besu.fullname" . }}-{{ $validatorNumber }}-key
+      - name: genesis-config
+        configMap:
+          name: {{ template "besu.fullname" . }}-genesis-configmap
+          items:
+            - key: genesis.json
+              path: genesis.json
+      - name: config-toml
+        configMap:
+          name: {{ template "besu.fullname" . }}-config-toml-configmap
+      {{- if .Values.besuConfig.permissions.nodes.enabled }}
+      - name: node-permissions
+        configMap:
+          name: {{ template "besu.fullname" . }}-node-permissions-configmap
+      {{- end }}     
+      - name: data
+        emptyDir:
+          sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"
