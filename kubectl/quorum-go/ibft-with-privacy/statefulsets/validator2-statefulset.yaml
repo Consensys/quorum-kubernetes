@@ -93,8 +93,10 @@ spec:
                   fieldPath: metadata.name
             - name: QUORUM_NETWORK_ID
               value: "10"              
+            - name: QUORUM_CONSENSUS
+              value: istanbul               
             - name: PRIVATE_CONFIG
-              value: ignore      
+              value: ignore     
           volumeMounts:
             - name: keys
               mountPath: /config/keys/

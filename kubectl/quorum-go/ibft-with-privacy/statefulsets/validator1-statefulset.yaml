@@ -56,7 +56,7 @@ spec:
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9125"
+        prometheus.io/port: "9126"
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: validator1-sa
@@ -82,6 +82,8 @@ spec:
                   fieldPath: metadata.name
             - name: QUORUM_NETWORK_ID
               value: "10"              
+            - name: QUORUM_CONSENSUS
+              value: istanbul               
             - name: PRIVATE_CONFIG
               value: ignore      
           volumeMounts:
