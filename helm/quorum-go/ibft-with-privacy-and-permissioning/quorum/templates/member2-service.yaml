@@ -1,0 +1,49 @@
+{{- $memberNumber := "member2" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quorum.name" . }}-{{ $memberNumber }}
+  labels:
+    app: {{ template "quorum.name" . }}
+    chart: {{ template "quorum.chart" . }}
+    component: {{ $memberNumber }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "quorum.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ $memberNumber }}
+  ports:
+    - name: json-rpc
+      port: {{ .Values.quorumConfig.rpc.port }}
+      targetPort: json-rpc
+      protocol: TCP
+    - name: ws
+      port: {{ .Values.quorumConfig.ws.port }}
+      targetPort: ws
+      protocol: TCP
+    - name: graphql
+      port: {{ .Values.quorumConfig.graphql.port }}
+      targetPort: graphql
+      protocol: TCP
+    - name: rlpx
+      port: {{ .Values.quorumConfig.p2p.port }}
+      targetPort: rlpx
+      protocol: TCP
+    - name: discovery
+      port: {{ .Values.quorumConfig.p2p.port }}
+      targetPort: discovery
+      protocol: UDP
+    - name: tessera
+      port: {{ .Values.quorumConfig.tessera.port }}
+      targetPort: tessera
+      protocol: TCP
+    - name: tessera-tp
+      port: {{ .Values.quorumConfig.tessera.tpport }}
+      targetPort: tessera-tp
+      protocol: TCP      

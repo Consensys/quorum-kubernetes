@@ -1,0 +1,41 @@
+{{- $validatorNumber := "validator1" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quorum.name" . }}-{{ $validatorNumber }}
+  labels:
+    app: {{ template "quorum.name" . }}
+    chart: {{ template "quorum.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ $validatorNumber }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "quorum.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ $validatorNumber }}
+  ports:
+    - name: json-rpc
+      port: {{ .Values.quorumConfig.rpc.port }}
+      targetPort: json-rpc
+      protocol: TCP
+    - name: ws
+      port: {{ .Values.quorumConfig.ws.port }}
+      targetPort: ws
+      protocol: TCP
+    - name: graphql
+      port: {{ .Values.quorumConfig.graphql.port }}
+      targetPort: graphql
+      protocol: TCP
+    - name: rlpx
+      port: {{ .Values.quorumConfig.p2p.port }}
+      targetPort: rlpx
+      protocol: TCP
+    - name: discovery
+      port: {{ .Values.quorumConfig.p2p.port }}
+      targetPort: discovery
+      protocol: UDP

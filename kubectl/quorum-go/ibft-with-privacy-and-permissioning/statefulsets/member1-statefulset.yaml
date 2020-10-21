@@ -3,19 +3,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: member2-sa
+  name: member1-sa
   namespace: quorum
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: member2-keys-read-role
+  name: member1-keys-read-role
   namespace: quorum
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: [ "quorum-member2-nodekey", "quorum-member2-accountkey" ]
+  resourceNames: [ "quorum-member1-nodekey", "quorum-member1-accountkey" ]
   verbs: ["get"]
 - apiGroups: [""]
   resources: ["services"]
@@ -24,44 +24,55 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: member2-rb
+  name: member1-rb
   namespace: quorum
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: member2-keys-read-role
+  name: member1-keys-read-role
 subjects:
 - kind: ServiceAccount
-  name: member2-sa
+  name: member1-sa
   namespace: quorum
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: member2
+  name: member1
   labels:
-    app: member2
+    app: member1
   namespace: quorum
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: member2
-  serviceName: quorum-member2
+      app: member1
+  serviceName: quorum-member1
   template:
     metadata:
       labels:
-        app: member2
+        app: member1
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9125"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: member2-sa
+      serviceAccountName: member1-sa
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec 
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-rpcnode.quorum.svc.cluster.local:8545
+              sleep 30      
       containers:
-        - name: member2-tessera
+        - name: member1-tessera
           image: quorumengineering/tessera:0.10.5
           imagePullPolicy: IfNotPresent
           resources:
@@ -119,7 +130,7 @@ spec:
                     {
                       "app":"ThirdParty",
                       "enabled": true,
-                      "serverAddress": "http://quorum-member2.quorum.svc.cluster.local:9080",
+                      "serverAddress": "http://quorum-member1.quorum.svc.cluster.local:9080",
                       "communicationType" : "REST"
                     },
                     {
@@ -131,7 +142,7 @@ spec:
                     {
                       "app":"P2P",
                       "enabled": true,
-                      "serverAddress": "http://quorum-member2.quorum.svc.cluster.local:9000",
+                      "serverAddress": "http://quorum-member1.quorum.svc.cluster.local:9000",
                       "sslConfig": {
                         "tls": "OFF"
                       },
@@ -165,7 +176,7 @@ spec:
                   cat /data/tm/tessera-config-09.json
                   java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
 
-        - name: member2-quorum
+        - name: member1-quorum
           image: quorumengineering/quorum:2.7.0
           imagePullPolicy: IfNotPresent
           resources:
@@ -258,11 +269,16 @@ spec:
               --allow-insecure-unlock \
               --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
               --password /config/keys/password.txt | tee -a /data/logs/quorum.log
-
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30  
       volumes:
         - name: keys
           secret:
-            secretName: quorum-member2-keys
+            secretName: quorum-member1-keys
         - name: genesis-file
           configMap:
             name: quorum-genesis-configmap
