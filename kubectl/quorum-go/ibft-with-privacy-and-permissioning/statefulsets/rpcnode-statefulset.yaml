@@ -3,19 +3,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: validator1-sa
+  name: rpcnode-sa
   namespace: quorum
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: validator1-keys-read-role
+  name: rpcnode-keys-read-role
   namespace: quorum
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: [ "quorum-validator1-keys" ]
+  resourceNames: [ "quorum-rpcnode-keys" ]
   verbs: ["get"]
 - apiGroups: [""]
   resources: ["services"]
@@ -24,44 +24,55 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: validator1-rb
+  name: rpcnode-rb
   namespace: quorum
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: validator1-keys-read-role
+  name: rpcnode-keys-read-role
 subjects:
 - kind: ServiceAccount
-  name: validator1-sa
+  name: rpcnode-sa
   namespace: quorum
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: validator1
+  name: rpcnode
   labels:
-    app: validator1
+    app: rpcnode
   namespace: quorum
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: validator1
-  serviceName: quorum-validator1
+      app: rpcnode
+  serviceName: quorum-rpcnode
   template:
     metadata:
       labels:
-        app: validator1
+        app: rpcnode
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9126"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: validator1-sa
+      serviceAccountName: rpcnode-sa
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec 
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator4.quorum.svc.cluster.local:8545
+              sleep 30
       containers:
-        - name: validator1
+        - name: rpcnode
           image: quorumengineering/quorum:2.7.0
           imagePullPolicy: IfNotPresent
           resources:
@@ -85,11 +96,11 @@ spec:
             - name: QUORUM_CONSENSUS
               value: istanbul               
             - name: PRIVATE_CONFIG
-              value: ignore      
+              value: ignore    
           volumeMounts:
             - name: keys
               mountPath: /config/keys/
-              readOnly: true
+              readOnly: true 
             - name: static-nodes-file
               mountPath: /config/static-nodes
               readOnly: true
@@ -148,11 +159,17 @@ spec:
               --allow-insecure-unlock \
               --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
               --password /config/keys/password.txt | tee -a /data/logs/quorum.log
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30  
 
       volumes:
         - name: keys
           secret:
-            secretName: quorum-validator1-keys
+            secretName: quorum-rpcnode-keys
         - name: genesis-file
           configMap:
             name: quorum-genesis-configmap
@@ -171,5 +188,3 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: "2Gi"
-
- 

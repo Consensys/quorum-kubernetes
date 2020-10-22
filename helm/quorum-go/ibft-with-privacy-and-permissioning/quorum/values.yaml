@@ -1,0 +1,151 @@
+# Default values for quorum.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+imagePullPolicy: IfNotPresent
+image:
+  quorum:
+    repository: quorumengineering/quorum
+    tag: 2.7.0
+  tessera:
+    repository: quorumengineering/tessera
+    tag: 0.10.5
+
+namespace: quorum
+
+validators:
+  validator1:
+    nodekey: |-
+      1a2c4ff0f1b38e2322658dba692816138eb22d002515df1fffca21278f406aa9
+    accountkey: |-
+      {"address":"cdcf951b1f2a8677798241f976927732ed90c935","crypto":{"cipher":"aes-128-ctr","ciphertext":"ee30244a6ed80ab43d294454818243d487507334cc84659e8054d2ff77712122","cipherparams":{"iv":"7e818cb97f6532bf3c887328fc084a1f"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"26296a00fca2705c729c731f6482d7d328d047b3a8f5a6d52db4f3260cff05b2"},"mac":"20930ce1e90e8a9d0294141b679ba49d3d6866e740ffe5f119feb1f3d4b62f62"},"id":"cc22f7a0-62c1-419c-8543-d0499cd93122","version":3}
+    password: |-
+      Password
+
+  validator2:
+    nodekey: |-
+      7f9af699dd2bb1af76c90b3f67183dd48abae509c315eb8f2c55301ad90ba978
+    accountkey: |-
+      {"address":"9ed8e78abbf389d513ed1e8eb3ac6bb79385e331","crypto":{"cipher":"aes-128-ctr","ciphertext":"789d9b19d51db3baa712bceb86b7121764a7e1c03b75f2fbe086e0cb1835fcc4","cipherparams":{"iv":"82335b4de67e38e1c60b39083d5e2e06"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"a02c6e80d5c39059a6675c4d9fb99965230e9781baefbe0dabd1d2943152bfa1"},"mac":"ef160498aa2ba44e006302a250e230644b160390bd5a10fef9afa0a48f2012e7"},"id":"4f870727-adc6-4bdf-8f94-b2af87b319ba","version":3}
+    password: |-
+      Password
+
+  validator3:
+    nodekey: |-
+      fe006b00c738e7e5af7f7623290ffc83f394741ae6fb6afc6081cab49e1e1a70
+    accountkey: |-
+      {"address":"cfaa891dc89dd42c97e10f2ff2ad1c970aa5bf83","crypto":{"cipher":"aes-128-ctr","ciphertext":"e177d7ea62ca632ab2bb15b1c8fb2f47dc124ec8775c342222663bcbb9d131dc","cipherparams":{"iv":"f25ebb48d29443bf14984e71da83f419"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"3c8207dc8f97bffce3e06d0390b1d7209ec5f53d6613eec3dd6db4f0803deb2e"},"mac":"bb8a033c05ea0150bff8a9321f1c7f1d472168f6d56e6e4da45f40b5287ef02e"},"id":"154e3171-f180-4df2-8bb9-30307c17b190","version":3}
+    password: |-
+      Password
+
+  validator4:
+    nodekey: |-
+      8f6ae009cdbbf6e6fa739b91a4483f251bbe89f6570d34856554533b36c93c55
+    accountkey: |-
+      {"address":"63ce215f8fbd916e0254efa44863b2c3b1322304","crypto":{"cipher":"aes-128-ctr","ciphertext":"dfcfc581c6d1ecacde89175d0d0096ca107395d93040141d989f287226b7931a","cipherparams":{"iv":"d6f27ffa24f47706e9a2ee64ea03bbc5"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"08e6a8cddb07ff48617384c35caec1f4d3a81c0d1bb00040b8b9910c7f01a0b0"},"mac":"0f57fa419d1e6d8cfaa60a18e781ce6f87aa3d39e2fdbb8084b568aeb7f836be"},"id":"46ad2c4e-e245-45ec-a39b-bda0f1a46dd9","version":3}
+    password: |-
+      Password
+
+nodes:
+  rpcnode:
+    nodekey: |-
+      4107f0b6bf67a3bc679a15fe36f640415cf4da6a4820affaac89c8b280dfd1b3
+    accountkey: |-
+      {"address":"c7e5b0fc0973e8bbc9f6bf4cced151da9608df90","crypto":{"cipher":"aes-128-ctr","ciphertext":"0d67b13099362ce4d883e5bceec2332650fe320914e8f2038d6ecdefc611572d","cipherparams":{"iv":"84cf8be5ce7df6d407389dae0b120266"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"24fcbbc1c78476cfef780e4a5a2b22c6d1e39fb5e3e95ec1a49da048f9e04658"},"mac":"05ce4d0bab3095eea9045767f2b0cee6385034d8a4c263d5dc8e0b1251bcbb0f"},"id":"6c18d511-29ea-47d3-b9b7-aa6d26ddd5b8","version":3}
+    password: |-
+      Password
+
+  member1:
+    nodekey: |-
+      b9a4bd1539c15bcc83fa9078fe89200b6e9e802ae992f13cd83c853f16e8bed4
+    accountkey: |-
+      {"address":"883c7f48489ce8313f6d33631919545b622365c1","crypto":{"cipher":"aes-128-ctr","ciphertext":"658ce98bce68a2bb2c096de1414fd3d5e8e4256e4945cef6762044ac446577a8","cipherparams":{"iv":"39e3ff11ab3e6e6577a421ee2583b727"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"aced091aa4df96478926d038400b86900d4f6cf14ec3f926440e6401d39409ca"},"mac":"9e0661ac83bf55c535716c6471378d73e05af95ad5ff91789376cb8035795b51"},"id":"225ccaed-9225-4d07-97a6-33faba08e18c","version":3}
+    password: |-
+      Password
+    tmkey: |-
+      {"data":{"bytes":"Wl+xSyXVuuqzpvznOS7dOobhcn4C5auxkFRi7yLtgtA="},"type":"unlocked"}
+    tmpub: |-
+      BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=
+
+  member2:
+    nodekey: |-
+      f18166704e19b895c1e2698ebc82b4e007e6d2933f4b31be23662dd0ec602570
+    accountkey: |-
+      {"address":"d36181b32df116e95b65467493e5bb6fc770e668","crypto":{"cipher":"aes-128-ctr","ciphertext":"ff334c7d44301eead7bfcbf8d36dc0c4014495852005502233513439a4e6649e","cipherparams":{"iv":"c0d50e6f62fe81ec9829d7fc91969efb"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"2341c5897c67e4d18e818a16447c3df1d88515c1989f8b27e8a4c3d4114d5c11"},"mac":"dfcdc002c5a4d21f161ad4a3c170f1963c260482b39592d888a1d5621f355ea0"},"id":"2a4c73fc-cd0f-47ed-96b3-894e7c827e47","version":3}
+    password: |-
+      Password
+    tmkey: |-
+      {"data":{"bytes":"nDFwJNHSiT1gNzKBy9WJvMhmYRkW3TzFUmPsNzR6oFk="},"type":"unlocked"}
+    tmpub: |-
+      QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=
+
+  member3:
+    nodekey: |-
+      4107f0b6bf67a3bc679a15fe36f640415cf4da6a4820affaac89c8b280dfd1b3
+    accountkey: |-
+      {"address":"bee49701e145808c4c238eb44d93388741ba4ce3","crypto":{"cipher":"aes-128-ctr","ciphertext":"58eb7d2eb73531b74269dac09f0531840b3e7e71e1f7c0af8b1dc125f6e93df4","cipherparams":{"iv":"26661456d440ad54e3bd1b49f4092f4a"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"d2eb43fb6b5504710bf7204234406be700d30ebad0354a7a11fff922792e5d39"},"mac":"9a8c83a542d03167a9323be79ec47ee5766af43f2cc74875f569fb1cafb64c5f"},"id":"69ce3ea9-1cae-49a4-aa49-c4df2d8ca5fc","version":3}
+    password: |-
+      Password
+    tmkey: |-
+      {"data":{"bytes":"tMxUVR8bX7aq/TbpVHc2QV3SN2iUuExBwefAuFsO0Lg="},"type":"unlocked"}
+    tmpub: |-
+      1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=
+      
+
+# common parameters to all nodes
+quorumConfig:
+  networkId: 10
+  replicaCount: 1
+  pvcSizeLimit: "1Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+  dataPath: "/data"
+  genesisFilePath: "/etc/genesis/genesis.json"
+  logging: INFO
+  p2p:
+    enabled: true
+    host: "0.0.0.0"
+    port: 30303
+    discovery: true
+    maxPeers: 50
+  rpc:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8545
+    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+    corsOrigins: '["all"]'
+    authenticationEnabled: false
+  ws:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8546
+    api: '["DEBUG", "ETH", "WEB3", "NET"]'
+    authenticationEnabled: false
+  graphql:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8547
+    corsOrigins: '["all"]'
+  txPool:
+    retentionHours: 999
+    maxSize: 1024
+  http:
+    allowlist: '["*"]'
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+  tessera:
+    enabled: true
+    url: "http://127.0.0.1:8888"
+    port: 9000
+    tpport: 9080
+
+
+
+
+
+
+

@@ -3,19 +3,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: validator4-sa
+  name: validator3-sa
   namespace: quorum
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: validator4-keys-read-role
+  name: validator3-keys-read-role
   namespace: quorum
 rules:
 - apiGroups: [""]
   resources: ["secrets"]
-  resourceNames: [ "quorum-validator4-keys" ]
+  resourceNames: [ "quorum-validator3-keys" ]
   verbs: ["get"]
 - apiGroups: [""]
   resources: ["services"]
@@ -24,42 +24,42 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: validator4-rb
+  name: validator3-rb
   namespace: quorum
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: validator4-keys-read-role
+  name: validator3-keys-read-role
 subjects:
 - kind: ServiceAccount
-  name: validator4-sa
+  name: validator3-sa
   namespace: quorum
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: validator4
+  name: validator3
   labels:
-    app: validator4
+    app: validator3
   namespace: quorum
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: validator4
-  serviceName: quorum-validator4
+      app: validator3
+  serviceName: quorum-validator3
   template:
     metadata:
       labels:
-        app: validator4
+        app: validator3
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9126"
         prometheus.io/path: "/metrics"
     spec:
-      serviceAccountName: validator4-sa
+      serviceAccountName: validator3-sa
       initContainers:
         - name: init-bootnode
           image: pegasyseng/k8s-helper:v1.18.4
@@ -70,13 +70,11 @@ spec:
             - |
               exec 
               curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator1.quorum.svc.cluster.local:8545
-              sleep 20
+              sleep 30
               curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator2.quorum.svc.cluster.local:8545
-              sleep 20
-              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-validator3.quorum.svc.cluster.local:8545
-              sleep 20
+              sleep 30
       containers:
-        - name: validator4
+        - name: validator3
           image: quorumengineering/quorum:2.7.0
           imagePullPolicy: IfNotPresent
           resources:
@@ -100,11 +98,11 @@ spec:
             - name: QUORUM_CONSENSUS
               value: istanbul               
             - name: PRIVATE_CONFIG
-              value: ignore     
+              value: ignore        
           volumeMounts:
             - name: keys
               mountPath: /config/keys/
-              readOnly: true 
+              readOnly: true
             - name: static-nodes-file
               mountPath: /config/static-nodes
               readOnly: true
@@ -163,15 +161,20 @@ spec:
               --allow-insecure-unlock \
               --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
               --password /config/keys/password.txt | tee -a /data/logs/quorum.log
-
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30  
 
       volumes:
         - name: keys
           secret:
-            secretName: quorum-validator4-keys
+            secretName: quorum-validator3-keys
         - name: accountkey
           secret:
-            secretName: quorum-validator4-accountkey
+            secretName: quorum-validator3-accountkey
         - name: genesis-file
           configMap:
             name: quorum-genesis-configmap
@@ -190,3 +193,5 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: "2Gi"
+
+ 

@@ -1,0 +1,320 @@
+{{- $memberNumber := "member1" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $memberNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $memberNumber }}-key-read-role
+  namespace: {{ .Values.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ {{ template "quorum.name" . }}-{{ $memberNumber }}-keys ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $memberNumber }}-rb
+  namespace: {{ .Values.namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $memberNumber }}-key-read-role
+subjects:
+- kind: ServiceAccount
+  name: {{ $memberNumber }}-sa
+  namespace: {{ .Values.namespace }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "quorum.name" . }}-{{ $memberNumber }}
+  labels:
+    app: {{ template "quorum.name" . }}
+    chart: {{ template "quorum.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+    component: {{ $memberNumber }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "quorum.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ $memberNumber }}
+  serviceName: {{ template "quorum.name" . }}-{{ $memberNumber }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "quorum.name" . }}
+        release: {{ .Release.Name }}
+        component: {{ $memberNumber }}
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9126"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ $memberNumber }}-sa
+      initContainers:
+      - name: init-bootnode
+        image: pegasyseng/k8s-helper:v1.18.4
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec 
+            curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://{{ template "quorum.name" . }}-rpcnode.{{ .Values.namespace }}.svc.cluster.local:8545
+            sleep 30
+      containers:
+      - name: {{ $memberNumber }}tessera
+        image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.quorumConfig.cpuRequest }}"
+            memory: "{{ .Values.quorumConfig.memRequest }}"
+          limits:
+            cpu: "{{ .Values.quorumConfig.cpuLimit }}"
+            memory: "{{ .Values.quorumConfig.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: TESSERA_CONFIG_TYPE
+            value: "-09"              
+          - name: PRIVATE_CONFIG
+            value: "/data/tm/tm.ipc"
+        volumeMounts:
+          - name: keys
+            mountPath: /config/keys/
+            readOnly: true
+          - name: static-nodes-file
+            mountPath: /config/static-nodes/
+            readOnly: true
+          - name: permissioned-nodes-config
+            mountPath: /config/permissions-nodes/
+            readOnly: true
+          - name: genesis-file
+            mountPath: /config/quorum/
+            readOnly: true
+          - name: data
+            mountPath: /data
+        ports:
+          - name: tessera
+            containerPort: {{ .Values.quorumConfig.tessera.port }}
+            protocol: TCP
+          - name: tessera-tp
+            containerPort: {{ .Values.quorumConfig.tessera.tpport }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec 
+            mkdir /data/tm/;
+            cp /config/keys/tm.* /data/tm/ ;
+
+                cat <<EOF > /data/tm/tessera-config-09.json
+                {
+                  "useWhiteList": false,
+                  "jdbc": {
+                    "username": "sa",
+                    "password": "",
+                    "url": "jdbc:h2:./data/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                    "autoCreateTables": true
+                  },
+                  "serverConfigs":[
+                  {
+                    "app":"ThirdParty",
+                    "enabled": true,
+                    "serverAddress": "http://{{ template "quorum.name" . }}-{{ $memberNumber }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.quorumConfig.tessera.tpport }}",
+                    "communicationType" : "REST"
+                  },
+                  {
+                    "app":"Q2T",
+                    "enabled": true,
+                    "serverAddress": "unix:/data/tm/tm.ipc",
+                    "communicationType" : "REST"
+                  },
+                  {
+                    "app":"P2P",
+                    "enabled": true,
+                    "serverAddress": "http://{{ template "quorum.name" . }}-{{ $memberNumber }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.quorumConfig.tessera.port }}",
+                    "sslConfig": {
+                      "tls": "OFF"
+                    },
+                    "communicationType" : "REST"
+                  }
+                  ],
+                  "peer": [
+                    {
+                        "url": "http://{{ template "quorum.name" . }}-member1.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.quorumConfig.tessera.port }}"
+                    },
+                    {
+                        "url": "http://{{ template "quorum.name" . }}-member2.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.quorumConfig.tessera.port }}"
+                    },
+                    {
+                        "url": "http://{{ template "quorum.name" . }}-member3.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.quorumConfig.tessera.port }}"
+                    }
+                  ],
+                  "keys": {
+                    "passwords": [],
+                    "keyData": [
+                      {
+                        "config": $$(cat /data/tm/tm.key),
+                        "publicKey": "$$(cat /data/tm/tm.pub)"
+                      }
+                    ]
+                  },
+                  "alwaysSendTo": []
+                }
+            EOF
+
+                cat /data/tm/tessera-config-09.json
+                java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
+
+      - name: {{ $memberNumber }}quorum
+        image: {{ .Values.image.quorum.repository }}:{{ .Values.image.quorum.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.quorumConfig.cpuRequest }}"
+            memory: "{{ .Values.quorumConfig.memRequest }}"
+          limits:
+            cpu: "{{ .Values.quorumConfig.cpuLimit }}"
+            memory: "{{ .Values.quorumConfig.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: QUORUM_NETWORK_ID
+            value: "{{ .Values.quorumConfig.networkId }}"
+          - name: QUORUM_CONSENSUS
+            value: "istanbul"
+          - name: PRIVATE_CONFIG
+            value: "/data/tm/tm.ipc"
+        volumeMounts:
+          - name: keys
+            mountPath: /config/keys/
+            readOnly: true
+          - name: static-nodes-file
+            mountPath: /config/static-nodes/
+            readOnly: true
+          - name: permissioned-nodes-config
+            mountPath: /config/permissions-nodes/
+            readOnly: true
+          - name: genesis-file
+            mountPath: /config/quorum/
+            readOnly: true
+          - name: data
+            mountPath: /data
+        ports:
+          - name: json-rpc
+            containerPort: {{ .Values.quorumConfig.rpc.port }}
+            protocol: TCP
+          - name: ws
+            containerPort: {{ .Values.quorumConfig.ws.port }}
+            protocol: TCP
+          - name: graphql
+            containerPort: {{ .Values.quorumConfig.graphql.port }}
+            protocol: TCP
+          - name: rlpx
+            containerPort: {{ .Values.quorumConfig.p2p.port }}
+            protocol: TCP
+          - name: discovery
+            containerPort: {{ .Values.quorumConfig.p2p.port }}
+            protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.quorumConfig.metrics.port }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec 
+
+            apk add curl
+            
+            until $(curl --output /dev/null --silent --head --fail http://127.0.0.1:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
+            echo transaction manager is up;
+
+            mkdir -p /data/dd
+            cp /config/static-nodes/static-nodes.json /data/dd/
+            cp /config/permissions-nodes/*.json /data/dd/
+            cp /config/quorum/genesis.json /data/dd
+            geth --datadir=/data/dd init /config/quorum/genesis.json
+            cp /config/keys/accountkey /data/dd/keystore/key
+            cp /config/keys/nodekey /data/dd/geth/nodekey
+
+            geth \
+            --datadir /data/dd \
+            --nodiscover \
+            --nat=any \
+            --permissioned \
+            --emitcheckpoints \
+            --verbosity 5 \
+            --istanbul.blockperiod 5 --mine --minerthreads 1 --emitcheckpoints \
+            --syncmode full --nousb \
+            --networkid ${QUORUM_NETWORK_ID} \
+            --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpccorsdomain "*" --rpcvhosts "*" --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
+            --ws --wsaddr 0.0.0.0 --wsport 8546 --wsorigins "*" --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
+            --graphql --graphql.addr 0.0.0.0 --graphql.port 8547 --graphql.corsdomain "*" --graphql.vhosts "*" \
+            --port 30303 \
+            --unlock 0 \
+            --allow-insecure-unlock \
+            --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
+            --password /config/keys/password.txt | tee -a /data/logs/quorum.log
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8545
+          initialDelaySeconds: 120
+          periodSeconds: 30  
+      volumes:
+      - name: keys
+        secret:
+          secretName: {{ template "quorum.name" . }}-{{ $memberNumber }}-keys
+      - name: genesis-file
+        configMap:
+          name: {{ template "quorum.name" . }}-genesis-configmap
+          items:
+            - key: genesis.json
+              path: genesis.json
+      - name: static-nodes-file
+        configMap:
+          name: {{ template "quorum.name" . }}-static-nodes-configmap
+      - name: permissioned-nodes-config
+        configMap:
+          name: {{ template "quorum.name" . }}-permissioned-nodes-configmap              
+      - name: data
+        emptyDir:
+          sizeLimit: "{{ .Values.quorumConfig.pvcSizeLimit }}"

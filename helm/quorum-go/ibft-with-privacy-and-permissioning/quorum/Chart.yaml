@@ -1,0 +1,19 @@
+apiVersion: v1
+version: 0.1.0
+appVersion: latest
+name: goquorum
+description: enterprise ethereum network chart for Kubernetes
+keywords:
+  - ethereum
+  - goQuorum
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys
+home: https://consensys.net/quorum/
+sources:
+  - https://github.com/ConsenSys/quorum
+maintainers:
+  - name: devops
+    email: ops-quorum@consensys.net
+icon: hhttps://consensys.net/static/media/favicon.062cf3a9.png
