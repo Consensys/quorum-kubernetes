@@ -31,5 +31,5 @@ spec:
         - path: {{ $ingressPath }}
           backend:
             serviceName: {{ $fullName }}
-            servicePort: http
+            servicePort: 8545
 {{- end }}
