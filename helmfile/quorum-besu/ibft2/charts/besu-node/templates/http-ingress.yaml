@@ -1,6 +1,7 @@
 {{- if .Values.ingress_http.enabled -}}
 {{- $fullName := include "besu-node.fullname" . -}}
 {{- $ingressPath := .Values.ingress_http.path -}}
+{{- $servicePort := .Values.node.rpc.port -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -31,5 +32,5 @@ spec:
         - path: {{ $ingressPath }}
           backend:
             serviceName: {{ $fullName }}
-            servicePort: 8545
+            servicePort: {{ $servicePort }}
 {{- end }}
