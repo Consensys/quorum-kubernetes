@@ -1,0 +1,110 @@
+---
+# oa2 proxy pods
+# NB: manifest of app registration must specify accessTokenAcceptedVersion value of 2, not the default null
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: besu-app
+    intapp: oa2-proxy
+  name: oa2-proxy
+  namespace: besu-nodes
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      intapp: oa2-proxy
+  template:
+    metadata:
+      labels:
+        intapp: oa2-proxy
+    spec:
+      containers:
+      - args:
+        - --skip-jwt-bearer-tokens=true
+        - --proxy-websockets=true
+        - --provider=azure
+        - --email-domain=*
+        - --http-address=0.0.0.0:4180
+        - --client-id=$APP_REGISTRATION_APPLICATION_ID
+        - --client-secret=$APP_REGISTRATION_SECRET
+        - --cookie-secret=$RANDOM_DATA_HERE
+        - --ssl-upstream-insecure-skip-verify=true
+        - --azure-tenant=$APP_REGISTRATION_APPLICATION_ID
+        - --oidc-issuer-url=https://login.microsoftonline.com/$APP_REGISTRATION_APPLICATION_ID/v2.0
+        - --pass-authorization-header=true
+        - --set-xauthrequest=true
+        - --pass-basic-auth=true
+        - --request-logging=true
+        - --auth-logging=true
+        - --standard-logging=true
+        - --skip-provider-button=true
+        - --pass-access-token=true
+        - --pass-authorization-header=true
+        - --set-authorization-header=true
+        - --set-xauthrequest=true
+        image: quay.io/oauth2-proxy/oauth2-proxy:latest
+        imagePullPolicy: Always
+        name: oa2-proxy
+        ports:
+        - containerPort: 4180
+          protocol: TCP
+---
+# oa2 proxy service
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    intapp: oa2-proxy
+  name: oa2-proxy
+  namespace: besu-nodes
+spec:
+  ports:
+  - name: http
+    port: 4180
+    protocol: TCP
+    targetPort: 4180
+  selector:
+    intapp: oa2-proxy
+---
+# nginx-ingress ingress resource rules
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: besu-ingress
+  namespace: besu-nodes
+  labels:
+    app: besu-app
+  annotations:
+    kubernetes.io/ingress.class: besu-nodes
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/auth-url: "http://$OA2-PROXY-SERVICE/oauth2/auth"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: validator-1-besu-node
+            port:
+              number: 8545
+---
+# oa2-proxy ingress resource rules
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oa2-proxy
+  namespace: besu-nodes
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: oa2-proxy
+            port:
+              number: 4180
