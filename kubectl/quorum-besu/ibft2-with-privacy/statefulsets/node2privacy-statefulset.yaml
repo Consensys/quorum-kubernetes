@@ -102,7 +102,7 @@ spec:
           configMap:
             name: orion-configmap
             items:
-              - key: orion1PubKey
+              - key: orion2PubKey
                 path: orion.pub
         - name: genesis-config
           configMap:
