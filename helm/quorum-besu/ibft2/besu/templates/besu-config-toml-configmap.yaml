@@ -25,11 +25,8 @@ data:
     # rpc-http-authentication-credentials-file="none"
     # TODO : insert as command line & mount Volume
     # rpc-ws-authentication-credentials-file="none"
-    # TODO : insert as command line & mount Volume
-    # permissions-nodes-config-file="./permissions_config.toml"
-    # TODO : insert as command line & mount Volume
-    # permissions-accounts-config-file="./permissions_config.toml"
     logging={{ .Values.besuConfig.logging | quote }}
+    min-gas-price=0
 
     # Transaction Pool
     tx-pool-retention-hours={{ .Values.besuConfig.txPool.retentionHours }}
@@ -39,7 +36,7 @@ data:
     # P2P network
     p2p-enabled={{ .Values.besuConfig.p2p.enabled }}
     discovery-enabled={{ .Values.besuConfig.p2p.discovery }}
-    #p2p-host={{ .Values.besuConfig.p2p.host | quote }}
+    p2p-host={{ .Values.besuConfig.p2p.host | quote }}
     p2p-port={{ .Values.besuConfig.p2p.port }}
     max-peers={{ .Values.besuConfig.p2p.maxPeers }}
     {{ end }}
@@ -72,27 +69,17 @@ data:
     rpc-ws-host={{ .Values.besuConfig.ws.host | quote }}
     rpc-ws-port={{ .Values.besuConfig.ws.port }}
     rpc-ws-api={{ .Values.besuConfig.ws.api }}
-    #rpc-ws-apis=["DEBUG","ETH"]
     rpc-ws-authentication-enabled={{ .Values.besuConfig.ws.authenticationEnabled }}
     {{ end }}
 
-    {{ if  .Values.besuConfig.permissions.enabled -}}
     # Permissioning
     permissions-nodes-config-file-enabled={{ .Values.besuConfig.permissions.nodes.enabled }}
     permissions-nodes-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/nodes-allowlist.yml"
-    permissions-accounts-config-file-enabled={{ .Values.besuConfig.permissions.accounts.enabled }}
-    permissions-nodes-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/accounts-allowlist.yml"
-    permissions-nodes-contract-enabled={{ .Values.besuConfig.permissions.nodesContract.enabled }}
-    permissions-nodes-contract-address={{ .Values.besuConfig.permissions.nodesContract.address | quote }}
-    {{ end }}
-
-    {{ if  .Values.besuConfig.privacy.enabled -}}
-    # Privacy
-    privacy-enabled={{ .Values.besuConfig.privacy.enabled }}
-    privacy-url={{ .Values.besuConfig.privacy.url | quote }}
-    privacy-precompiled-address={{ .Values.besuConfig.privacy.precompiledAddress }}
-    {{ end }}
-
+    #permissions-accounts-config-file-enabled={{ .Values.besuConfig.permissions.accounts.enabled }}
+    #permissions-accounts-config-file="{{ .Values.besuConfig.permissions.nodes.filePath }}/accounts-allowlist.yml"
+    #permissions-nodes-contract-enabled={{ .Values.besuConfig.permissions.nodesContract.enabled }}
+    #permissions-nodes-contract-address={{ .Values.besuConfig.permissions.nodesContract.address | quote }}
+    
     {{ if  .Values.besuConfig.metrics.enabled -}}
     # Metrics
     metrics-enabled={{ .Values.besuConfig.metrics.enabled }}

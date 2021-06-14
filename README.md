@@ -2,9 +2,11 @@
 
 # Besu-Kubernetes (k8s)
 
-The following repo has example reference implementations of private networks using k8s. This is intended to get developers and ops people familiar with how to run a private ethereum network in k8s and understand the concepts involved.
+The following repo has example reference implementations of private networks using k8s. This are aimed at developers and ops people to get them familiar with how to run a private ethereum network in k8s and understand the concepts involved.
 
 It provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
+
+When you have understood how things work here, you are welcome to use our more prod ready [repo](https://github.com/ConsenSys/quorum-azure) which utilizes cloud services like KeyVault, Identities, Azure Monitor etc natively
 
 ## Local Development:
 The reference examples in this repo can be used locally, to get familiar with the deployment setup. You will require:

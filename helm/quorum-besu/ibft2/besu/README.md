@@ -1,7 +1,10 @@
 
+# Example setup using local permissioning
+
 ## Flow of the process:
 - Create private/public keys for the bootnodes & update the secrets/bootnode-keys-secret.yaml with the bootnode private keys
 - Update the values.yaml file with specific data for the genesis file, number of nodes etc
+- Update the local permissions file: templates/besu-node-permissions-configmap.yml (becuase this is a permissioned setup you must add enode details for every node here)
 - Run helm
   - Creates a secrets resource for the validator private keys
   - Creates a configmap with the validator public keys & genesis file.json
@@ -90,3 +93,5 @@ In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboa
 helm del besu 
 
 ```
+
+

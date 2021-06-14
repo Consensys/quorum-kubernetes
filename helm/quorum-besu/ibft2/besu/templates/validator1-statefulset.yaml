@@ -1,4 +1,6 @@
+
 {{- $validatorNumber := "validator1" }}
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -7,7 +9,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ $validatorNumber }}-key-read-role
@@ -22,7 +24,7 @@ rules:
   verbs: ["get", "list"]
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $validatorNumber }}-rb
@@ -63,6 +65,7 @@ spec:
         app: {{ template "besu.name" . }}
         release: {{ .Release.Name }}
         component: {{ $validatorNumber }}
+
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9545"
@@ -71,8 +74,8 @@ spec:
       serviceAccountName: {{ $validatorNumber }}-sa
       containers:
       - name: {{ $validatorNumber }}
-        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+        imagePullPolicy: {{ .Values.image.imagePullPolicy }}
         resources:
           requests:
             cpu: "{{ .Values.validators.cpuRequest }}"
@@ -99,10 +102,6 @@ spec:
               configMapKeyRef:
                 name: {{ template "besu.fullname" . }}-validators-configmap
                 key: validator2PubKey
-          - name: VALIDATOR1_SERVICE_HOST
-            value: "$({{ template "besu.upperfullname" . }}_VALIDATOR1_SERVICE_HOST)"
-          - name: VALIDATOR2_SERVICE_HOST
-            value: "$({{ template "besu.upperfullname" . }}_VALIDATOR2_SERVICE_HOST)"
         volumeMounts:
           - name: key
             mountPath: /secrets
@@ -112,7 +111,10 @@ spec:
             readOnly: true
           - name: config-toml
             mountPath: /etc/besu
-            readOnly: true
+          {{- if .Values.besuConfig.permissions.nodes.enabled }}
+          - name: node-permissions
+            mountPath: {{ .Values.besuConfig.permissions.nodes.filePath }}
+          {{- end }}            
           - name: data
             mountPath: /data
         ports:
@@ -142,14 +144,9 @@ spec:
             exec /opt/besu/bin/besu \
               --node-private-key-file=/secrets/key \
               --config-file=/etc/besu/config.toml \
-              --p2p-host=${VALIDATOR1_SERVICE_HOST} --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $validatorNumber }} \
-              --bootnodes=enode://${VALIDATOR1_PUBKEY}@${VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${VALIDATOR2_SERVICE_HOST}:30303
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 8545
-          initialDelaySeconds: 60
-          periodSeconds: 30              
+              --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ template "besu.fullname" . }}-{{ $validatorNumber }}\
+              --bootnodes=enode://${VALIDATOR1_PUBKEY}@{{ template "besu.name" . }}-validator1-0.{{ template "besu.name" . }}-validator1.{{ .Values.namespace }}.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@{{ template "besu.name" . }}-validator2-0.{{ template "besu.name" . }}-validator2.{{ .Values.namespace }}.svc.cluster.local:30303
+         
       volumes:
       - name: key
         secret:
@@ -163,6 +160,12 @@ spec:
       - name: config-toml
         configMap:
           name: {{ template "besu.fullname" . }}-config-toml-configmap
+      {{- if .Values.besuConfig.permissions.nodes.enabled }}
+      - name: node-permissions
+        configMap:
+          name: {{ template "besu.fullname" . }}-node-permissions-configmap
+      {{- end }}     
       - name: data
         emptyDir:
           sizeLimit: "{{ .Values.validators.pvcSizeLimit }}"
+

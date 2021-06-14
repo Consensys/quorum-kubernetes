@@ -17,16 +17,14 @@ data:
     # Node Information
     data-path="/data"
     genesis-file="/etc/genesis/genesis.json"
+
     # TODO : insert as command line & mount Volume
     # rpc-http-authentication-credentials-file="none"
     # TODO : insert as command line & mount Volume
     # rpc-ws-authentication-credentials-file="none"
-    # TODO : insert as command line & mount Volume
-    # permissions-nodes-config-file="./permissions_config.toml"
-    # TODO : insert as command line & mount Volume
-    # permissions-accounts-config-file="./permissions_config.toml"
     logging="INFO"
 
+    min-gas-price=0
     # Transaction Pool
     tx-pool-retention-hours=999
     tx-pool-max-size=1024
@@ -44,7 +42,7 @@ data:
     rpc-http-enabled=true
     rpc-http-host="0.0.0.0"
     rpc-http-port=8545
-    rpc-http-api=["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]
+    rpc-http-api=["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "EEA", "WEB3", "PRIV", "PERM"]
     rpc-http-cors-origins=["*"]
     rpc-http-authentication-enabled=false
 
@@ -58,11 +56,15 @@ data:
     rpc-ws-enabled=false
     rpc-ws-host="0.0.0.0"
     rpc-ws-port=8546
-    rpc-ws-api=["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]
+    rpc-ws-api=["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "EEA", "WEB3", "PRIV", "PERM"]
     rpc-ws-authentication-enabled=false
 
     # Metrics
     metrics-enabled=true
     metrics-host="0.0.0.0"
     metrics-port=9545
+
+    # Permissioning
+    permissions-nodes-config-file-enabled=true
+    permissions-nodes-config-file="/etc/permissions/nodes-allowlist.yml"
 
