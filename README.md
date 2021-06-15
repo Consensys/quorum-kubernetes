@@ -2,7 +2,7 @@
 
 # Besu-Kubernetes (k8s)
 
-The following repo has example reference implementations of private networks using k8s. This are aimed at developers and ops people to get them familiar with how to run a private ethereum network in k8s and understand the concepts involved.
+The following repo has example reference implementations of private networks using k8s. These examples are aimed at developers and ops people to get them familiar with how to run a private ethereum network in k8s and understand the concepts involved.
 
 It provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
 
