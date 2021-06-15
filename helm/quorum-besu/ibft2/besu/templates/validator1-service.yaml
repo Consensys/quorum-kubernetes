@@ -11,6 +11,8 @@ metadata:
     heritage: {{ .Release.Service }}
     component: {{ $validatorNumber }}
     namespace: {{ .Values.namespace }}
+    app.kubernetes.io/name: besu
+    app.kubernetes.io/release: "1.0.0"
   namespace: {{ .Values.namespace }}
 spec:
   type: ClusterIP

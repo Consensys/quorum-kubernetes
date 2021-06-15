@@ -1,6 +1,9 @@
 
+# Example setup using local permissioning and privacy
+
 ## Flow of the process:
 - Create private/public keys for the validators & update the secrets/validator-keys-secret.yaml with the validator private keys
+- Update the local permissions file: configmap/besu-node-permissions-configmap.yml (becuase this is a permissioned setup you must add enode details for every node here)
 - Update the configmap/configmap.yml with the public keys & genesis file
 - Update the number of nodes you would like in deployments/node-deployment.yaml
 - Run kubectl
