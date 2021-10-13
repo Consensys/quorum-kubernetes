@@ -1,22 +1,22 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "quorum.name" . }}-cakeshop
+  name: {{ template "quorum.fullname" . }}-prometheus
   labels:
     app: {{ template "quorum.name" . }}
     chart: {{ template "quorum.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     namespace: monitoring
-    component: cakeshop
+    component: prometheus
   namespace: monitoring
 spec:
   type: NodePort
   selector:
-    component: cakeshop
+    component: prometheus
   ports:
-    - port: 8999
-      targetPort: 8999
-      nodePort: 30099
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
       protocol: TCP
-      name: cakeshop
+      name: prometheus

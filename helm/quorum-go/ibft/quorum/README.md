@@ -79,8 +79,11 @@ minikube ip
 
 For example if the ip returned was `192.168.99.100`
 
-*Cakeshop:*
-In a fresh browser tab open `192.168.99.100:30099` to get to the Cakeshop dashboard and you can see all the available metrics, as well as the targets that it is collecting metrics for
+*Prometheus:*
+In a fresh browser tab open `192.168.99.100:30090` to get to the prometheus dashboard and you can see all the available metrics, as well as the targets that it is collecting metrics for
+
+*Grafana:*
+In a fresh browser tab open `192.168.99.100:30030` to get to the grafana dashboard. Credentials are `admin:password` Open the 'GoQuorum Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
 
 
 
