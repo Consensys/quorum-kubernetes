@@ -1,0 +1,144 @@
+{{- if and .Values.besuConfig.miner.enabled }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "besu.fullname" . }}-miner
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: miner
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "besu.name" . }}
+      release: {{ .Release.Name }}
+      component: miner
+  serviceName: {{ template "besu.fullname" . }}-miner
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu.name" . }}
+        release: {{ .Release.Name }}
+        component: miner
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          env:
+            - name: BOOTNODE1_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_BOOTNODE1_SERVICE_HOST)"
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BOOTNODE1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: node
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          resources:
+            requests:
+              cpu: "{{ .Values.node.cpuRequest }}"
+              memory: "{{ .Values.node.memRequest }}"
+            limits:
+              cpu: "{{ .Values.node.cpuLimit }}"
+              memory: "{{ .Values.node.memLimit }}"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: BOOTNODE1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "besu.fullname" . }}-bootnodes-configmap
+                  key: bootnode1PubKey
+            - name: BOOTNODE2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ template "besu.fullname" . }}-bootnodes-configmap
+                  key: bootnode2PubKey
+            - name: BOOTNODE1_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_BOOTNODE1_SERVICE_HOST)"
+            - name: BOOTNODE2_SERVICE_HOST
+              value: "$({{ template "besu.upperfullname" . }}_BOOTNODE2_SERVICE_HOST)"
+            - name: MINER_COINBASE
+              value: {{ .Values.besuConfig.miner.coinbase | quote }}
+          volumeMounts:
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - name: json-rpc
+              containerPort: {{ .Values.besuConfig.rpc.port }}
+              protocol: TCP
+            - name: ws
+              containerPort: {{ .Values.besuConfig.ws.port }}
+              protocol: TCP
+            - name: graphql
+              containerPort: {{ .Values.besuConfig.graphql.port }}
+              protocol: TCP
+            - name: rlpx
+              containerPort: {{ .Values.besuConfig.p2p.port }}
+              protocol: TCP
+            - name: discovery
+              containerPort: {{ .Values.besuConfig.p2p.port }}
+              protocol: UDP
+            - name: metrics
+              containerPort: {{ .Values.besuConfig.metrics.port }}
+              protocol: TCP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --config-file=/etc/besu/config.toml \
+                --miner-enabled \
+                --miner-coinbase=${MINER_COINBASE} \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BOOTNODE2_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30                  
+      volumes:
+        - name: genesis-config
+          configMap:
+            name: {{ template "besu.fullname" . }}-genesis-configmap
+            items:
+              - key: genesis.json
+                path: genesis.json
+        - name: config-toml
+          configMap:
+            name: {{ template "besu.fullname" . }}-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "{{ .Values.node.pvcSizeLimit }}"
+
+{{- end }}

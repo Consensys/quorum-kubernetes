@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quorum-validator1
+  labels:
+    app: validator1
+  namespace: quorum
+spec:
+  type: ClusterIP
+  selector:
+    app: validator1
+  ports:
+    - port: 30303
+      targetPort: 30303
+      protocol: UDP
+      name: discovery
+    - port: 30303
+      targetPort: 30303
+      protocol: TCP
+      name: rlpx
+    - port: 8545
+      targetPort: 8545
+      protocol: TCP
+      name: json-rpc
+    - port: 8546
+      targetPort: 8546
+      protocol: TCP
+      name: ws
+    - port: 8547
+      targetPort: 8547
+      protocol: TCP
+      name: graphql

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "besu.fullname" . }}-prometheus
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+    component: prometheus
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    component: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
+      protocol: TCP
+      name: prometheus

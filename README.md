@@ -1,12 +1,38 @@
 
 
-# Besu-Kubernetes (k8s)
+# Quorum-Kubernetes (k8s)
 
 The following repo has example reference implementations of private networks using k8s. These examples are aimed at developers and ops people to get them familiar with how to run a private ethereum network in k8s and understand the concepts involved.
 
 It provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
 
-When you have understood how things work here, you are welcome to use our more prod ready [repo](https://github.com/ConsenSys/quorum-azure) which utilizes cloud services like KeyVault, Identities, Azure Monitor etc natively
+The current repo layout is:
+
+```bash
+  ├── docker
+  │   └── istanbul-tools            # helper docker images used for various tasks
+  ├── playground                    # playground for users to get familiar with concepts and how to run and tweak things - START HERE 
+  │   └── kubectl
+  │       ├── quorum-besu           # use Hyperledger Besu as the block chain client
+  │       │   ├── clique
+  │       │   │   ├── ...           # templates, config etc hidden here for brevity
+  │       │   ├── ethash
+  │       │   │   ├── ...
+  │       │   └── ibft2
+  │       │       └── ...
+  │       └── quorum-go             # use GoQuorum as the block chain client
+  │           └── ibft
+  │               └── ...
+  ├── helm
+  │   ├── dev                       # dev helm charts
+  │   ├── prod                      # prod helm charts - these will use cloud native services where possible eg IAM for identity, keyvault for secrets etc
+  └── static                        # images and other static assets
+  
+
+
+```
+
+We recommend starting with the `playground` folder and working through the examples and setups there and then moving to the next stage. The `dev` and `prod` folders are pretty identical in terms of what gets deployed, but differ in that the prod folder natively uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
 
 ## Local Development:
 The reference examples in this repo can be used locally, to get familiar with the deployment setup. You will require:
@@ -38,29 +64,26 @@ $ helm plugin install https://github.com/databus23/helm-diff --version master
 
 Pick the deployment tool that suits your environment and then change directory and follow the Readme.md files there.
 
-
-Namespaces:
-Currently we do not deploy anything in the 'default' namespace. Anything related to Besu gets spun up in a 'besu' namespace, the monitoring pieces get spun up in a 'monitoring' namespace.
+#### Namespaces:
+Currently we do not deploy anything in the 'default' namespace. Anything related to Besu gets spun up in a 'besu' namespace, and 'quorum' for GoQuorum; with the monitoring pieces get spun up in a 'monitoring' namespace.
 Namespaces are part of the setup and do not need to be created via kubectl prior to deploying. To change the namespaces:
 - In Kubectl, you need to edit every file in the deployment
 - In Helm, edit the namespace value in the values.yaml 
 
 It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
 
-
-Monitoring:
+#### Monitoring:
 The example setups all have out custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes and network easier.
 
 We use the default ports 3000 for grafana and 9090 for prometheus deployments, and the respective Nodeport services use ports 30030 and 30090. Credentials are `admin:password` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
 
 Please configure the kubernetes scraper and grafana security to suit your requirements, Grafana supports [multiple options](https://grafana.com/docs/grafana/latest/auth/overview/) that can be configured using env vars
 
-Ingress Controllers:
+#### Ingress Controllers:
 
-If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](./helm/ingress/README.md) with rules that are configured to do so.
- 
+If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](deprecated/helm/ingress/README.md) with rules that are configured to do so.
+
 Please use these as a reference and develop solutions to match your network topology and requirements.
-
 
 ## Production Network Guidelines:
 | ⚠️ **Note**: After you have familiarised yourself with the examples in this repo, it is recommended that you design your network based on your needs, taking the following guidelines into account |
@@ -127,7 +150,7 @@ Besu also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboard
 
 For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements, grafana supports multiple options that can be configured using env vars
 
-We also have [example ingress controller config rules](./helm/ingress/), should you want to use a setup that makes use of ingress controllers. 
+We also have [example ingress controller config rules](deprecated/helm/ingress/), should you want to use a setup that makes use of ingress controllers. 
 
 #### Logging
 Besu's logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.

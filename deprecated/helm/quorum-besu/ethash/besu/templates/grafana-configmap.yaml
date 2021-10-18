@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-grafana-configmap-datasources
+  labels:
+    app: {{ template "besu.fullname" . }}-grafana-configmap-datasources
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  prometheus.yml: |-
+{{ .Files.Get "grafana-datasource.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-dashboard
+  labels:
+    app: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-dashboard
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  dashboard.yml: |-
+{{ .Files.Get "grafana-dashboard-default.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-besu
+  labels:
+    app: {{ template "besu.fullname" . }}-grafana-configmap-dashboards-besu
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  besu.json: |-
+{{ .Files.Get "grafana-dashboard-besu.json" | indent 4}}

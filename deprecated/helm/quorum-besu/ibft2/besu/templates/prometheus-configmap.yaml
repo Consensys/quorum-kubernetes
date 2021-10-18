@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-prometheus-configmap
+  labels:
+    app: {{ template "besu.fullname" . }}-prometheus-configmap
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: monitoring
+  namespace: monitoring
+data:
+  prometheus.yml: |-
+{{ .Files.Get "prometheus.yml" | indent 4}}

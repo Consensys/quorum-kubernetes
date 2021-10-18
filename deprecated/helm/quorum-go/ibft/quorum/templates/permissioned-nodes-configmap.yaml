@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum.name" . }}-permissioned-nodes-configmap
+  labels:
+    app: {{ template "quorum.name" . }}
+    chart: {{ template "quorum.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+data:
+  permissioned-nodes.json: |-
+{{ (tpl (.Files.Get "static-nodes.json") . | indent 4 ) }}
+
+
+  disallowed-nodes.json: |-
+{{ .Files.Get "disallowed-nodes.json" | indent 4 }}
+

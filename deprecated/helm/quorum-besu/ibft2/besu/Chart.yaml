@@ -1,0 +1,20 @@
+apiVersion: v1
+version: 0.1.0
+appVersion: latest
+name: besu
+description: enterprise ethereum network chart for Kubernetes
+keywords:
+  - ethereum
+  - besu
+  - hyperledger
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys
+home: https://besu.hyperledger.org
+sources:
+  - https://github.com/hyperledger/besu
+maintainers:
+  - name: devops
+    email: devops@pegasys.tech
+icon: http://besu.hyperledger.org/en/latest/favicon.ico

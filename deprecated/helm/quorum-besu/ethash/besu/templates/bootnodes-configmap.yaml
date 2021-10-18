@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu.fullname" . }}-bootnodes-configmap
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+data:
+  {{ if regexMatch "^0x" .Values.bootnode1.publicKey }}
+  bootnode1PubKey: {{ trimPrefix "0x" .Values.bootnode1.publicKey | quote }}
+  {{ else }}
+  bootnode1PubKey: {{ .Values.bootnode1.publicKey | quote }}
+  {{ end }}
+
+  {{ if regexMatch "^0x" .Values.bootnode2.publicKey }}
+  bootnode2PubKey: {{ trimPrefix "0x" .Values.bootnode2.publicKey | quote }}
+  {{ else }}
+  bootnode2PubKey: {{ .Values.bootnode2.publicKey | quote }}
+  {{ end }}
+
+

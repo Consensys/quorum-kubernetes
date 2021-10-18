@@ -1,0 +1,145 @@
+---
+
+namespace: besu
+
+image:
+  imagePullPolicy: IfNotPresent
+  besu:
+    repository: hyperledger/besu
+    tag: 21.1.2
+  tessera:
+    repository: quorumengineering/tessera
+    tag: 21.4.0
+  helper:
+    repository: pegasyseng/k8s-helper
+    tag: v1.18.4 
+
+members:
+  pvcSizeLimit: "10Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+
+  member1:
+    privateKey: "b9a4bd1539c15bcc83fa9078fe89200b6e9e802ae992f13cd83c853f16e8bed4"
+    publicKey: "98496800174b3c73ae33cba59f8f5e686cd488f7897c2edb52e2cf46383d75cd03dbb58dde07185bc0953f98800ca9a89f4b5ef450c5e51292ea08ec6130ee0c"
+    tmkey: |-
+        {"data":{"bytes":"Wl+xSyXVuuqzpvznOS7dOobhcn4C5auxkFRi7yLtgtA="},"type":"unlocked"}
+    tmpub: |-
+        BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=
+    accountkey: |-
+      {"address":"883c7f48489ce8313f6d33631919545b622365c1","crypto":{"cipher":"aes-128-ctr","ciphertext":"658ce98bce68a2bb2c096de1414fd3d5e8e4256e4945cef6762044ac446577a8","cipherparams":{"iv":"39e3ff11ab3e6e6577a421ee2583b727"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"aced091aa4df96478926d038400b86900d4f6cf14ec3f926440e6401d39409ca"},"mac":"9e0661ac83bf55c535716c6471378d73e05af95ad5ff91789376cb8035795b51"},"id":"225ccaed-9225-4d07-97a6-33faba08e18c","version":3}
+  
+  member2:
+    privateKey: "f18166704e19b895c1e2698ebc82b4e007e6d2933f4b31be23662dd0ec602570"
+    publicKey: "ad2c79c6561bc8212c2e8382611c62e406e767d1f3106c68ca206900f575cb8ba9a8be111c645cd9803701d684454c782c40d2361b000a32ed03d26228b30ec1"
+    tmkey: |-
+        {"data":{"bytes":"nDFwJNHSiT1gNzKBy9WJvMhmYRkW3TzFUmPsNzR6oFk="},"type":"unlocked"}
+    tmpub: |-
+        QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=
+    accountkey: |-
+      {"address":"d36181b32df116e95b65467493e5bb6fc770e668","crypto":{"cipher":"aes-128-ctr","ciphertext":"ff334c7d44301eead7bfcbf8d36dc0c4014495852005502233513439a4e6649e","cipherparams":{"iv":"c0d50e6f62fe81ec9829d7fc91969efb"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"2341c5897c67e4d18e818a16447c3df1d88515c1989f8b27e8a4c3d4114d5c11"},"mac":"dfcdc002c5a4d21f161ad4a3c170f1963c260482b39592d888a1d5621f355ea0"},"id":"2a4c73fc-cd0f-47ed-96b3-894e7c827e47","version":3}
+
+  member3:
+    privateKey: "4107f0b6bf67a3bc679a15fe36f640415cf4da6a4820affaac89c8b280dfd1b3"
+    publicKey: "af19c92deb635bd7720634de9b2e7908208530d6f5e96eee003a8f1799e5be4037957d7e2fdbe3605e3a38dab05c961679c02133a0e624e23a72f7961e8af6ac"
+    tmkey: |-
+        {"data":{"bytes":"tMxUVR8bX7aq/TbpVHc2QV3SN2iUuExBwefAuFsO0Lg="},"type":"unlocked"}
+    tmpub: |-
+        1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=
+    accountkey: |-
+      {"address":"bee49701e145808c4c238eb44d93388741ba4ce3","crypto":{"cipher":"aes-128-ctr","ciphertext":"58eb7d2eb73531b74269dac09f0531840b3e7e71e1f7c0af8b1dc125f6e93df4","cipherparams":{"iv":"26661456d440ad54e3bd1b49f4092f4a"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"d2eb43fb6b5504710bf7204234406be700d30ebad0354a7a11fff922792e5d39"},"mac":"9a8c83a542d03167a9323be79ec47ee5766af43f2cc74875f569fb1cafb64c5f"},"id":"69ce3ea9-1cae-49a4-aa49-c4df2d8ca5fc","version":3}
+
+
+validators:
+  pvcSizeLimit: "10Gi"
+  pvcStorageClass: "standard"
+  memRequest: "1024Mi"
+  memLimit: "2048Mi"
+  cpuRequest: "100m"
+  cpuLimit: "500m"
+  validator1:
+    privateKey: "0fd4aecd8f02b24f468325aa06e1428ab8076d283bac3ed804c9f70187dedb63"
+    publicKey: "c1979a8a48693db804316b5acebe35e11731e1fb1c9c21ff7268ab25db6f6e03390a429b83cf0ec0865a7205f2669ec1ace652a3def11e2e01571c74939cbe22"
+
+  validator2:
+    privateKey: "47c63c0afd1a85b16915934a2d75cf5a0d3bd13c509d6ee9d7ef1315a36bdc0a"
+    publicKey: "e40129f02c9e29a02049668346d4777bb55809042746882b33b20a8b5a7310eb5f107a53f0aa3da766ee77f401557a79c0c328329ea48bf0996c6c9dff817f76"
+
+  validator3:
+    privateKey: "35dcc853354b24e98889fa4b2e214d5e92e759ef8312bb6a444bad3182187b68"
+    publicKey: "a3e4af081a0ab853c959b9acd0596f818b91a9409b9d04c50af055072c929abfa340e14111dcfa76e049fdb16bb9198e722d5e7be3e8ef37562ea0d0ce1eda11"
+
+  validator4:
+    privateKey: "d38e71552943e18061fdb44a72eca14ea193e0505a7ead404864f9840e275b49"
+    publicKey: "8f4e444a73034236ab4244c7a572aa2c6198b9e0d483ef17bf4b751cac5c0370bc527a5b0c5d01aa3ef41704af838c74730aeecac0f0c22dc4c17b0a9f03ad76"
+
+tesseraConfig:
+  port: 9000
+  tpPort: 9080
+  q2tPort: 9101
+
+# common parameters to all nodes
+besuConfig:
+  dataPath: "/data"
+  genesisFilePath: "/etc/genesis/genesis.json"
+  logging: INFO
+  p2p:
+    enabled: true
+    host: "0.0.0.0"
+    port: 30303
+    discovery: true
+    maxPeers: 25
+  rpc:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8545
+    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "EEA", "WEB3"]'
+    corsOrigins: '["all"]'
+    authenticationEnabled: false
+  ws:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8546
+    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "EEA", "WEB3"]'
+    authenticationEnabled: false
+  graphql:
+    enabled: false
+    host: "0.0.0.0"
+    port: 8547
+    corsOrigins: '["all"]'
+  txPool:
+    retentionHours: 999
+    maxSize: 1024
+  http:
+    allowlist: '["*"]'
+  metrics:
+    enabled: true
+    host: "0.0.0.0"
+    port: 9545
+  metricsPush:
+    enabled: false
+    host: "5.5.5.5"
+    port: 9091
+    interval: 15
+    prometheusJob: "besu"
+  privacy:
+    enabled: false
+    url: "http://127.0.0.1:8888"
+    precompiledAddress: 9
+  permissions:
+    enabled: true
+    nodes:
+      enabled: true
+      filePath: "/etc/permissions"
+    nodesContract:
+      enabled: false
+      address: "0x0000000000000000000000000000000000001234"
+    accounts:
+      enabled: false
+
+
+
+

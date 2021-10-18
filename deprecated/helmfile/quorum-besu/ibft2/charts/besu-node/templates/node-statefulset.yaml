@@ -1,0 +1,188 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ .Release.Name }}-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ .Release.Name }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Release.Name }}-role
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-sa
+  namespace:  {{ .Release.Namespace }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "besu-node.fullname" . }}-{{  .Release.Name }}
+  labels:
+    app: {{ template "besu-node.name" . }}
+    chart: {{ template "besu-node.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "besu-node.name" . }}
+    helm.sh/chart: {{ include "besu-node.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: {{ template "besu-node.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ include "besu-node.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  serviceName: {{ include "besu-node.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu-node.name" . }}
+        release: {{ .Release.Name }}
+        component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "besu-node.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ .Release.Name }}-sa
+{{- if not .Values.bootnode.enabled }}
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BOOTNODE_1_BESU_NODE_SERVICE_HOST}:8545/liveness"
+{{- end}}
+      containers:
+      - name: {{ .Release.Name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.node.resources.cpuRequest }}"
+            memory: "{{ .Values.node.resources.memRequest }}"
+          limits:
+            cpu: "{{ .Values.node.resources.cpuLimit }}"
+            memory: "{{ .Values.node.resources.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: BOOTNODE1_PUBKEY
+            valueFrom:
+              secretKeyRef:
+                name: besu-bootnode-1-keys
+                key: enode.key
+          - name: BOOTNODE2_PUBKEY
+            valueFrom:
+              secretKeyRef:
+                name: besu-bootnode-2-keys
+                key: enode.key
+        volumeMounts:
+          - name: key
+            mountPath: /secrets
+            readOnly: true
+          - name: genesis
+            mountPath: /etc/genesis
+            readOnly: true
+          - name: config-toml
+            mountPath: /etc/besu
+            readOnly: true
+          - name: data
+            mountPath: /data
+        ports:
+          - name: json-rpc
+            containerPort: {{ .Values.node.rpc.port }}
+            protocol: TCP
+          - name: ws
+            containerPort: {{ .Values.node.ws.port }}
+            protocol: TCP
+          - name: graphql
+            containerPort: {{ .Values.node.graphql.port }}
+            protocol: TCP
+          - name: rlpx
+            containerPort: {{ .Values.node.p2p.port }}
+            protocol: TCP
+          - name: discovery
+            containerPort: {{ .Values.node.p2p.port }}
+            protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.node.metrics.port }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec /opt/besu/bin/besu \
+              --node-private-key-file=/secrets/private.key \
+              --config-file=/etc/besu/config.toml \
+              --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
+{{- if not .Values.bootnode.enabled }}
+              --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BOOTNODE_1_BESU_NODE_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BOOTNODE_2_BESU_NODE_SERVICE_HOST}:30303
+{{ else }}
+              --bootnodes
+{{- end}}
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8545
+          initialDelaySeconds: 60
+          periodSeconds: 30              
+      volumes:
+      - name: key
+        secret:
+          secretName: besu-{{ .Release.Name }}-keys
+      - name: genesis
+        configMap:
+          name: besu-genesis
+          items:
+            - key: genesis.json
+              path: genesis.json
+      - name: config-toml
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-config-toml
+      {{- if .Values.node.permissions.enabled }}
+      - name: permissions-config
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-permissions
+      {{- end }}
+      - name: data
+        emptyDir:
+          sizeLimit: "{{ .Values.node.pvcSizeLimit }}"

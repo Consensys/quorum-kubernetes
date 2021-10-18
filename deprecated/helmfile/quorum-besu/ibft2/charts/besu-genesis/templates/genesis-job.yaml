@@ -1,0 +1,183 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["create", "get", "list", "update", "delete" ]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch" ]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "besu-genesis.fullname" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "besu-genesis.fullname" . }}-sa
+    namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-init
+  labels:
+    app: {{ template "besu-genesis.name" . }}
+    chart: {{ template "besu-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 3
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "besu-genesis.fullname" . }}-sa
+      restartPolicy: "Never"
+      containers:
+        - name: generate-genesis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: raw-config
+              mountPath: /raw-config
+            - name: generated-config
+              mountPath: /generated-config
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              apt-get update && apt-get install -y curl
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+              echo "Creating config ..."
+              /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
+              echo "Creating genesis configmap in k8s ..."
+              ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+
+              echo "Creating validator secrets in k8s ..."
+              i=1
+              for f in /generated-config/keys/*; do
+                if [ -d ${f} ]; then
+                  echo $f
+                  sed 's/^0x//' ${f}/key.pub > ${f}/enode.key
+                  ./kubectl create secret generic besu-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode.key=${f}/enode.key
+                  i=$((i+1))
+                fi
+              done
+
+              echo "Creating bootnode keys ..."
+              for j in {1..2}
+              do
+                /opt/besu/bin/besu public-key export --to=public${j}.key
+                sed 's/^0x//' ./public${j}.key > enode${j}.key
+                echo "Creating bootnode ${j} secrets in k8s ..."
+                ./kubectl create secret generic besu-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode.key=./enode${j}.key
+                rm ./public${j}.key ./enode${j}.key /opt/besu/key
+              done
+
+              echo "Completed ..."
+      volumes:
+        - name: raw-config
+          configMap:
+            name: {{ include "besu-genesis.fullname" . }}-raw-json-config
+        - name: generated-config
+          emptyDir: {}
+
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-keys-cleanup
+  labels:
+    app: {{ template "besu-genesis.name" . }}
+    chart: {{ template "besu-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-weight: "0"
+    helm.sh/hook: "pre-delete"
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 3
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "besu-genesis.fullname" . }}-sa
+      restartPolicy: "Never"
+      containers:
+        - name: delete-genesis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              apt-get update && apt-get install -y curl
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+              echo "Deleting genesis configmap in k8s ..."
+              ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
+              echo "Deleting validator secrets in k8s ..."
+              for f in `seq 1 {{ .Values.rawConfig.blockchain.nodes.count }}`; do
+                echo $f
+                ./kubectl delete secret besu-validator-${f}-keys --namespace {{ .Release.Namespace }}
+              done
+              echo "Deleting bootnode secrets in k8s ..."
+              for j in {1..2}
+              do
+                ./kubectl delete secret besu-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
+              done
+              echo "Completed ..."
+

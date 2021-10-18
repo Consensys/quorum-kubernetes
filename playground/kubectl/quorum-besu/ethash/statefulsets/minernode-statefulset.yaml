@@ -1,0 +1,111 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minernode
+  labels:
+    app: minernode
+  namespace: besu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minernode
+  serviceName: besu-node
+  template:
+    metadata:
+      labels:
+        app: minernode
+    spec:
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X POST --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_peerCount\",\"params\":[],\"id\":1}' $BESU_BOOTNODE1_SERVICE_HOST:8545"
+      containers:
+        - name: minernode
+          image: hyperledger/besu:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: BOOTNODE1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-bootnodes-configmap
+                  key: bootnode1PubKey
+            - name: BOOTNODE2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-bootnodes-configmap
+                  key: bootnode2PubKey
+            - name: MINER_COINBASE
+              value: "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73"
+          volumeMounts:
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --config-file=/etc/besu/config.toml \
+                --miner-enabled \
+                --miner-coinbase=${MINER_COINBASE} \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30
+      volumes:
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

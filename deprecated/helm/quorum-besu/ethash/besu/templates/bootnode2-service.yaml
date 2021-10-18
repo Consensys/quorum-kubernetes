@@ -1,0 +1,41 @@
+{{- $bootnodeNumber := "bootnode2" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "besu.fullname" . }}-{{ $bootnodeNumber }}
+  labels:
+    app: {{ template "besu.name" . }}
+    chart: {{ template "besu.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ $bootnodeNumber }}
+    namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "besu.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ $bootnodeNumber }}
+  ports:
+    - name: json-rpc
+      port: {{ .Values.besuConfig.rpc.port }}
+      targetPort: json-rpc
+      protocol: TCP
+    - name: ws
+      port: {{ .Values.besuConfig.ws.port }}
+      targetPort: ws
+      protocol: TCP
+    - name: graphql
+      port: {{ .Values.besuConfig.graphql.port }}
+      targetPort: graphql
+      protocol: TCP
+    - name: rlpx
+      port: {{ .Values.besuConfig.p2p.port }}
+      targetPort: rlpx
+      protocol: TCP
+    - name: discovery
+      port: {{ .Values.besuConfig.p2p.port }}
+      targetPort: discovery
+      protocol: UDP

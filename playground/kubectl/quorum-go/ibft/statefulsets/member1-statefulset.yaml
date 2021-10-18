@@ -1,0 +1,301 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: member1-sa
+  namespace: quorum
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: member1-keys-read-role
+  namespace: quorum
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ "quorum-member1-nodekey", "quorum-member1-accountkey" ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: member1-rb
+  namespace: quorum
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: member1-keys-read-role
+subjects:
+- kind: ServiceAccount
+  name: member1-sa
+  namespace: quorum
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: member1
+  labels:
+    app: member1
+  namespace: quorum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: member1
+  serviceName: quorum-member1
+  template:
+    metadata:
+      labels:
+        app: member1
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9125"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: member1-sa
+      initContainers:
+        - name: init-bootnode
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec 
+              curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-rpcnode.quorum.svc.cluster.local:8545
+              sleep 30      
+      containers:
+        - name: member1-tessera
+          image: quorumengineering/tessera:0.10.5
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TESSERA_CONFIG_TYPE
+              value: "-09"              
+            - name: PRIVATE_CONFIG
+              value: /data/tm/tm.ipc      
+          volumeMounts:
+            - name: keys
+              mountPath: /config/keys/
+              readOnly: true   
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 9000
+              name: tessera
+              protocol: TCP
+            - containerPort: 9080
+              name: tessera-tp
+              protocol: TCP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec 
+              mkdir /data/tm/;
+              cp /config/keys/tm.* /data/tm/ ;
+
+                  cat <<EOF > /data/tm/tessera-config-09.json
+                  {
+                    "useWhiteList": false,
+                    "jdbc": {
+                      "username": "sa",
+                      "password": "",
+                      "url": "jdbc:h2:./data/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                      "autoCreateTables": true
+                    },
+                    "serverConfigs":[
+                    {
+                      "app":"ThirdParty",
+                      "enabled": true,
+                      "serverAddress": "http://quorum-member1.quorum.svc.cluster.local:9080",
+                      "communicationType" : "REST"
+                    },
+                    {
+                      "app":"Q2T",
+                      "enabled": true,
+                      "serverAddress": "unix:/data/tm/tm.ipc",
+                      "communicationType" : "REST"
+                    },
+                    {
+                      "app":"P2P",
+                      "enabled": true,
+                      "serverAddress": "http://quorum-member1.quorum.svc.cluster.local:9000",
+                      "sslConfig": {
+                        "tls": "OFF"
+                      },
+                      "communicationType" : "REST"
+                    }
+                    ],
+                    "peer": [
+                      {
+                          "url": "http://quorum-member1.quorum.svc.cluster.local:9000"
+                      },
+                      {
+                          "url": "http://quorum-member2.quorum.svc.cluster.local:9000"
+                      },
+                      {
+                          "url": "http://quorum-member3.quorum.svc.cluster.local:9000"
+                      }
+                    ],
+                    "keys": {
+                      "passwords": [],
+                      "keyData": [
+                        {
+                          "config": $$(cat /data/tm/tm.key),
+                          "publicKey": "$$(cat /data/tm/tm.pub)"
+                        }
+                      ]
+                    },
+                    "alwaysSendTo": []
+                  }
+              EOF
+
+                  cat /data/tm/tessera-config-09.json
+                  java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
+
+        - name: member1-quorum
+          image: quorumengineering/quorum:2.7.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: QUORUM_NETWORK_ID
+              value: "10"              
+            - name: QUORUM_CONSENSUS
+              value: istanbul                
+            - name: PRIVATE_CONFIG
+              value: "/data/tm/tm.ipc"      
+          volumeMounts:
+            - name: keys
+              mountPath: /config/keys/
+              readOnly: true   
+            - name: static-nodes-file
+              mountPath: /config/static-nodes
+              readOnly: true
+            - name: permissions-nodes-config
+              mountPath: /config/permissions-nodes/
+              readOnly: true
+            - name: genesis-file
+              mountPath: /config/quorum/
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec
+              apk add curl
+              
+              until $(curl --output /dev/null --silent --head --fail http://127.0.0.1:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
+              echo transaction manager is up;
+ 
+              mkdir -p /data/dd
+              cp /config/static-nodes/static-nodes.json /data/dd/
+              cp /config/permissions-nodes/*.json /data/dd/
+              cp /config/quorum/genesis.json /data/dd/
+              geth --datadir=/data/dd init /config/quorum/genesis.json
+              cp /config/keys/accountkey /data/dd/keystore/key
+              cp /config/keys/nodekey /data/dd/geth/nodekey
+
+              geth \
+              --datadir /data/dd \
+              --nodiscover \
+              --nat=any \
+              --permissioned \
+              --emitcheckpoints \
+              --verbosity 5 \
+              --istanbul.blockperiod 5 --mine --minerthreads 1 --emitcheckpoints \
+              --syncmode full --nousb \
+              --networkid ${QUORUM_NETWORK_ID} \
+              --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpccorsdomain "*" --rpcvhosts "*" --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
+              --ws --wsaddr 0.0.0.0 --wsport 8546 --wsorigins "*" --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
+              --graphql --graphql.addr 0.0.0.0 --graphql.port 8547 --graphql.corsdomain "*" --graphql.vhosts "*" \
+              --port 30303 \
+              --unlock 0 \
+              --allow-insecure-unlock \
+              --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
+              --password /config/keys/password.txt | tee -a /data/logs/quorum.log
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30  
+      volumes:
+        - name: keys
+          secret:
+            secretName: quorum-member1-keys
+        - name: genesis-file
+          configMap:
+            name: quorum-genesis-configmap
+            items:
+              - key: genesis.json
+                path: genesis.json                 
+        - name: static-nodes-file
+          configMap:
+            name: quorum-static-nodes-configmap
+            items:
+              - key: static-nodes.json
+                path: static-nodes.json 
+        - name: permissions-nodes-config
+          configMap:
+            name: quorum-permissions-nodes-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "2Gi"
+
+ 
