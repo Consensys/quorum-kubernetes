@@ -62,7 +62,7 @@ spec:
       serviceAccountName: member3-sa
       initContainers:
         - name: init-bootnode
-          image: pegasyseng/k8s-helper:v1.18.4
+          image: curlimages/curl:7.79.1
           command:
             - "sh"
             - "-c"
@@ -89,8 +89,6 @@ spec:
                   fieldPath: metadata.name
             - name: TESSERA_CONFIG_TYPE
               value: "-09"
-            - name: PRIVATE_CONFIG
-              value: /data/tm/tm.ipc
           volumeMounts:
             - name: key
               mountPath: /config/keys/

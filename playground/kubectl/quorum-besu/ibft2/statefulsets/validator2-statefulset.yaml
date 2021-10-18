@@ -61,7 +61,7 @@ spec:
       serviceAccountName: validator2-sa
       initContainers:
         - name: init-bootnode
-          image: pegasyseng/k8s-helper:v1.18.4
+          image: curlimages/curl:7.79.1
           command:
             - "sh"
             - "-c"

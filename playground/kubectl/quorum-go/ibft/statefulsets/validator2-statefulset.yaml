@@ -62,7 +62,7 @@ spec:
       serviceAccountName: validator2-sa
       initContainers:
         - name: init-bootnode
-          image: pegasyseng/k8s-helper:v1.18.4
+          image: consensys/k8s-helper:v1.18.4
           command:
             - /bin/sh
             - -c

@@ -62,14 +62,14 @@ spec:
       serviceAccountName: member1-sa
       initContainers:
         - name: init-bootnode
-          image: cons
+          image: curlimages/curl:7.79.1
           command:
             - "sh"
             - "-c"
             - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: member1-tessera
-          image: quorumengineering/tessera:21.4.0
+          image: quorumengineering/tessera:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -89,13 +89,10 @@ spec:
                   fieldPath: metadata.name
             - name: TESSERA_CONFIG_TYPE
               value: "-09"
-            - name: PRIVATE_CONFIG
-              value: /data/tm/tm.ipc
           volumeMounts:
             - name: key
               mountPath: /config/keys/
               readOnly: true
-
           ports:
             - containerPort: 9000
               name: tessera
@@ -175,7 +172,7 @@ spec:
               EOF
 
                   cat /data/tm/tessera-config-09.json
-                  java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
+                  /tessera/bin/tessera -configfile /data/tm/tessera-config-09.json
 
         - name: member1-besu
           image: hyperledger/besu:21.1.2
