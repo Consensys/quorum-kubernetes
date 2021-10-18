@@ -38,4 +38,7 @@ spec:
       targetPort: 9080
       protocol: TCP
       name: tessera-tp
-            
+    - port: 9101
+      targetPort: 9101
+      protocol: TCP
+      name: tessera-q2t               

@@ -1,0 +1,342 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "besu-node.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "besu-node.fullname" . }}-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "besu-node.fullname" . }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "besu-node.fullname" . }}-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "besu-node.fullname" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: kubernetes.io/azure-file
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+mountOptions:
+  - dir_mode=0755
+  - file_mode=0755
+  - uid=1000
+  - gid=1000
+  - mfsymlinks
+parameters:
+  skuName: Standard_LRS
+
+{{- if .Values.node.storage.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pvc-besu
+  namespace: {{ .Release.Namespace }}
+spec:
+  storageClassName: {{ include "besu-node.fullname" . }}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+{{- end }}
+
+{{- if and .Values.nodeFlags.privacy .Values.node.storage.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pvc-orion
+  namespace: {{ .Release.Namespace }}
+spec:
+  storageClassName: {{ include "besu-node.fullname" . }}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "besu-node.fullname" . }}
+  labels:
+    app: {{ template "besu-node.fullname" . }}
+    chart: {{ template "besu-node.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
+    helm.sh/chart: {{ include "besu-node.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  podManagementPolicy: OrderedReady
+  selector:
+    matchLabels:
+      app: {{ template "besu-node.fullname" . }}
+      release: {{ .Release.Name }}
+      component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  serviceName: {{ include "besu-node.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "besu-node.fullname" . }}
+        release: {{ .Release.Name }}
+        component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "besu-node.fullname" . }}-sa
+{{- if not .Values.nodeFlags.bootnode }}
+      initContainers:
+      - name: init-bootnode
+        image: curlimages/curl:latest
+        command:
+          - /bin/sh
+          - -c
+          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
+{{- end}}
+
+      containers:
+      {{- if .Values.nodeFlags.privacy }}
+      - name: {{ .Release.Name }}-orion
+        image: {{ .Values.image.orion.repository }}:{{ .Values.image.orion.tag }}
+        imagePullPolicy: {{ .Values.image.orion.pullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.node.resources.cpuRequest }}"
+            memory: "{{ .Values.node.resources.memRequest }}"
+          limits:
+            cpu: "{{ .Values.node.resources.cpuLimit }}"
+            memory: "{{ .Values.node.resources.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: ORION_NODEURL
+            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.nodeport}}/"
+          - name: ORION_CLIENTURL
+            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.clientport}}/"
+          - name: ORION_OTHERNODES
+          {{- if eq .Values.privacy.othernodes "self" }}
+            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.nodeport}}/"
+          {{- else }}
+            value: {{ .Values.privacy.othernodes | quote }}
+          {{- end}}
+
+        volumeMounts:
+          - name: orion-key
+            mountPath: /secrets
+            readOnly: true
+          - name: orion-config
+            mountPath: /configs
+            readOnly: true
+          - name: orion-data
+            mountPath: /data
+        ports:
+          - containerPort: {{ .Values.privacy.orionConfig.nodeport }}
+            name: nodeport
+            protocol: TCP
+          - containerPort: {{ .Values.privacy.orionConfig.clientport }}
+            name: clientport
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec
+            /opt/orion/bin/orion /configs/orion.conf
+        livenessProbe:
+          httpGet:
+            path: /upcheck
+            port: {{ .Values.privacy.orionConfig.clientport}}
+          initialDelaySeconds: 180
+          periodSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /upcheck
+            port: {{ .Values.privacy.orionConfig.clientport}}
+          initialDelaySeconds: 180
+          periodSeconds: 60
+
+      {{- end}}
+
+      - name: {{ .Release.Name }}-besu
+        image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+        imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
+        resources:
+          requests:
+            cpu: "{{ .Values.node.resources.cpuRequest }}"
+            memory: "{{ .Values.node.resources.memRequest }}"
+          limits:
+            cpu: "{{ .Values.node.resources.cpuLimit }}"
+            memory: "{{ .Values.node.resources.memLimit }}"
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: BOOTNODE1_PUBKEY
+            valueFrom:
+              secretKeyRef:
+                name: besu-node-bootnode-1-keys
+                key: enode
+          - name: BOOTNODE2_PUBKEY
+            valueFrom:
+              secretKeyRef:
+                name: besu-node-bootnode-2-keys
+                key: enode
+        volumeMounts:
+        {{- if .Values.nodeFlags.privacy }}
+          - name: orion-key
+            mountPath: /orionsecrets
+            readOnly: true
+        {{- end}}
+          - name: key
+            mountPath: /secrets
+            readOnly: true
+          - name: genesis
+            mountPath: /etc/genesis
+            readOnly: true
+          - name: besu-config
+            mountPath: /etc/besu
+            readOnly: true
+          - name: data
+            mountPath: /data
+        ports:
+          - name: json-rpc
+            containerPort: {{ .Values.node.rpc.port }}
+            protocol: TCP
+          - name: ws
+            containerPort: {{ .Values.node.ws.port }}
+            protocol: TCP
+          - name: graphql
+            containerPort: {{ .Values.node.graphql.port }}
+            protocol: TCP
+          - name: rlpx
+            containerPort: {{ .Values.node.p2p.port }}
+            protocol: TCP
+          - name: discovery
+            containerPort: {{ .Values.node.p2p.port }}
+            protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.node.metrics.port }}
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec
+            export BOOTNODE_ENODE1="enode://${BOOTNODE1_PUBKEY}@besu-node-bootnode-1-0.besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
+            export BOOTNODE_ENODE2="enode://${BOOTNODE2_PUBKEY}@besu-node-bootnode-2-0.besu-node-bootnode-2.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
+            /opt/besu/bin/besu \
+              --node-private-key-file=/secrets/private.key \
+              --config-file=/etc/besu/config.toml \
+              --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
+              --min-gas-price=0 \
+          {{- if .Values.nodeFlags.privacy -}}
+              --privacy-enabled=true \
+              --privacy-url="http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.clientport}}" \
+              --privacy-public-key-file=/orionsecrets/public.key \
+          {{- end -}}
+              --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
+
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8545
+          initialDelaySeconds: 180
+          periodSeconds: 60
+      volumes:
+      - name: key
+        secret:
+          secretName: {{ include "besu-node.fullname" . }}-keys
+      - name: genesis
+        configMap:
+          name: besu-genesis
+          items:
+            - key: genesis.json
+              path: genesis.json
+      - name: besu-config
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-besu-config
+      - name: data
+        {{- if .Values.node.storage.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "besu-node.fullname" . }}-pvc-besu
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      {{- if .Values.node.permissions.enabled }}
+      - name: permissions-config
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-permissions
+      {{- end }}
+      {{- if .Values.nodeFlags.privacy }}
+      - name: orion-key
+        secret:
+          secretName: {{ include "besu-node.fullname" . }}-orion-keys
+      - name: orion-config
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-orion-config
+      - name: orion-data
+        {{- if .Values.node.storage.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "besu-node.fullname" . }}-pvc-orion
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      {{- end }}

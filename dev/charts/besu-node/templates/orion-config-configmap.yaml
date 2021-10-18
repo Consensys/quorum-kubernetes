@@ -1,0 +1,22 @@
+{{- if .Values.nodeFlags.privacy }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "besu-node.fullname" . }}-orion-config
+  labels:
+    app: {{ template "besu-node.name" . }}
+    chart: {{ template "besu-node.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-node.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "besu-node.chart" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+{{ (.Files.Glob "config/**.conf").AsConfig | indent 2 }}
+
+{{- end }}

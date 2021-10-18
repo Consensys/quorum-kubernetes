@@ -1,0 +1,34 @@
+---
+metadata:
+  name: besu-ingress-routes
+  namespace: besu
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /rpc
+            pathType: Prefix
+            backend:
+              service:
+                name: besu-node-tx-1
+                port:
+                  number: 8545
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: besu-node-tx-1
+                port:
+                  number: 8546
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: besu-monitoring-monitoring-grafana
+                port:
+                  number: 3000

@@ -136,7 +136,8 @@ spec:
                       "sslConfig": {
                         "tls": "OFF"
                       },
-                      "communicationType" : "REST"                    },
+                      "communicationType" : "REST"                    
+                    },
                     {
                       "app":"P2P",
                       "enabled": true,

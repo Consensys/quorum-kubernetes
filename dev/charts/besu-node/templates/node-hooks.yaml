@@ -1,0 +1,165 @@
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"  
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-role
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"    
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["create", "get", "list", "update", "delete" ]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-rb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"    
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "besu-node.fullname" . }}-hooks-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
+  namespace:  {{ .Release.Namespace }}
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pre-install-hook
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+    spec:
+      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+      restartPolicy: "OnFailure"
+      containers:
+        - name: {{ template "besu-node.fullname" . }}-besu-pre-start-hook
+          image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+          imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+            {{- if .Values.nodeFlags.generateKeys }}       
+      
+              apt-get update && apt-get install -y curl jq
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+
+              echo "Besu nodekey generation ..."
+              /opt/besu/bin/besu public-key export --to=public.key
+              # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+              sed 's/^0x//' ./public${j}.key > enode
+              echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
+              ./kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=./enode
+ 
+            {{- end }}       
+              echo "Completed"
+
+        - name: {{ template "besu-node.fullname" . }}-orion-pre-start-hook
+          image: {{ .Values.image.orion.repository }}:{{ .Values.image.orion.tag }}
+          imagePullPolicy: {{ .Values.image.orion.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+            {{- if .Values.nodeFlags.privacy }}       
+            
+              apt-get update && apt-get install -y curl jq
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+
+            {{- if .Values.privacy.password }} 
+              echo $'{{.Values.privacy.password }}\n{{ .Values.privacy.password }}\n' > password.txt
+            {{- else }} 
+              echo $'\n\n' > password.txt
+            {{- end }}  
+              orion -g nodekey < password.txt
+              echo "Creating {{ template "besu-node.fullname" . }}-orion-keys secrets in k8s ..."
+              ./kubectl create secret generic {{ template "besu-node.fullname" . }}-orion-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/orion/nodekey.key --from-file=public.key=/opt/orion/nodekey.pub --from-file=password=/opt/orion/password.txt
+      
+            {{- end }}  
+              echo "Completed"             
+
+ 
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-node.fullname" . }}-keys-pre-delete-hook
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-weight: "0"
+    helm.sh/hook: "pre-delete"
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "besu-node.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+      restartPolicy: "OnFailure"
+      containers:
+        - name: delete-keys
+          image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+            {{- if .Values.nodeFlags.removeKeysOnDeletion }}       
+
+              apt-get update && apt-get install -y curl
+              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+              echo "Deleting node secrets in k8s ..."
+              ./kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
+              ./kubectl delete secret {{ template "besu-node.fullname" . }}-orion-keys --namespace {{ .Release.Namespace }}
+
+            {{- end }}       
+              echo "Completed"
+
+                           

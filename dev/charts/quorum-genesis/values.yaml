@@ -1,0 +1,11 @@
+---
+image:
+  repository: consensys/istanbul-tools
+  tag: 'latest'
+  pullPolicy: Always
+
+# the number of Validators you want
+rawGenesisConfig:
+  blockchain:
+    nodes:
+      count: 4

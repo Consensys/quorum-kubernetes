@@ -1,0 +1,7 @@
+---
+
+nodeFlags:
+  bootnode: false
+  generateKeys: false
+  privacy: false
+  removeKeysOnDeletion: false

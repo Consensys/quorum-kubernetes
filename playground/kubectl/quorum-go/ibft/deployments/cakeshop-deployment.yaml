@@ -60,7 +60,7 @@ spec:
       serviceAccountName: cakeshop
       containers:
         - name: cakeshop
-          image: quorumengineering/cakeshop:0.11.0
+          image: quorumengineering/cakeshop:0.12.1
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -96,10 +96,10 @@ spec:
               mkdir -p /data/cakeshop/local
               cp /config/cakeshop/application.properties /data/cakeshop/local/application.properties
               cp /config/cakeshop/quorum_nodes.json /data/cakeshop/local/seednodes.json
+              java -Xms128M -Xmx128M -Dspring.config.additional-location=file:/data/cakeshop/local/ -Dcakeshop.config.dir=/data/cakeshop -jar /cakeshop/cakeshop.war
 
-              java -Xms128M -Xmx128M -Dcakeshop.config.dir=/data/cakeshop -Dlogging.path=/data/logs/cakeshop -jar /opt/cakeshop/cakeshop.war
 
       volumes:
         - name: cakeshop-config
           configMap:
-            name: cakeshop-configmap
+            name: quorum-cakeshop-configmap

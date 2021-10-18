@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cakeshop-configmap
+  name: quorum-cakeshop-configmap
   labels:
-    app: cakeshop-configmap
+    app: quorum-cakeshop-configmap
   namespace: monitoring
 data:
   application.properties: |-

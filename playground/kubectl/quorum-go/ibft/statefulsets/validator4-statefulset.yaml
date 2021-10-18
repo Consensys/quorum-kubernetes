@@ -56,13 +56,13 @@ spec:
         tier: backend
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9126"
-        prometheus.io/path: "/metrics"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/debug/metrics/prometheus"   
     spec:
       serviceAccountName: validator4-sa
       initContainers:
         - name: init-bootnode
-          image: pegasyseng/k8s-helper:v1.18.4
+          image: curlimages/curl:7.79.1
           command:
             - /bin/sh
             - -c
@@ -77,7 +77,7 @@ spec:
               sleep 30
       containers:
         - name: validator4
-          image: quorumengineering/quorum:2.7.0
+          image: quorumengineering/quorum:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -132,6 +132,9 @@ spec:
             - containerPort: 30303
               name: discovery
               protocol: UDP
+            - containerPort: 9545
+              name: metrics
+              protocol: TCP              
           command:
             - /bin/sh
             - -c
@@ -157,12 +160,11 @@ spec:
               --networkid ${QUORUM_NETWORK_ID} \
               --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpccorsdomain "*" --rpcvhosts "*" --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
               --ws --wsaddr 0.0.0.0 --wsport 8546 --wsorigins "*" --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
-              --graphql --graphql.addr 0.0.0.0 --graphql.port 8547 --graphql.corsdomain "*" --graphql.vhosts "*" \
               --port 30303 \
               --unlock 0 \
               --allow-insecure-unlock \
-              --metrics --metrics.expensive --pprof --pprofaddr=0.0.0.0  \
-              --password /config/keys/password.txt | tee -a /data/logs/quorum.log
+              --metrics --pprof --pprofaddr 0.0.0.0 --pprofport 9545 \
+              --password /config/keys/password.txt 
           livenessProbe:
             httpGet:
               path: /
