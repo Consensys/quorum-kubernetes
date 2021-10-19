@@ -4,16 +4,19 @@ image:
   tag: 'latest'
   pullPolicy: IfNotPresent
 
+# local / azure / aws
+provider: local
+
 # the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
 rawGenesisConfig:
   genesis:
     config:
-      chainId: 2018
+      chainId: 1337
       constantinoplefixblock: 0
       ibft2:
-        blockperiodseconds: 2
+        blockperiodseconds: 10
         epochlength: 30000
-        requesttimeoutseconds: 10
+        requesttimeoutseconds: 20
     nonce: '0x0'
     timestamp: '0x58ee40ba'
     gasLimit: '0x47b760'

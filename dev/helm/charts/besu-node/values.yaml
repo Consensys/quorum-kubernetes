@@ -9,6 +9,9 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
 
+# local / azure
+provider: local
+
 nodeFlags:
   bootnode: false
   generateKeys: false
@@ -20,7 +23,6 @@ node:
   # privKey:
   # pubKey:
   storage:
-    enabled: true
     pvcSizeLimit: "10Gi"
     pvcStorageClass: "standard"
   resources:
@@ -71,7 +73,6 @@ node:
     interval: 15
     prometheusJob: "besu"
   privacy:
-    enabled: false
     url: "http://127.0.0.1:8888"
     precompiledAddress: 9
   permissions:

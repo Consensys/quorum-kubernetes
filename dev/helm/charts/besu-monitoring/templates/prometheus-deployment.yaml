@@ -72,7 +72,7 @@ spec:
       serviceAccountName: prometheus
       containers:
         - name: prometheus
-          image: prom/prometheus:v2.26.0
+          image: prom/prometheus:v2.30.3
           imagePullPolicy: IfNotPresent
           resources:
             requests:

@@ -2,7 +2,7 @@ apiVersion: v1
 version: 0.0.1
 appVersion: latest
 name: besu-node
-description: Besu nodes for a POA network using IBFT2 for consensys
+description: Besu nodes for a POA network
 keywords:
   - ethereum
   - besu

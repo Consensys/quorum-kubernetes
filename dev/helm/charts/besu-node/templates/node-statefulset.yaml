@@ -33,6 +33,8 @@ subjects:
   name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
 
+{{- if eq .Values.provider "azure" }}
+
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -51,7 +53,27 @@ mountOptions:
 parameters:
   skuName: Standard_LRS
 
-{{- if .Values.node.storage.enabled }}
+{{- else }}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    type: local
+spec:
+  storageClassName: {{ include "besu-node.fullname" . }}-storage
+  capacity:
+    storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/{{ include "besu-node.fullname" . }}"
+
+{{- end }}
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -65,14 +87,14 @@ spec:
   resources:
     requests:
       storage: "{{ .Values.node.storage.pvcSizeLimit }}"
-{{- end }}
 
-{{- if and .Values.nodeFlags.privacy .Values.node.storage.enabled }}
+{{- if .Values.nodeFlags.privacy }}
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "besu-node.fullname" . }}-pvc-orion
+  name: {{ include "besu-node.fullname" . }}-pvc-privacy
   namespace: {{ .Release.Namespace }}
 spec:
   storageClassName: {{ include "besu-node.fullname" . }}-storage
@@ -125,14 +147,27 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
-{{- if not .Values.nodeFlags.bootnode }}
       initContainers:
+
+{{- if not .Values.nodeFlags.bootnode }}
       - name: init-bootnode
         image: curlimages/curl:latest
         command:
           - /bin/sh
           - -c
           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
+{{- end}}
+
+{{- if eq .Values.provider "local" }}
+# fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
+      - name: volume-permission
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /data"]
+        volumeMounts:
+          - name: data
+            mountPath: /data
+        securityContext:
+          runAsUser: 0
 {{- end}}
 
       containers:
@@ -314,12 +349,8 @@ spec:
         configMap:
           name: {{ include "besu-node.fullname" . }}-besu-config
       - name: data
-        {{- if .Values.node.storage.enabled }}
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc-besu
-        {{- else }}
-        emptyDir: {}
-        {{- end }}
       {{- if .Values.node.permissions.enabled }}
       - name: permissions-config
         configMap:
@@ -333,10 +364,6 @@ spec:
         configMap:
           name: {{ include "besu-node.fullname" . }}-orion-config
       - name: orion-data
-        {{- if .Values.node.storage.enabled }}
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc-orion
-        {{- else }}
-        emptyDir: {}
-        {{- end }}
       {{- end }}
