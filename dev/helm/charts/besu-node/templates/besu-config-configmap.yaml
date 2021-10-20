@@ -87,7 +87,6 @@ data:
     privacy-url={{ .Values.node.besu.privacy.url | quote }}
     privacy-public-key-file={{ .Values.node.besu.privacy.pubkeyFile | quote }}
     privacy-onchain-groups-enabled={{ .Values.node.besu.privacy.onchainGroupsEnabled }}
-    privacy-precompiled-address={{ .Values.node.besu.privacy.precompiledAddress }}
     {{ end }}
 
     {{ if  .Values.node.besu.metrics.enabled -}}

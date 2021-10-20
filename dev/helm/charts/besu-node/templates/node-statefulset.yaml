@@ -78,7 +78,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "besu-node.fullname" . }}-pvc-besu
+  name: {{ include "besu-node.fullname" . }}-pvc
   namespace: {{ .Release.Namespace }}
 spec:
   storageClassName: {{ include "besu-node.fullname" . }}-storage
@@ -86,24 +86,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: "{{ .Values.node.besu.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
 
-{{- if .Values.nodeFlags.privacy }}
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "besu-node.fullname" . }}-pvc-tessera
-  namespace: {{ .Release.Namespace }}
-spec:
-  storageClassName: {{ include "besu-node.fullname" . }}-storage
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: "{{ .Values.node.tessera.storage.pvcSizeLimit }}"
-{{- end }}
 
 ---
 apiVersion: apps/v1
@@ -169,24 +153,12 @@ spec:
         securityContext:
           runAsUser: 0
 
-{{- if .Values.nodeFlags.privacy }}
-      # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
-      - name: volume-permission-tessera
-        image: busybox
-        command: ["sh", "-c", "chown -R 1000:1000 /tessera-data"]
-        volumeMounts:
-          - name: tessera-data
-            mountPath: /tessera-data
-        securityContext:
-          runAsUser: 0
-
-{{- end}}
 {{- end}}
 
       containers:
 
 {{- if .Values.nodeFlags.privacy }}
-      - name: {{ include "besu-node.fullname" . }}-tessera
+      - name: {{ .Release.Name }}-tessera
         image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources:
@@ -208,10 +180,10 @@ spec:
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
         volumeMounts:
-          - name: tessera-secrets
+          - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
-          - name: tessera-data
+          - name: data
             mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
             mountPath: /config/tessera-peers
@@ -232,16 +204,15 @@ spec:
           - |
             exec
 
-            mkdir {{ .Values.node.tessera.dataPath }}/tm/;
-            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataPath }}/tm/ ;
+            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataPath }}/ ;
 
-                cat <<EOF > {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
+                cat <<EOF > {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
                 {
                   "useWhiteList": false,
                   "jdbc": {
                     "username": "sa",
                     "password": "",
-                    "url": "jdbc:h2:{{ .Values.node.tessera.dataPath }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                    "url": "jdbc:h2:{{ .Values.node.tessera.dataPath }}/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
                     "autoCreateTables": true
                   },
                   "serverConfigs":[
@@ -275,8 +246,8 @@ spec:
                     "passwords": [],
                     "keyData": [
                       {
-                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm/tm.key),
-                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm/tm.pub)"
+                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm.key),
+                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm.pub)"
                       }
                     ]
                   },
@@ -284,8 +255,8 @@ spec:
                 }
             EOF
 
-                cat {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
-                /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
+                cat {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
+                /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
 
 {{- end }}
 
@@ -390,7 +361,7 @@ spec:
           name: {{ include "besu-node.fullname" . }}-besu-config
       - name: data
         persistentVolumeClaim:
-          claimName: {{ include "besu-node.fullname" . }}-pvc-besu
+          claimName: {{ include "besu-node.fullname" . }}-pvc
       {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config
         configMap:
@@ -400,7 +371,10 @@ spec:
       - name: tessera-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-tessera-keys
-      - name: tessera-data
-        persistentVolumeClaim:
-          claimName: {{ include "besu-node.fullname" . }}-pvc-tessera
+      - name: tessera-peers
+        configMap:
+          name: tessera-peers
+          items:
+            - key: tesseraPeers
+              path: tesseraPeers
       {{- end }}

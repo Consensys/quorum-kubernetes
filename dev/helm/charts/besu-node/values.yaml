@@ -26,17 +26,16 @@ nodeFlags:
 node:
   storage:
     sizeLimit: "10Gi"
+    pvcSizeLimit: "2Gi"
   besu:
     resources:
       cpuLimit: 0.7
       cpuRequest: 0.5
       memLimit: "2G"
       memRequest: "1G"
-    storage:
-      pvcSizeLimit: "8Gi"
     # privKey:
     # pubKey:
-    dataPath: "/data"
+    dataPath: "/data/besu"
     keysPath: "/keys"
     privateKeyPath: "/keys/private.key"
     genesisFilePath: "/etc/genesis/genesis.json"
@@ -58,7 +57,7 @@ node:
       enabled: false
       host: "0.0.0.0"
       port: 8546
-      api: '["DEBUG", "ETH", "WEB3", "NET"]'
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
       authenticationEnabled: false
     graphql:
       enabled: false
@@ -104,20 +103,15 @@ node:
       cpuRequest: 0.5
       memLimit: "1G"
       memRequest: "500m"
-    storage:
-      pvcSizeLimit: "2Gi"
     tmkey: ""
     tmpub: ""
     password: ""
-    dataPath: "/data"
+    dataPath: "/data/tessera"
     keysPath: "/keys"
     url: "http://127.0.0.1:8888"
     port: 9000
     tpport: 9080
     q2tport: 9101
-
-
-
 
 nodeSelector: {}
 tolerations: []

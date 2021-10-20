@@ -1,6 +1,14 @@
-# Playground
+# Dev
 
-The playground area has basic examples you can use to setup your network with. They use fixed keys and `kubectl` to deploy. Please refer to the individual folders to see how things are connected and working. You are encouraged to pull these manifests apart and experiment with options to learn how things work.
+The dev area has basic examples you can use to setup your network with. They use `helm` exclusively and there are various charts each with specfic functionality.
+
+The dev charts have:
+- Dynamic key & account generation
+- Agnostic of env - can be used locally and on azure. Edit the `provider: local` value in the values.yml
+- Keys are stored as opaque secrets and not in keyvault if using Azure.
+- Use Nodeports to expose services if running
+
+You are encouraged to pull these charts apart and experiment with options to learn how things work.
 
 ## Local Development:
 - [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster
@@ -52,7 +60,7 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install besu-ingress ingress-nginx/ingress-nginx \
     --namespace besu \
-    --set controller.replicaCount=2 \
+    --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux

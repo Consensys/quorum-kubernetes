@@ -46,15 +46,15 @@ spec:
       
 {{- if .Values.nodeFlags.privacy }}          
     - name: tessera
-      port: {{ .Values.tessera.port }}
+      port: {{ .Values.node.tessera.port }}
       targetPort: nodeport
       protocol: TCP
     - name: tessera-tp
-      port: {{ .Values.tessera.tpport }}
+      port: {{ .Values.node.tessera.tpport }}
       targetPort: tpport
       protocol: TCP
     - name: tessera-q2t
-      port: {{ .Values.tessera.q2tport }}
+      port: {{ .Values.node.tessera.q2tport }}
       targetPort: tpport
       protocol: TCP
 {{- end }}
