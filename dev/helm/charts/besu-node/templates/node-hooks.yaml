@@ -86,33 +86,49 @@ spec:
             {{- end }}       
               echo "Completed"
 
-#        - name: {{ template "besu-node.fullname" . }}-tessera-pre-start-hook
-#          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
-#          imagePullPolicy: {{ .Values.image.hooks.pullPolicy }}
-#          securityContext:
-#            runAsUser: 0
-#          command:
-#            - /bin/bash
-#            - -c
-#          args:
-#            - |
-#
-#            {{- if .Values.nodeFlags.privacy }}
-#
-#              apt-get update && apt-get install -y curl jq
-#              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
-#
-#            {{- if .Values.privacy.password }}
-#              echo $'{{.Values.privacy.password }}\n{{ .Values.privacy.password }}\n' > password.txt
-#            {{- else }}
-#              echo $'\n\n' > password.txt
-#            {{- end }}
-#              orion -g nodekey < password.txt
-#              echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
-#              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/orion/nodekey.key --from-file=public.key=/opt/orion/nodekey.pub --from-file=password=/opt/orion/password.txt
-#
-#            {{- end }}
-#              echo "Completed"
+        - name: {{ template "besu-node.fullname" . }}-tessera-pre-start-hook
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+          imagePullPolicy: {{ .Values.image.hooks.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              function update_tessera_peers_configmap {
+                /usr/local/bin/kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
+                # first time a tx node is deployed and there is no configmap
+                if [ $? -ne 0 ]; then
+                  echo "No tessera-peers found, creating a new one..."
+                  echo "[{ \"url\": \"http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000\" }]"  > /tmp/tessera-peers
+                  /usr/local/bin/kubectl --namespace {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers
+
+                # update the entries
+                else
+                  echo "Tessera-peers found, updating existing..."
+                  echo $(/usr/local/bin/kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
+                  NEEDLE="http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
+                  cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
+                  /usr/local/bin/kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                fi
+              }
+
+            {{- if .Values.nodeFlags.privacy }}
+            {{- if .Values.node.tessera.password }}
+              echo $'{{.Values.node.tessera.password }}\n{{ .Values.node.tessera.password }}\n' > password.txt
+            {{- else }}
+              echo $'\n\n' > password.txt
+            {{- end }}
+
+              /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
+              echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
+              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tm.key --from-file=tm.pub=/tmp/tm.pub --from-file=password=/tmp/password.txt
+              update_tessera_peers_configmap
+
+            {{- end }}
+              echo "Completed"
 
  
 ---

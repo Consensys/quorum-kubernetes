@@ -186,7 +186,7 @@ spec:
       containers:
 
 {{- if .Values.nodeFlags.privacy }}
-      - name: {{ include "quorum-node.fullname" . }}-tessera
+      - name: {{ include "besu-node.fullname" . }}-tessera
         image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources:
@@ -209,10 +209,10 @@ spec:
             value: "-09"
         volumeMounts:
           - name: tessera-secrets
-            mountPath: {{ .Values.node.quorumConfig.keysPath }}
+            mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
           - name: tessera-data
-            mountPath: {{ .Values.node.tessera.dataDir }}
+            mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
             mountPath: /config/tessera-peers
         ports:
@@ -232,16 +232,16 @@ spec:
           - |
             exec
 
-            mkdir {{ .Values.node.tessera.dataDir }}/tm/;
-            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataDir }}/tm/ ;
+            mkdir {{ .Values.node.tessera.dataPath }}/tm/;
+            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataPath }}/tm/ ;
 
-                cat <<EOF > {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+                cat <<EOF > {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
                 {
                   "useWhiteList": false,
                   "jdbc": {
                     "username": "sa",
                     "password": "",
-                    "url": "jdbc:h2:{{ .Values.node.tessera.dataDir }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                    "url": "jdbc:h2:{{ .Values.node.tessera.dataPath }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
                     "autoCreateTables": true
                   },
                   "serverConfigs":[
@@ -275,8 +275,8 @@ spec:
                     "passwords": [],
                     "keyData": [
                       {
-                        "config": $$(cat {{ .Values.node.tessera.dataDir }}/tm/tm.key),
-                        "publicKey": "$$(cat {{ .Values.node.tessera.dataDir }}/tm/tm.pub)"
+                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm/tm.key),
+                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm/tm.pub)"
                       }
                     ]
                   },
@@ -284,8 +284,8 @@ spec:
                 }
             EOF
 
-                cat {{ .Values.node.tessera.dataDir }}/tm/tessera-config-09.json
-                /tessera/bin/tessera -configfile {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+                cat {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
+                /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tm/tessera-config-09.json
 
 {{- end }}
 
@@ -322,11 +322,11 @@ spec:
         volumeMounts:
         {{- if .Values.nodeFlags.privacy }}
           - name: tessera-keys
-            mountPath: /tessera
+            mountPath: {{ .Values.node.besu.privacy.pubkeysPath }}
             readOnly: true
         {{- end}}
           - name: besu-keys
-            mountPath: /besu
+            mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
           - name: genesis
             mountPath: /etc/genesis
@@ -335,7 +335,7 @@ spec:
             mountPath: /etc/besu
             readOnly: true
           - name: data
-            mountPath: /data
+            mountPath: {{ .Values.node.besu.dataPath }}
         ports:
           - name: json-rpc
             containerPort: {{ .Values.node.besu.rpc.port }}
@@ -397,9 +397,9 @@ spec:
           name: {{ include "besu-node.fullname" . }}-permissions
       {{- end }}
       {{- if .Values.nodeFlags.privacy }}
-      - name: orion-key
+      - name: tessera-keys
         secret:
-          secretName: {{ include "besu-node.fullname" . }}-orion-keys
+          secretName: {{ include "besu-node.fullname" . }}-tessera-keys
       - name: tessera-data
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc-tessera

@@ -40,7 +40,7 @@ helm install validator-3 ./charts/besu-node --namespace besu --values ./values/v
 helm install validator-4 ./charts/besu-node --namespace besu --values ./values/validator.yml
 
 # spin up a besu and orion node pair
-helm install tx-1 ./charts/besu-node --namespace besu --values ./values/txnode.yml
+helm install member-1 ./charts/besu-node --namespace besu --values ./values/txnode.yml
 ```
 
 Optionally deploy the ingress controller like so:

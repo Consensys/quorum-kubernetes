@@ -27,7 +27,7 @@ data:
     data-path={{ .Values.node.besu.dataPath | quote }}
     genesis-file={{ .Values.node.besu.genesisFilePath | quote }}
     logging={{ .Values.node.besu.logging | quote }}
-    node-private-key-file="/besu/private.key"
+    node-private-key-file={{.Values.node.besu.privateKeyPath | quote }}
 
     # Transaction Pool
     tx-pool-retention-hours={{ .Values.node.besu.txPool.retentionHours }}
@@ -85,7 +85,7 @@ data:
     # Privacy
     privacy-enabled={{ .Values.nodeFlags.privacy }}
     privacy-url={{ .Values.node.besu.privacy.url | quote }}
-    privacy-public-key-file={{ .Values.node.besu.privacy.pubkeyPath | quote }}
+    privacy-public-key-file={{ .Values.node.besu.privacy.pubkeyFile | quote }}
     privacy-onchain-groups-enabled={{ .Values.node.besu.privacy.onchainGroupsEnabled }}
     privacy-precompiled-address={{ .Values.node.besu.privacy.precompiledAddress }}
     {{ end }}

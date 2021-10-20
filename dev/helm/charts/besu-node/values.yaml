@@ -37,6 +37,8 @@ node:
     # privKey:
     # pubKey:
     dataPath: "/data"
+    keysPath: "/keys"
+    privateKeyPath: "/keys/private.key"
     genesisFilePath: "/etc/genesis/genesis.json"
     logging: INFO
     p2p:
@@ -80,7 +82,8 @@ node:
       prometheusJob: "besu"
     privacy:
       url: "http://localhost:9101"
-      pubkeyPath: "/tessera/tm.pub"
+      pubkeysPath: "/tessera"
+      pubkeyFile: "/tessera/tm.pub"
       onchainGroupsEnabled: false
       precompiledAddress: 9
     permissions:
@@ -104,13 +107,14 @@ node:
     storage:
       pvcSizeLimit: "2Gi"
     tmkey: ""
-    dataPath: "/data"
     tmpub: ""
+    password: ""
+    dataPath: "/data"
+    keysPath: "/keys"
     url: "http://127.0.0.1:8888"
     port: 9000
     tpport: 9080
     q2tport: 9101
-    password: ""
 
 
 
