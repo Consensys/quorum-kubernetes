@@ -64,7 +64,7 @@ spec:
       restartPolicy: "OnFailure"
       containers:
         - name: {{ template "besu-node.fullname" . }}-besu-pre-start-hook
-          image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
           imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
           securityContext:
             runAsUser: 0
@@ -75,47 +75,44 @@ spec:
             - |
 
             {{- if .Values.nodeFlags.generateKeys }}       
-      
-              apt-get update && apt-get install -y curl jq
-              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
 
               echo "Besu nodekey generation ..."
               /opt/besu/bin/besu public-key export --to=public.key
               # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
               sed 's/^0x//' ./public${j}.key > enode
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
-              ./kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=./enode
+              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=./enode
  
             {{- end }}       
               echo "Completed"
 
-        - name: {{ template "besu-node.fullname" . }}-orion-pre-start-hook
-          image: {{ .Values.image.orion.repository }}:{{ .Values.image.orion.tag }}
-          imagePullPolicy: {{ .Values.image.orion.pullPolicy }}
-          securityContext:
-            runAsUser: 0
-          command:
-            - /bin/bash
-            - -c
-          args:
-            - |
-
-            {{- if .Values.nodeFlags.privacy }}       
-            
-              apt-get update && apt-get install -y curl jq
-              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
-
-            {{- if .Values.privacy.password }} 
-              echo $'{{.Values.privacy.password }}\n{{ .Values.privacy.password }}\n' > password.txt
-            {{- else }} 
-              echo $'\n\n' > password.txt
-            {{- end }}  
-              orion -g nodekey < password.txt
-              echo "Creating {{ template "besu-node.fullname" . }}-orion-keys secrets in k8s ..."
-              ./kubectl create secret generic {{ template "besu-node.fullname" . }}-orion-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/orion/nodekey.key --from-file=public.key=/opt/orion/nodekey.pub --from-file=password=/opt/orion/password.txt
-      
-            {{- end }}  
-              echo "Completed"             
+#        - name: {{ template "besu-node.fullname" . }}-tessera-pre-start-hook
+#          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+#          imagePullPolicy: {{ .Values.image.hooks.pullPolicy }}
+#          securityContext:
+#            runAsUser: 0
+#          command:
+#            - /bin/bash
+#            - -c
+#          args:
+#            - |
+#
+#            {{- if .Values.nodeFlags.privacy }}
+#
+#              apt-get update && apt-get install -y curl jq
+#              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
+#
+#            {{- if .Values.privacy.password }}
+#              echo $'{{.Values.privacy.password }}\n{{ .Values.privacy.password }}\n' > password.txt
+#            {{- else }}
+#              echo $'\n\n' > password.txt
+#            {{- end }}
+#              orion -g nodekey < password.txt
+#              echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
+#              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/orion/nodekey.key --from-file=public.key=/opt/orion/nodekey.pub --from-file=password=/opt/orion/password.txt
+#
+#            {{- end }}
+#              echo "Completed"
 
  
 ---
@@ -141,7 +138,7 @@ spec:
       restartPolicy: "OnFailure"
       containers:
         - name: delete-keys
-          image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
           securityContext:
             runAsUser: 0
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -156,8 +153,8 @@ spec:
               apt-get update && apt-get install -y curl
               curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting node secrets in k8s ..."
-              ./kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
-              ./kubectl delete secret {{ template "besu-node.fullname" . }}-orion-keys --namespace {{ .Release.Namespace }}
+              /usr/local/bin/kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
+              /usr/local/bin/kubectl delete secret {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
 
             {{- end }}       
               echo "Completed"

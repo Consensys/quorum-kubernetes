@@ -4,8 +4,12 @@ image:
     repository: hyperledger/besu
     tag: latest
     pullPolicy: IfNotPresent
-  orion:
-    repository: consensys/quorum-orion
+  tessera:
+    repository: quorumengineering/tessera
+    tag: latest
+    pullPolicy: IfNotPresent
+  hooks:
+    repository: consensys/quorum-k8s-hooks
     tag: latest
     pullPolicy: IfNotPresent
 
@@ -20,84 +24,95 @@ nodeFlags:
   removeKeysOnDeletion: false
 
 node:
-  # privKey:
-  # pubKey:
   storage:
-    pvcSizeLimit: "10Gi"
-    pvcStorageClass: "standard"
-  resources:
-    memRequest: "1024Mi"
-    memLimit: "2048Mi"
-    cpuRequest: "100m"
-    cpuLimit: "500m"
-  dataPath: "/data"
-  genesisFilePath: "/etc/genesis/genesis.json"
-  logging: INFO
-  p2p:
-    enabled: true
-    host: "0.0.0.0"
-    port: 30303
-    discovery: true
-    maxPeers: 25
-  rpc:
-    enabled: true
-    host: "0.0.0.0"
-    port: 8545
-    api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
-    corsOrigins: '["all"]'
-    authenticationEnabled: false
-  ws:
-    enabled: false
-    host: "0.0.0.0"
-    port: 8546
-    api: '["DEBUG", "ETH", "WEB3", "NET"]'
-    authenticationEnabled: false
-  graphql:
-    enabled: false
-    host: "0.0.0.0"
-    port: 8547
-    corsOrigins: '["all"]'
-  txPool:
-    retentionHours: 999
-    maxSize: 1024
-  http:
-    allowlist: '["*"]'
-  metrics:
-    enabled: true
-    host: "0.0.0.0"
-    port: 9545
-  metricsPush:
-    enabled: false
-    host: "5.5.5.5"
-    port: 9091
-    interval: 15
-    prometheusJob: "besu"
-  privacy:
-    url: "http://127.0.0.1:8888"
-    precompiledAddress: 9
-  permissions:
-    enabled: false
-    nodes:
+    sizeLimit: "10Gi"
+  besu:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "2G"
+      memRequest: "1G"
+    storage:
+      pvcSizeLimit: "8Gi"
+    # privKey:
+    # pubKey:
+    dataPath: "/data"
+    genesisFilePath: "/etc/genesis/genesis.json"
+    logging: INFO
+    p2p:
+      enabled: true
+      host: "0.0.0.0"
+      port: 30303
+      discovery: true
+      maxPeers: 25
+    rpc:
+      enabled: true
+      host: "0.0.0.0"
+      port: 8545
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+      corsOrigins: '["all"]'
+      authenticationEnabled: false
+    ws:
       enabled: false
-      allowlist: ["enode://abcd..@1.2.3.3:30303","enode://efba..@1.2.3.4:besu-node-bootnode-1-0.besu-node-bootnode-1.besu.svc.cluster.local:30303"]
-    nodesContract:
+      host: "0.0.0.0"
+      port: 8546
+      api: '["DEBUG", "ETH", "WEB3", "NET"]'
+      authenticationEnabled: false
+    graphql:
       enabled: false
-      address: "0x0000000000000000000000000000000000001234"
-    accounts:
+      host: "0.0.0.0"
+      port: 8547
+      corsOrigins: '["all"]'
+    txPool:
+      retentionHours: 999
+      maxSize: 1024
+    http:
+      allowlist: '["*"]'
+    metrics:
+      enabled: true
+      host: "0.0.0.0"
+      port: 9545
+    metricsPush:
       enabled: false
-      allowlist: ["0x0000000000000000000000000000000000000009"]
+      host: "5.5.5.5"
+      port: 9091
+      interval: 15
+      prometheusJob: "besu"
+    privacy:
+      url: "http://localhost:9101"
+      pubkeyPath: "/tessera/tm.pub"
+      onchainGroupsEnabled: false
+      precompiledAddress: 9
+    permissions:
+      enabled: false
+      nodes:
+        enabled: false
+        allowlist: ["enode://abcd..@1.2.3.3:30303","enode://efba..@1.2.3.4:besu-node-bootnode-1-0.besu-node-bootnode-1.besu.svc.cluster.local:30303"]
+      nodesContract:
+        enabled: false
+        address: "0x0000000000000000000000000000000000001234"
+      accounts:
+        enabled: false
+        allowlist: ["0x0000000000000000000000000000000000000009"]
 
-privacy:
-  # privKey:
-  # pubKey:
-  # password:
-  # the orion bootnode so to speak
-  othernodes: "self"
-  orionConfig:
-    nodeport: 8080
-    nodenetworkinterface: "0.0.0.0"
-    clientport: 8888
-    clientnetworkinterface: "0.0.0.0"
+  tessera:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "1G"
+      memRequest: "500m"
+    storage:
+      pvcSizeLimit: "2Gi"
+    tmkey: ""
+    dataPath: "/data"
+    tmpub: ""
+    url: "http://127.0.0.1:8888"
+    port: 9000
+    tpport: 9080
+    q2tport: 9101
+    password: ""
+
+
 
 
 nodeSelector: {}
@@ -105,19 +120,3 @@ tolerations: []
 affinity: {}
 resources: {}
 
-ingress_http:
-  enabled: false
-  annotations: {}
-  #   ingress.kubernetes.io/ssl-redirect: "false"
-
-  # path: /
-  # hosts:
-  #   - k8s.localhost.lan
-  # tls:
-  #  - secretName: clique-tls
-  #    hosts:
-  #      - chain.apps.consensys
-
-ingress_ws:
-  enabled: false
-  annotations: {}

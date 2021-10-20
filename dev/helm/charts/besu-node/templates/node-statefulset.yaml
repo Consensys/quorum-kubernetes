@@ -66,7 +66,7 @@ metadata:
 spec:
   storageClassName: {{ include "besu-node.fullname" . }}-storage
   capacity:
-    storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+    storage: "{{ .Values.node.storage.sizeLimit }}"
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -86,7 +86,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.node.besu.storage.pvcSizeLimit }}"
 
 {{- if .Values.nodeFlags.privacy }}
 
@@ -94,7 +94,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "besu-node.fullname" . }}-pvc-privacy
+  name: {{ include "besu-node.fullname" . }}-pvc-tessera
   namespace: {{ .Release.Namespace }}
 spec:
   storageClassName: {{ include "besu-node.fullname" . }}-storage
@@ -102,7 +102,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.node.tessera.storage.pvcSizeLimit }}"
 {{- end }}
 
 ---
@@ -159,8 +159,8 @@ spec:
 {{- end}}
 
 {{- if eq .Values.provider "local" }}
-# fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
-      - name: volume-permission
+      # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
+      - name: volume-permission-besu
         image: busybox
         command: ["sh", "-c", "chown -R 1000:1000 /data"]
         volumeMounts:
@@ -168,20 +168,34 @@ spec:
             mountPath: /data
         securityContext:
           runAsUser: 0
+
+{{- if .Values.nodeFlags.privacy }}
+      # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
+      - name: volume-permission-tessera
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /tessera-data"]
+        volumeMounts:
+          - name: tessera-data
+            mountPath: /tessera-data
+        securityContext:
+          runAsUser: 0
+
+{{- end}}
 {{- end}}
 
       containers:
-      {{- if .Values.nodeFlags.privacy }}
-      - name: {{ .Release.Name }}-orion
-        image: {{ .Values.image.orion.repository }}:{{ .Values.image.orion.tag }}
-        imagePullPolicy: {{ .Values.image.orion.pullPolicy }}
+
+{{- if .Values.nodeFlags.privacy }}
+      - name: {{ include "quorum-node.fullname" . }}-tessera
+        image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
         resources:
           requests:
-            cpu: "{{ .Values.node.resources.cpuRequest }}"
-            memory: "{{ .Values.node.resources.memRequest }}"
+            cpu: "{{ .Values.node.tessera.resources.cpuRequest }}"
+            memory: "{{ .Values.node.tessera.resources.memRequest }}"
           limits:
-            cpu: "{{ .Values.node.resources.cpuLimit }}"
-            memory: "{{ .Values.node.resources.memLimit }}"
+            cpu: "{{ .Values.node.tessera.resources.cpuLimit }}"
+            memory: "{{ .Values.node.tessera.resources.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -191,36 +205,25 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: ORION_NODEURL
-            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.nodeport}}/"
-          - name: ORION_CLIENTURL
-            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.clientport}}/"
-          - name: ORION_OTHERNODES
-          {{- if eq .Values.privacy.othernodes "self" }}
-            value: "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.nodeport}}/"
-          {{- else }}
-            value: {{ .Values.privacy.othernodes | quote }}
-          {{- end}}
-
+          - name: TESSERA_CONFIG_TYPE
+            value: "-09"
         volumeMounts:
-          - name: orion-key
-            mountPath: /secrets
+          - name: tessera-secrets
+            mountPath: {{ .Values.node.quorumConfig.keysPath }}
             readOnly: true
-          - name: orion-config
-            mountPath: /configs
-            readOnly: true
-          - name: orion-data
-            mountPath: /data
+          - name: tessera-data
+            mountPath: {{ .Values.node.tessera.dataDir }}
+          - name: tessera-peers
+            mountPath: /config/tessera-peers
         ports:
-          - containerPort: {{ .Values.privacy.orionConfig.nodeport }}
-            name: nodeport
+          - name: tessera
+            containerPort: {{ .Values.node.tessera.port }}
             protocol: TCP
-          - containerPort: {{ .Values.privacy.orionConfig.clientport }}
-            name: clientport
+          - name: tessera-tp
+            containerPort: {{ .Values.node.tessera.tpport }}
+            protocol: TCP
+          - name: tessera-q2t
+            containerPort: {{ .Values.node.tessera.q2tport }}
             protocol: TCP
         command:
           - /bin/sh
@@ -228,32 +231,75 @@ spec:
         args:
           - |
             exec
-            /opt/orion/bin/orion /configs/orion.conf
-        livenessProbe:
-          httpGet:
-            path: /upcheck
-            port: {{ .Values.privacy.orionConfig.clientport}}
-          initialDelaySeconds: 180
-          periodSeconds: 60
-        readinessProbe:
-          httpGet:
-            path: /upcheck
-            port: {{ .Values.privacy.orionConfig.clientport}}
-          initialDelaySeconds: 180
-          periodSeconds: 60
 
-      {{- end}}
+            mkdir {{ .Values.node.tessera.dataDir }}/tm/;
+            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataDir }}/tm/ ;
+
+                cat <<EOF > {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+                {
+                  "useWhiteList": false,
+                  "jdbc": {
+                    "username": "sa",
+                    "password": "",
+                    "url": "jdbc:h2:{{ .Values.node.tessera.dataDir }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                    "autoCreateTables": true
+                  },
+                  "serverConfigs":[
+                  {
+                    "app":"ThirdParty",
+                    "enabled": true,
+                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.tpport }}",
+                    "communicationType" : "REST"
+                  },
+                  {
+                    "app":"Q2T",
+                    "enabled": true,
+                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.q2tport }}",
+                    "sslConfig": {
+                      "tls": "OFF"
+                    },
+                    "communicationType" : "REST"
+                  },
+                  {
+                    "app":"P2P",
+                    "enabled": true,
+                    "serverAddress": "http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.port }}",
+                    "sslConfig": {
+                      "tls": "OFF"
+                    },
+                    "communicationType" : "REST"
+                  }
+                  ],
+                  "peer": $$(cat /config/tessera-peers/tesseraPeers),
+                  "keys": {
+                    "passwords": [],
+                    "keyData": [
+                      {
+                        "config": $$(cat {{ .Values.node.tessera.dataDir }}/tm/tm.key),
+                        "publicKey": "$$(cat {{ .Values.node.tessera.dataDir }}/tm/tm.pub)"
+                      }
+                    ]
+                  },
+                  "alwaysSendTo": []
+                }
+            EOF
+
+                cat {{ .Values.node.tessera.dataDir }}/tm/tessera-config-09.json
+                /tessera/bin/tessera -configfile {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+
+{{- end }}
+
 
       - name: {{ .Release.Name }}-besu
         image: {{ .Values.image.besu.repository }}:{{ .Values.image.besu.tag }}
         imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
         resources:
           requests:
-            cpu: "{{ .Values.node.resources.cpuRequest }}"
-            memory: "{{ .Values.node.resources.memRequest }}"
+            cpu: "{{ .Values.node.besu.resources.cpuRequest }}"
+            memory: "{{ .Values.node.besu.resources.memRequest }}"
           limits:
-            cpu: "{{ .Values.node.resources.cpuLimit }}"
-            memory: "{{ .Values.node.resources.memLimit }}"
+            cpu: "{{ .Values.node.besu.resources.cpuLimit }}"
+            memory: "{{ .Values.node.besu.resources.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -275,12 +321,12 @@ spec:
                 key: enode
         volumeMounts:
         {{- if .Values.nodeFlags.privacy }}
-          - name: orion-key
-            mountPath: /orionsecrets
+          - name: tessera-keys
+            mountPath: /tessera
             readOnly: true
         {{- end}}
-          - name: key
-            mountPath: /secrets
+          - name: besu-keys
+            mountPath: /besu
             readOnly: true
           - name: genesis
             mountPath: /etc/genesis
@@ -292,22 +338,22 @@ spec:
             mountPath: /data
         ports:
           - name: json-rpc
-            containerPort: {{ .Values.node.rpc.port }}
+            containerPort: {{ .Values.node.besu.rpc.port }}
             protocol: TCP
           - name: ws
-            containerPort: {{ .Values.node.ws.port }}
+            containerPort: {{ .Values.node.besu.ws.port }}
             protocol: TCP
           - name: graphql
-            containerPort: {{ .Values.node.graphql.port }}
+            containerPort: {{ .Values.node.besu.graphql.port }}
             protocol: TCP
           - name: rlpx
-            containerPort: {{ .Values.node.p2p.port }}
+            containerPort: {{ .Values.node.besu.p2p.port }}
             protocol: TCP
           - name: discovery
-            containerPort: {{ .Values.node.p2p.port }}
+            containerPort: {{ .Values.node.besu.p2p.port }}
             protocol: UDP
           - name: metrics
-            containerPort: {{ .Values.node.metrics.port }}
+            containerPort: {{ .Values.node.besu.metrics.port }}
             protocol: TCP
         command:
           - /bin/sh
@@ -318,15 +364,9 @@ spec:
             export BOOTNODE_ENODE1="enode://${BOOTNODE1_PUBKEY}@besu-node-bootnode-1-0.besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
             export BOOTNODE_ENODE2="enode://${BOOTNODE2_PUBKEY}@besu-node-bootnode-2-0.besu-node-bootnode-2.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
             /opt/besu/bin/besu \
-              --node-private-key-file=/secrets/private.key \
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
               --min-gas-price=0 \
-          {{- if .Values.nodeFlags.privacy -}}
-              --privacy-enabled=true \
-              --privacy-url="http://{{ include "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.privacy.orionConfig.clientport}}" \
-              --privacy-public-key-file=/orionsecrets/public.key \
-          {{- end -}}
               --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
 
         livenessProbe:
@@ -336,7 +376,7 @@ spec:
           initialDelaySeconds: 180
           periodSeconds: 60
       volumes:
-      - name: key
+      - name: besu-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-keys
       - name: genesis
@@ -351,7 +391,7 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc-besu
-      {{- if .Values.node.permissions.enabled }}
+      {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-permissions
@@ -360,10 +400,7 @@ spec:
       - name: orion-key
         secret:
           secretName: {{ include "besu-node.fullname" . }}-orion-keys
-      - name: orion-config
-        configMap:
-          name: {{ include "besu-node.fullname" . }}-orion-config
-      - name: orion-data
+      - name: tessera-data
         persistentVolumeClaim:
-          claimName: {{ include "besu-node.fullname" . }}-pvc-orion
+          claimName: {{ include "besu-node.fullname" . }}-pvc-tessera
       {{- end }}

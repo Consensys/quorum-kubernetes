@@ -24,35 +24,37 @@ spec:
     app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: json-rpc
-      port: {{ .Values.node.rpc.port }}
+      port: {{ .Values.node.besu.rpc.port }}
       targetPort: json-rpc
       protocol: TCP
     - name: ws
-      port: {{ .Values.node.ws.port }}
+      port: {{ .Values.node.besu.ws.port }}
       targetPort: ws
       protocol: TCP
     - name: graphql
-      port: {{ .Values.node.graphql.port }}
+      port: {{ .Values.node.besu.graphql.port }}
       targetPort: graphql
       protocol: TCP
     - name: rlpx
-      port: {{ .Values.node.p2p.port }}
+      port: {{ .Values.node.besu.p2p.port }}
       targetPort: rlpx
       protocol: TCP
     - name: discovery
-      port: {{ .Values.node.p2p.port }}
+      port: {{ .Values.node.besu.p2p.port }}
       targetPort: discovery
       protocol: UDP
       
 {{- if .Values.nodeFlags.privacy }}          
-    - name: nodeport
-      port: {{ .Values.privacy.orionConfig.nodeport }}
+    - name: tessera
+      port: {{ .Values.tessera.port }}
       targetPort: nodeport
       protocol: TCP
-    - name: clientport
-      port: {{ .Values.privacy.orionConfig.clientport }}
-      targetPort: clientport
+    - name: tessera-tp
+      port: {{ .Values.tessera.tpport }}
+      targetPort: tpport
       protocol: TCP
-
-{{- end }}    
-
+    - name: tessera-q2t
+      port: {{ .Values.tessera.q2tport }}
+      targetPort: tpport
+      protocol: TCP
+{{- end }}
