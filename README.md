@@ -4,7 +4,27 @@
 
 The following repo has example reference implementations of private networks using k8s. These examples are aimed at developers and ops people to get them familiar with how to run a private ethereum network in k8s and understand the concepts involved.
 
-It provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
+You will need the following tools to proceed:
+
+- [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster (refer to the [playground](./playground) for manifests to deploy)
+- [Helm](https://helm.sh/docs/)
+- [Helmfile](https://github.com/roboll/helmfile)
+- [Helm Diff plugin](https://github.com/databus23/helm-diff)
+
+Verify kubectl is connected with
+```bash
+$ kubectl version
+Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+```
+
+Install helm & helm-diff:
+Please note that the documentation and steps listed use *helm3*. The API has been updated so please take that into account if using an older version
+```bash
+$ helm plugin install https://github.com/databus23/helm-diff --version master
+```
+
+The repo provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
 
 The current repo layout is:
 
@@ -55,21 +75,6 @@ Namespaces are part of the setup and do not need to be created via kubectl prior
 
 It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
 
-#### Monitoring:
-The example setups all have our custom Grafana [dashboards](https://grafana.com/orgs/pegasyseng) to make monitoring of the nodes and network easier.
-
-We use the default ports 3000 for grafana and 9090 for prometheus deployments, and the respective Nodeport services use ports 30030 and 30090. Credentials are `admin:password` Open the 'Besu Dashboard' to see the status of the nodes on your network. If you do not see the dashboard, click on Dashboards -> Manage and select the dashboard from there
-
-Please configure the kubernetes scraper and grafana security to suit your requirements, Grafana supports [multiple options](https://grafana.com/docs/grafana/latest/auth/overview/) that can be configured using env vars
-
-#### Ingress Controllers:
-
-If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](./ingress) with rules that are configured to do so.
-
-Please use these as a reference and develop solutions to match your network topology and requirements.
-
-
-
 #### Network Topology and High Availability requirements:
 Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
 
@@ -99,12 +104,18 @@ Besu & GoQuorum also have a custom Grafana [dashboards](https://grafana.com/orgs
 
 For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements, grafana supports multiple options that can be configured using env vars
 
-We also have [example ingress controller config rules](./ingress/), should you want to use a setup that makes use of ingress controllers.
+#### Ingress Controllers:
+
+If you require the use of ingress controllers for the RPC calls or the monitoring dashboards, we have provided [examples](./ingress) with rules that are configured to do so.
+
+Please use these as a reference and develop solutions to match your network topology and requirements.
 
 #### Logging
 Node logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
 
-### New nodes joining the network:
+
+
+## New nodes joining the network:
 The general rule is that any new nodes joining the network need to have the following accessible:
 - genesis.json of the network
 - Bootnodes need to be accessible on the network (if using bootnodes, otherwise static-nodes.json)
@@ -138,24 +149,4 @@ When deploying a private network, eg: IBFT you need to ensure that the bootnodes
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
 
-## Usage
-You will need the following tools to proceed:
-
-- [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster (refer to the [playground](./playground) for manifests to deploy)
-- [Helm](https://helm.sh/docs/)
-- [Helmfile](https://github.com/roboll/helmfile)
-- [Helm Diff plugin](https://github.com/databus23/helm-diff)
-
-Verify kubectl is connected with 
-```bash
-$ kubectl version
-Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
-Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
-```
-
-Install helm & helm-diff:
-Please note that the documentation and steps listed use *helm3*. The API has been updated so please take that into account if using an older version
-```bash
-$ helm plugin install https://github.com/databus23/helm-diff --version master
-```
 

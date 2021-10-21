@@ -36,7 +36,6 @@ node:
     dataPath: "/data/quorum"
     keysPath: "/keys"
     genesisFilePath: "/etc/genesis/genesis.json"
-    logging: INFO
     networkId: 10
     replicaCount: 1
     account: {}
