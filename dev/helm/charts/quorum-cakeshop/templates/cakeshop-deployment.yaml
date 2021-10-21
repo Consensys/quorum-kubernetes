@@ -1,0 +1,125 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-rb
+  namespace: {{ .Release.Namespace }}  
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-sa
+    namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-cakeshop
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "quorum-monitoring.fullname" . }}
+    helm.sh/chart: {{ include "quorum-monitoring.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ template "quorum-monitoring.fullname" . }}-cakeshop
+      release: {{ .Release.Name }}
+      component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ include "quorum-monitoring.fullname" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "quorum-monitoring.fullname" . }}-cakeshop
+        release: {{ .Release.Name }}
+        component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "quorum-monitoring.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "quorum-monitoring.fullname" . }}-cakeshop-sa
+      containers:
+      - name: cakeshop
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumeMounts:
+          - name: cakeshop-config
+            mountPath: /config/cakeshop/
+            readOnly: true
+        ports:
+          - containerPort: 8999
+            name: http
+            protocol: TCP
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            exec 
+            rm -rf /data/cakeshop/local
+            mkdir -p /data/cakeshop/local
+            cp /config/cakeshop/application.properties /data/cakeshop/local/application.properties
+            cp /config/cakeshop/quorum_nodes.json /data/cakeshop/local/seednodes.json
+
+            java -Xms128M -Xmx128M -Dcakeshop.config.dir=/data/cakeshop -Dlogging.path=/data/logs/cakeshop -jar /opt/cakeshop/cakeshop.war
+
+      volumes:
+        - name: cakeshop-config
+          configMap:
+            name: {{ include "quorum-monitoring.fullname" . }}-cakeshop-configmap

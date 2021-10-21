@@ -1,0 +1,118 @@
+---
+image:
+  besu:
+    repository: hyperledger/besu
+    tag: latest
+    pullPolicy: IfNotPresent
+  tessera:
+    repository: quorumengineering/tessera
+    tag: latest
+    pullPolicy: IfNotPresent
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: latest
+    pullPolicy: IfNotPresent
+
+# local / azure
+provider: local
+
+nodeFlags:
+  bootnode: false
+  generateKeys: false
+  privacy: false
+  # be careful with this one
+  removeKeysOnDeletion: false
+
+node:
+  storage:
+    sizeLimit: "10Gi"
+    pvcSizeLimit: "10Gi"
+  besu:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "2G"
+      memRequest: "1G"
+    # privKey:
+    # pubKey:
+    dataPath: "/data/besu"
+    keysPath: "/keys"
+    privateKeyPath: "/keys/private.key"
+    genesisFilePath: "/etc/genesis/genesis.json"
+    logging: INFO
+    p2p:
+      enabled: true
+      host: "0.0.0.0"
+      port: 30303
+      discovery: true
+      maxPeers: 25
+    rpc:
+      enabled: true
+      host: "0.0.0.0"
+      port: 8545
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+      corsOrigins: '["all"]'
+      authenticationEnabled: false
+    ws:
+      enabled: false
+      host: "0.0.0.0"
+      port: 8546
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+      authenticationEnabled: false
+    graphql:
+      enabled: false
+      host: "0.0.0.0"
+      port: 8547
+      corsOrigins: '["all"]'
+    txPool:
+      retentionHours: 999
+      maxSize: 1024
+    http:
+      allowlist: '["*"]'
+    metrics:
+      enabled: true
+      host: "0.0.0.0"
+      port: 9545
+    metricsPush:
+      enabled: false
+      host: "5.5.5.5"
+      port: 9091
+      interval: 15
+      prometheusJob: "besu"
+    privacy:
+      url: "http://localhost:9101"
+      pubkeysPath: "/tessera"
+      pubkeyFile: "/tessera/tm.pub"
+      onchainGroupsEnabled: false
+    permissions:
+      enabled: false
+      nodes:
+        enabled: false
+        allowlist: ["enode://abcd..@1.2.3.3:30303","enode://efba..@1.2.3.4:besu-node-bootnode-1-0.besu-node-bootnode-1.besu.svc.cluster.local:30303"]
+      nodesContract:
+        enabled: false
+        address: "0x0000000000000000000000000000000000001234"
+      accounts:
+        enabled: false
+        allowlist: ["0x0000000000000000000000000000000000000009"]
+
+  tessera:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "1G"
+      memRequest: "500m"
+    tmkey: ""
+    tmpub: ""
+    password: ""
+    dataPath: "/data/tessera"
+    keysPath: "/keys"
+    port: 9000
+    tpport: 9080
+    q2tport: 9101
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+resources: {}
+

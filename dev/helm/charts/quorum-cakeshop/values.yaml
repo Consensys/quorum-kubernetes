@@ -1,0 +1,17 @@
+---
+image:
+  repository: quorumengineering/cakeshop
+  tag: 0.11.0
+  pullPolicy: IfNotPresent
+
+ 
+# the number of nodes you want
+cakeshopConfig:
+  nodes:
+    validator-1: {}
+    validator-2: {}
+    validator-3: {}
+    validator-4: {}
+    consortium-tx:
+      tesseraPort: 9080
+

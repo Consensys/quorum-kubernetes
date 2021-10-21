@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-prometheus
+  labels:
+    app: {{ template "quorum-monitoring.name" . }}
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    component: prometheus
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: NodePort
+  selector:
+    component: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
+      protocol: TCP
+      name: prometheus

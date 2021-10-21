@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana
+  labels:
+    app: {{ template "quorum-monitoring.name" . }}
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    component: grafana
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: NodePort
+  selector:
+    component: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30030
+      protocol: TCP
+      name: grafana

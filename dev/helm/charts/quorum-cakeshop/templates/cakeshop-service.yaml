@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "quorum-monitoring.fullname" . }}-cakeshop
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-cakeshop
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "quorum-monitoring.fullname" . }}
+    helm.sh/chart: {{ include "quorum-monitoring.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "quorum-monitoring.fullname" . }}-cakeshop
+    release: {{ .Release.Name }}
+    component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "quorum-monitoring.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      targetPort: http
+      port: 8999
+      protocol: TCP

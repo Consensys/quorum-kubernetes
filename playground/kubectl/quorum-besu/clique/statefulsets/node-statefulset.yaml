@@ -1,0 +1,109 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: node
+  labels:
+    app: node
+  namespace: besu
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node
+  serviceName: besu-node
+  template:
+    metadata:
+      labels:
+        app: node
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      initContainers:
+        - name: init-bootnode2
+          image: pegasyseng/k8s-helper:v1.18.4
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: node
+          image: hyperledger/besu:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator1PubKey
+            - name: VALIDATOR2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator2PubKey
+          volumeMounts:
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --config-file=/etc/besu/config.toml \
+                --Xnat-kube-service-name=besu-node \
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@${BESU_VALIDATOR1_SERVICE_HOST}:30303,enode://${VALIDATOR2_PUBKEY}@${BESU_VALIDATOR2_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8545
+            initialDelaySeconds: 120
+            periodSeconds: 30
+      volumes:
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

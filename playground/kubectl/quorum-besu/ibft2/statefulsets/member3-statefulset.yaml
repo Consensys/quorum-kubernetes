@@ -1,0 +1,269 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: member3-sa
+  namespace: besu
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: member3-key-read-role
+  namespace: besu
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: [ besu-member3-key ]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: member3-rb
+  namespace: besu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: member3-key-read-role
+subjects:
+  - kind: ServiceAccount
+    name: member3-sa
+    namespace: besu
+
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: member3
+  labels:
+    app: member3
+  namespace: besu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: member3
+  serviceName: besu-member3
+  template:
+    metadata:
+      labels:
+        app: member3
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: member3-sa
+      initContainers:
+        - name: init-bootnode
+          image: curlimages/curl:7.79.1
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: member3-tessera
+          image: quorumengineering/tessera:21.4.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TESSERA_CONFIG_TYPE
+              value: "-09"
+          volumeMounts:
+            - name: key
+              mountPath: /config/keys/
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 9000
+              name: tessera
+              protocol: TCP
+            - containerPort: 9080
+              name: tessera-tp
+              protocol: TCP
+            - containerPort: 9101
+              name: tessera-q2t
+              protocol: TCP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec
+              mkdir /data/tm/;
+              cp /config/keys/tm.* /data/tm/ ;
+
+                  cat <<EOF > /data/tm/tessera-config-09.json
+                  {
+                    "mode": "orion",
+                    "useWhiteList": false,
+                    "jdbc": {
+                      "username": "sa",
+                      "password": "",
+                      "url": "jdbc:h2:./data/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                      "autoCreateTables": true
+                    },
+                    "serverConfigs":[
+                    {
+                      "app":"ThirdParty",
+                      "enabled": true,
+                      "serverAddress": "http://besu-member3.besu.svc.cluster.local:9080",
+                      "communicationType" : "REST"
+                    },
+                    {
+                      "app":"Q2T",
+                      "enabled": true,
+                      "serverAddress": "http://besu-member1.besu.svc.cluster.local:9101",
+                      "sslConfig": {
+                        "tls": "OFF"
+                      },
+                      "communicationType" : "REST"                    },
+                    {
+                      "app":"P2P",
+                      "enabled": true,
+                      "serverAddress": "http://besu-member3.besu.svc.cluster.local:9000",
+                      "sslConfig": {
+                        "tls": "OFF"
+                      },
+                      "communicationType" : "REST"
+                    }
+                    ],
+                    "peer": [
+                      {
+                          "url": "http://besu-member1.besu.svc.cluster.local:9000"
+                      },
+                      {
+                          "url": "http://besu-member2.besu.svc.cluster.local:9000"
+                      },
+                      {
+                          "url": "http://besu-member3.besu.svc.cluster.local:9000"
+                      }
+                    ],
+                    "keys": {
+                      "passwords": [],
+                      "keyData": [
+                        {
+                          "config": $$(cat /data/tm/tm.key),
+                          "publicKey": "$$(cat /data/tm/tm.pub)"
+                        }
+                      ]
+                    },
+                    "alwaysSendTo": []
+                  }
+              EOF
+
+                  cat /data/tm/tessera-config-09.json
+                  java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
+
+        - name: member3-besu
+          image: hyperledger/besu:21.1.2
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator1PubKey
+            - name: VALIDATOR2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator2PubKey
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: node-permissions
+              mountPath: /etc/permissions
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec
+              /opt/besu/bin/besu \
+                --node-private-key-file=/secrets/nodekey \
+                --config-file=/etc/besu/config.toml \
+                --privacy-enabled=true \
+                --privacy-url=http://localhost:9101 \
+                --privacy-public-key-file=/secrets/tm.pub \
+                --privacy-onchain-groups-enabled=false \
+                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-member3 \
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
+
+      volumes:
+        - name: key
+          secret:
+            secretName: besu-member3-key
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: node-permissions
+          configMap:
+            name: besu-node-permissions-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

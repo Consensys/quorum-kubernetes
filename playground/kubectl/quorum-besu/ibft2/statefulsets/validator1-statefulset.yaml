@@ -1,0 +1,147 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: validator1-sa
+  namespace: besu
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: validator1-key-read-role
+  namespace: besu
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ besu-validator1-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: validator1-rb
+  namespace: besu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: validator1-key-read-role
+subjects:
+- kind: ServiceAccount
+  name: validator1-sa
+  namespace: besu
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: validator1
+  labels:
+    app: validator1
+  namespace: besu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: validator1
+  serviceName: besu-validator1
+  template:
+    metadata:
+      labels:
+        app: validator1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: validator1-sa
+      containers:
+        - name: validator1
+          image: hyperledger/besu:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator1PubKey
+            - name: VALIDATOR2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator2PubKey
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: node-permissions
+              mountPath: /etc/permissions
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --node-private-key-file=/secrets/nodekey \
+                --config-file=/etc/besu/config.toml \
+                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-validator1 \
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
+      volumes:
+        - name: key
+          secret:
+            secretName: besu-validator1-key
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: node-permissions
+          configMap:
+            name: besu-node-permissions-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

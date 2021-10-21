@@ -1,0 +1,148 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bootnode1-sa
+  namespace: besu
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: bootnode1-key-read-role
+  namespace: besu
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ besu-bootnode1-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: bootnode1-rb
+  namespace: besu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: bootnode1-key-read-role
+subjects:
+  - kind: ServiceAccount
+    name: bootnode1-sa
+    namespace: besu
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bootnode1
+  labels:
+    app: bootnode1
+  namespace: besu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bootnode1
+  serviceName: besu-bootnode1
+  template:
+    metadata:
+      labels:
+        app: bootnode1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: bootnode1-sa
+      containers:
+        - name: bootnode1
+          image: hyperledger/besu:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: BOOTNODE1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-bootnodes-configmap
+                  key: bootnode1PubKey
+            - name: BOOTNODE2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-bootnodes-configmap
+                  key: bootnode2PubKey
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --node-private-key-file=/secrets/key \
+                --config-file=/etc/besu/config.toml \
+                --Xnat-kube-service-name=besu-bootnode1 \
+                --bootnodes=enode://${BOOTNODE1_PUBKEY}@${BESU_BOOTNODE1_SERVICE_HOST}:30303,enode://${BOOTNODE2_PUBKEY}@${BESU_BOOTNODE2_SERVICE_HOST}:30303
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: key
+          secret:
+            secretName: besu-bootnode1-key
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

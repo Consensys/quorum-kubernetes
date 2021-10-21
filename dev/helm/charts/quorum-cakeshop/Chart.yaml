@@ -1,0 +1,20 @@
+apiVersion: v1
+version: 0.0.1
+appVersion: latest
+name: quorum-monitoring
+description: Quorum monitoring with Cakeshop
+keywords:
+  - ethereum
+  - quorum
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys
+home: https://quorum.hyperledger.org
+sources:
+  - https://github.com/hyperledger/quorum
+maintainers:
+  - name: Joshua Fernandes
+    email: joshua.fernandes@consensys.net
+
+

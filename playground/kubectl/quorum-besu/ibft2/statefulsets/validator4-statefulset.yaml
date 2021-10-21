@@ -1,0 +1,155 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: validator4-sa
+  namespace: besu
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: validator4-key-read-role
+  namespace: besu
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: [ besu-validator4-key ]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: validator4-rb
+  namespace: besu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: validator4-key-read-role
+subjects:
+- kind: ServiceAccount
+  name: validator4-sa
+  namespace: besu
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: validator4
+  labels:
+    app: validator4
+  namespace: besu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: validator4
+  serviceName: besu-validator4
+  template:
+    metadata:
+      labels:
+        app: validator4
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9545"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: validator4-sa
+      initContainers:
+        - name: init-bootnode
+          image: curlimages/curl:7.79.1
+          command:
+            - "sh"
+            - "-c"
+            - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
+      containers:
+        - name: validator4
+          image: hyperledger/besu:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+            limits:
+              cpu: 500m
+              memory: 2048Mi
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VALIDATOR1_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator1PubKey
+            - name: VALIDATOR2_PUBKEY
+              valueFrom:
+                configMapKeyRef:
+                  name: besu-validators-configmap
+                  key: validator2PubKey
+          volumeMounts:
+            - name: key
+              mountPath: /secrets
+              readOnly: true
+            - name: genesis-config
+              mountPath: /etc/genesis
+              readOnly: true
+            - name: config-toml
+              mountPath: /etc/besu
+              readOnly: true
+            - name: node-permissions
+              mountPath: /etc/permissions
+            - name: data
+              mountPath: /data
+          ports:
+            - containerPort: 8545
+              name: json-rpc
+              protocol: TCP
+            - containerPort: 8546
+              name: ws
+              protocol: TCP
+            - containerPort: 8547
+              name: graphql
+              protocol: TCP
+            - containerPort: 30303
+              name: rlpx
+              protocol: TCP
+            - containerPort: 30303
+              name: discovery
+              protocol: UDP
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec /opt/besu/bin/besu \
+                --node-private-key-file=/secrets/nodekey \
+                --config-file=/etc/besu/config.toml \
+                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-validator4 \
+                --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
+
+      volumes:
+        - name: key
+          secret:
+            secretName: besu-validator4-key
+        - name: config-toml
+          configMap:
+            name: besu-config-toml-configmap
+        - name: genesis-config
+          configMap:
+            name: besu-genesis-configmap
+        - name: node-permissions
+          configMap:
+            name: besu-node-permissions-configmap
+        - name: data
+          emptyDir:
+            sizeLimit: "1Gi"

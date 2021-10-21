@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "besu-genesis.fullname" . }}-raw-json-config
+  labels:
+    app: {{ template "besu-genesis.name" . }}
+    chart: {{ template "besu-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+data:
+  raw-config-genesis.json: |-
+          {{ .Values.rawGenesisConfig | toJson | indent 2 }}
+
