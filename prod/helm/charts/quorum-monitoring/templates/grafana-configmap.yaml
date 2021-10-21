@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-datasources
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-datasources
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+data:
+  prometheus.yml: |-
+{{ .Files.Get "grafana-datasource.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-default
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-default
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+data:
+  dashboard.yml: |-
+{{ .Files.Get "grafana-dashboard-default.yml" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-goquorum
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-goquorum
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+data:
+  goquorum.json: |-
+{{ .Files.Get "grafana-dashboard-goquorum.json" | indent 4}}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-besu
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-besu
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+data:
+  besu.json: |-
+{{ .Files.Get "grafana-dashboard-besu.json" | indent 4}}

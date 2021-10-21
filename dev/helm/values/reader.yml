@@ -4,3 +4,5 @@ nodeFlags:
   generateKeys: true
   privacy: false
   removeKeysOnDeletion: true
+
+provider: local

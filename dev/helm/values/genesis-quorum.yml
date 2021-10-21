@@ -1,8 +1,0 @@
----
-rawGenesisConfig:
-  blockchain:
-    nodes:
-      generate: true
-      count: 4
-
-

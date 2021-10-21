@@ -1,0 +1,102 @@
+---
+
+image:
+  quorum:
+    repository: quorumengineering/quorum
+    tag: latest
+  tessera:
+    repository: quorumengineering/tessera
+    tag: latest
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: latest
+    pullPolicy: IfNotPresent
+
+# azure
+provider: azure
+
+nodeFlags:
+  bootnode: false
+  generateKeys: false
+  privacy: false
+  removeKeysOnDeletion: false
+
+node:
+  storage:
+    sizeLimit: "30Gi"
+    pvcSizeLimit: "30Gi"
+  quorum:
+    resources:
+      cpuLimit: 0.5
+      cpuRequest: 0.1
+      memLimit: "2G"
+      memRequest: "1G"
+    # privKey:
+    # pubKey:
+    dataPath: "/data/quorum"
+    keysPath: "/keys"
+    genesisFilePath: "/etc/genesis/genesis.json"
+    networkId: 10
+    replicaCount: 1
+    account: {}
+      # unlock: 0
+      # password: "/config/keys/password.txt"
+    log:
+      verbosity: 5
+    miner:
+     threads: 1
+     blockPeriod: 5
+    p2p:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 30303
+    rpc:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8545
+      corsDomain: "*"
+      vHosts: "*"
+      api: "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul"
+      authenticationEnabled: false
+    ws:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8546
+      api: "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul"
+      origins: "*"
+      authenticationEnabled: false
+    graphql:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8547
+      corsDomain: "*"
+      vHosts: "*"
+    metrics:
+      enabled: true
+      pprofaddr: "0.0.0.0"
+      pprofport: 9545
+    privacy:
+      url: "http://localhost:9101"
+      pubkeysPath: "/tessera"
+      pubkeyFile: "/tessera/tm.pub"
+
+  tessera:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "1G"
+      memRequest: "500m"
+    tmkey: ""
+    tmpub: ""
+    password: ""
+    dataPath: "/data/tessera"
+    keysPath: "/keys"
+    port: 9000
+    tpport: 9080
+    q2tport: 9101
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+resources: {}

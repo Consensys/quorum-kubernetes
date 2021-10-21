@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: quorum-genesis-configmap
+  name: goquorum-genesis-configmap
   labels:
-    app: quorum-genesis-configmap
+    app: goquorum-genesis-configmap
   namespace: quorum
 data:
   genesis.json: |-

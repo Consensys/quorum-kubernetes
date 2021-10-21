@@ -1,0 +1,17 @@
+---
+image:
+  grafana:
+    repository: grafana/grafana
+    tag: 8.2.1
+    pullPolicy: IfNotPresent
+  prometheus:
+    repository: prom/prometheus
+    tag: v2.30.3
+    pullPolicy: IfNotPresent
+
+grafana:
+  username: admin
+  password: password
+
+# azure
+provider: azure

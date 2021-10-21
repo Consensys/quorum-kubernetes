@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "goquorum-node.fullname" . }}
+  labels:
+    app: {{ template "goquorum-node.fullname" . }}
+    chart: {{ template "goquorum-node.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
+    helm.sh/chart: {{ include "goquorum-node.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "goquorum-node.fullname" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: json-rpc
+      port: {{ .Values.node.quorum.rpc.port }}
+      targetPort: json-rpc
+      protocol: TCP
+    - name: ws
+      port: {{ .Values.node.quorum.ws.port }}
+      targetPort: ws
+      protocol: TCP
+    - name: graphql
+      port: {{ .Values.node.quorum.graphql.port }}
+      targetPort: graphql
+      protocol: TCP
+    - name: rlpx
+      port: {{ .Values.node.quorum.p2p.port }}
+      targetPort: rlpx
+      protocol: TCP
+    - name: discovery
+      port: {{ .Values.node.quorum.p2p.port }}
+      targetPort: discovery
+      protocol: UDP
+
+{{- if .Values.nodeFlags.privacy }}
+    - name: tessera
+      port: {{ .Values.node.tessera.port }}
+      targetPort: tessera
+      protocol: TCP
+    - name: tessera-tp
+      port: {{ .Values.node.tessera.tpport }}
+      targetPort: tessera-tp
+      protocol: TCP
+    - name: tessera-q2t
+      port: {{ .Values.node.tessera.q2tport }}
+      targetPort: tessera-q2t
+      protocol: TCP
+{{- end }}

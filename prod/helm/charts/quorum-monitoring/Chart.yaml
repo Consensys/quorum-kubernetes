@@ -1,0 +1,20 @@
+apiVersion: v1
+version: 0.0.1
+appVersion: latest
+name: quorum-monitoring
+description: Monitoring for quorum nodes in K8S
+keywords:
+  - ethereum
+  - quorum
+  - hyperledger
+  - enterprise
+  - blockchain
+  - consensys
+home: https://quorum.hyperledger.org
+sources:
+  - https://github.com/hyperledger/quorum
+maintainers:
+  - name: Joshua Fernandes
+    email: joshua.fernandes@consensys.net
+icon: http://quorum.hyperledger.org/en/latest/favicon.ico
+

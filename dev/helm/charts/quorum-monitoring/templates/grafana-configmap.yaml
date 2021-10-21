@@ -36,14 +36,30 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-quorum
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-goquorum
   labels:
-    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-quorum
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-goquorum
     chart: {{ template "quorum-monitoring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     namespace: {{ .Release.Namespace }}
   namespace: {{ .Release.Namespace }}
 data:
-  quorum.json: |-
-{{ .Files.Get "grafana-dashboard-quorum.json" | indent 4}}
+  goquorum.json: |-
+{{ .Files.Get "grafana-dashboard-goquorum.json" | indent 4}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-besu
+  labels:
+    app: {{ template "quorum-monitoring.fullname" . }}-grafana-cm-dash-besu
+    chart: {{ template "quorum-monitoring.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }}
+data:
+  besu.json: |-
+{{ .Files.Get "grafana-dashboard-besu.json" | indent 4}}

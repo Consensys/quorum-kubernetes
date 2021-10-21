@@ -37,7 +37,7 @@
         },
         "type": "string"
       }
- 
+
     },
     "variables": {
       "apiVersionVirtualNetworks": "2020-05-01",
@@ -138,7 +138,7 @@
             }
           }
         ]
-      },    
+      },
       {
         "type": "Microsoft.Network/networkSecurityGroups",
         "apiVersion": "[variables('apiVersionNetworkSecurityGroups')]",
@@ -177,7 +177,9 @@
         "location": "[parameters('location')]",
         "dependsOn": [
           "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('opsManagedIdentity'))]",
-          "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+          "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+          "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnet1Name'))]"          
+
         ],
         "properties": {
           "enableSoftDelete": true,
@@ -272,7 +274,7 @@
             "scope": "[resourceGroup().id]",
             "principalType": "ServicePrincipal"
         }
-      },   
+      },
       {
         "type": "Microsoft.Authorization/roleAssignments",
         "apiVersion": "[variables('apiVersionRoleAssignments')]",
@@ -287,7 +289,7 @@
             "scope": "[resourceGroup().id]",
             "principalType": "ServicePrincipal"
         }
-      },       
+      },
       {
         "type": "Microsoft.Authorization/roleAssignments",
         "apiVersion": "[variables('apiVersionRoleAssignments')]",
@@ -302,7 +304,7 @@
             "scope": "[resourceGroup().id]",
             "principalType": "ServicePrincipal"
         }
-      },  
+      },
       {
         "type": "Microsoft.ContainerRegistry/registries",
         "name": "[variables('acrName')]",
@@ -319,7 +321,7 @@
           "adminUserEnabled": false
         }
       },
-  
+
       {
         "type":  "Microsoft.ContainerService/managedClusters",
         "apiVersion": "[variables('apiVersionManangedClusters')]",
@@ -372,7 +374,7 @@
             "enabled": true,
             "userAssignedIdentities": [
               {
-                "name": "default-pod-identity",
+                "name": "quorum-pod-identity",
                 "namespace": "default",
                 "identity": {
                   "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('opsManagedIdentity'))]",
@@ -538,7 +540,7 @@
           "smsReceivers":[
           ],
           "emailReceivers":[
-  
+
           ],
           "webhookReceivers":[
           ]
@@ -758,7 +760,7 @@
           ]
         }
       },
-  
+
       {
         "type":"microsoft.insights/metricAlerts",
         "apiVersion":"2018-03-01",
@@ -1036,8 +1038,8 @@
           ]
         }
       }
-  
-      
+
+
     ],
     "outputs": {
       "cluster": {
@@ -1050,5 +1052,5 @@
       }
 
     }
-  
+
   }

@@ -1,0 +1,43 @@
+---
+image:
+  repository: consensys/quorum-k8s-hooks
+  tag: latest
+  pullPolicy: Always
+
+# azure
+provider: azure
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+
+# the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
+rawGenesisConfig:
+  genesis:
+    config:
+      chainId: 1337
+      constantinoplefixblock: 0
+      ibft2:
+        blockperiodseconds: 10
+        epochlength: 30000
+        requesttimeoutseconds: 20
+    nonce: '0x0'
+    timestamp: '0x58ee40ba'
+    gasLimit: '0x47b760'
+    difficulty: '0x1'
+    mixHash: '0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365'
+    coinbase: '0x0000000000000000000000000000000000000000'
+    alloc:
+      627306090abaB3A6e1400e9345bC60c78a8BEf57:
+        balance: '0x446c3b15f9926687d2c40534fdb564000000000000'
+      f17f52151EbEF6C7334FAD080c5704D77216b732:
+        balance: '0x446c3b15f9926687d2c40534fdb564000000000000'
+  blockchain:
+    nodes:
+      generate: true
+      count: 4

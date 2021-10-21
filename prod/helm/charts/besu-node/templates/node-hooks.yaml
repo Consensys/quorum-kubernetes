@@ -1,0 +1,225 @@
+
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-role
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["create", "get", "list", "update", "delete" ]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "besu-node.fullname" . }}-hooks-rb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook": "pre-install,pre-delete,post-delete"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "besu-node.fullname" . }}-hooks-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
+  namespace:  {{ .Release.Namespace }}
+
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pre-install-hook
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+  labels:
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+    metadata:
+      labels:
+        aadpodidbinding: "{{ .Values.azure.identityName }}"
+    spec:
+      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+      restartPolicy: "OnFailure"
+      containers:
+        - name: {{ template "besu-node.fullname" . }}-pre-start-hook
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+          imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              echo "{{ template "besu-node.fullname" . }} hook ..."
+
+              function update_enodes_configmap {
+                kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o json
+                if [ $? -ne 0 ]; then
+                    echo "[]" > /tmp/static-nodes.json.raw
+                fi
+                # update the entries
+                echo "updating besu-node-enodes..."
+                pubkey=$(cat /tmp/nodekey.pub )
+                echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+                NEEDLE="enode://$pubkey@.{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
+                cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
+                kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
+              }
+
+              function update_tessera_peers_configmap {
+                kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
+                # first time a tx node is deployed and there is no configmap
+                if [ $? -ne 0 ]; then
+                  echo "No tessera-peers found, creating a new one..."
+                  echo "[{ \"url\": \"http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000\" }]"  > /tmp/tessera-peers
+                  kubectl --namespace {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers
+
+                # update the entries
+                else
+                  echo "Tessera-peers found, updating existing..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
+                  NEEDLE="http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
+                  cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                fi
+              }
+
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  az keyvault secret set --vault-name {{ .Values.azure.keyvaultName }} --name $key --file $fpath --encoding utf-8
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key | jq -r '.value' > $fpath
+                fi
+              }
+
+
+              az login --identity --debug
+
+            {{- if .Values.nodeFlags.generateKeys }}
+
+              echo "Besu nodekey generation ..."
+              /opt/besu/bin/besu public-key export --to=/tmp/public.key
+              # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+              sed 's/^0x//' /tmp/public.key > /tmp/enode
+
+              echo "Creating keys in keyvault for {{ template "besu-node.fullname" . }} ..."
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey /opt/besu/key
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub /tmp/public.key
+              safeWriteSecret {{ template "besu-node.fullname" . }}-enode /tmp/enode
+
+              echo "Besu Completed"
+
+            {{- end }}
+
+
+            {{- if .Values.nodeFlags.privacy }}
+
+            {{- if .Values.node.tessera.password }}
+              echo $'{{.Values.node.tessera.password }}\n{{ .Values.node.tessera.password }}\n' > /tmp/password.txt
+            {{- else }}
+              echo $'\n\n' > /tmp/password.txt
+            {{- end }}
+
+              /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
+              echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
+
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey /tmp/tm.key
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub /tmp/tm.pub
+              echo -ne $(sed -n '1p' /tmp/password.txt )> /tmp/password
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword /tmp/password
+
+              update_tessera_peers_configmap
+              echo "Tessera Completed"
+
+            {{- end }}
+
+              echo "hook completed"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-node.fullname" . }}-keys-pre-delete-hook
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-weight: "0"
+    helm.sh/hook: "pre-delete"
+    helm.sh/hook-delete-policy: "hook-succeeded"
+  labels:
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+    metadata:
+      labels:
+        aadpodidbinding: "{{ .Values.azure.identityName }}"
+        app.kubernetes.io/name: {{ include "besu-node.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+      restartPolicy: "OnFailure"
+      containers:
+        - name: delete-keys
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              function delete_node_from_tessera_peers_configmap {
+                kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
+                # if there is no configmap, do nothing
+                if [ $? -ne 0 ]; then
+                  echo "No tessera-peers found, nothing to do..."
+                # delete the one
+                else
+                  echo "tessera-peers found, deleting {{ template "besu-node.fullname" . }}..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
+                  cat /tmp/tessera-peers.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( .url | contains($NEEDLE) ))' > /tmp/tessera-peers
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                fi
+              }
+
+              delete_node_from_tessera_peers_configmap
+              delete_node_from_enodes_configmap
+
+              echo "Completed"

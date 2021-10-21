@@ -1,0 +1,14 @@
+---
+image:
+  repository: consensys/quorum-k8s-hooks
+  tag: latest
+  pullPolicy: Always
+
+# azure
+provider: azure
+
+# the number of Validators you want
+rawGenesisConfig:
+  blockchain:
+    nodes:
+      count: 4

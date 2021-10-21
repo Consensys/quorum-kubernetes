@@ -1,0 +1,20 @@
+apiVersion: v1
+version: 0.0.1
+appVersion: latest
+name: goquorum-node
+description: Quorum node for a POA network using IBFT for consensys
+keywords:
+  - geth
+  - goquorum
+  - ethereum
+  - hyperledger
+  - enterprise
+  - blockchain
+  - pegasys
+  - consensys
+home: https://consensys.net/quorum/
+sources:
+  - https://github.com/consensys/quorum
+maintainers:
+  - name: Joshua Fernandes
+    email: joshua.fernandes@consensys.net

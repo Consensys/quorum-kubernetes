@@ -1,0 +1,162 @@
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "besu-genesis.name" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "besu-genesis.name" . }}-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["create", "get", "list", "update", "delete" ]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch" ]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "besu-genesis.name" . }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "besu-genesis.name" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "besu-genesis.name" . }}-sa
+    namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-genesis.name" . }}-init
+  labels:
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+    app: {{ template "besu-genesis.name" . }}
+    chart: {{ template "besu-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "besu-genesis.chart" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 3
+  completions: 1
+  template:
+    metadata:
+      labels:
+        aadpodidbinding: "{{ .Values.azure.identityName }}"
+        app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "besu-genesis.name" . }}-sa
+      restartPolicy: "Never"
+      containers:
+        - name: generate-genesis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: raw-config
+              mountPath: /raw-config
+            - name: generated-config
+              mountPath: /generated-config
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              function writeK8sEnodeSecret {
+                key=$1
+                fpath=$2
+                kubectl create secret generic $key --namespace {{ .Release.Namespace }} --from-file=$fpath
+              }
+
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                   az keyvault secret set --vault-name {{ .Values.azure.keyvaultName }} --name $key --file $fpath --encoding utf-8
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key | jq -r '.value' > $fpath
+                fi
+              }
+
+              function safeWriteGenesisConfigmap {
+                kubectl get configmap --namespace {{ .Release.Namespace }} besu-genesis
+                if [ $? -ne 0 ]; then
+                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+                fi
+              }
+
+              az login --identity --debug
+
+              echo "Creating config ..."
+              /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
+              echo "Creating genesis configmap in k8s ..."
+              safeWriteGenesisConfigmap
+
+              echo "Creating validator secrets in k8s ..."
+              i=1
+              for f in /generated-config/keys/*; do
+                if [ -d ${f} ]; then
+                  echo $f
+                  # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+                  sed 's/^0x//' ${f}/key.pub > ${f}/enode
+
+                  echo "Creating keys in keyvault for validator-${i} ..."
+                  safeWriteSecret besu-node-validator-${i}-nodekey ${f}/key.priv
+                  safeWriteSecret besu-node-validator-${i}-nodekeypub ${f}/key.pub
+                  safeWriteSecret besu-node-validator-${i}-enode ${f}/enode
+
+                  i=$((i+1))
+                fi
+              done
+
+              echo "Creating bootnode keys ..."
+              for j in {1..2}
+              do
+                /opt/besu/bin/besu public-key export --to=/tmp/public.key
+                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+                sed 's/^0x//' /tmp/public.key > /tmp/enode
+                echo "Creating keys in keyvault for bootnode ${j} ..."
+                safeWriteSecret besu-node-bootnode-${j}-nodekey /opt/besu/key
+                safeWriteSecret besu-node-bootnode-${j}-nodekeypub /tmp/public.key
+                safeWriteSecret besu-node-bootnode-${j}-enode /tmp/enode
+                writeK8sEnodeSecret besu-node-bootnode-${j}-enode /tmp/enode
+                rm /tmp/public.key /tmp/enode /opt/besu/key
+              done
+
+              echo "Completed ..."
+
+      volumes:
+        - name: raw-config
+          configMap:
+            name: {{ include "besu-genesis.fullname" . }}-raw-json-config
+        - name: generated-config
+          emptyDir: {}
