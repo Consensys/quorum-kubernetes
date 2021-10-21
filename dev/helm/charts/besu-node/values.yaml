@@ -26,7 +26,7 @@ nodeFlags:
 node:
   storage:
     sizeLimit: "10Gi"
-    pvcSizeLimit: "2Gi"
+    pvcSizeLimit: "10Gi"
   besu:
     resources:
       cpuLimit: 0.7
@@ -84,7 +84,6 @@ node:
       pubkeysPath: "/tessera"
       pubkeyFile: "/tessera/tm.pub"
       onchainGroupsEnabled: false
-      precompiledAddress: 9
     permissions:
       enabled: false
       nodes:
@@ -108,7 +107,6 @@ node:
     password: ""
     dataPath: "/data/tessera"
     keysPath: "/keys"
-    url: "http://127.0.0.1:8888"
     port: 9000
     tpport: 9080
     q2tport: 9101

@@ -23,16 +23,27 @@ The current repo layout is:
   │       └── quorum-go             # use GoQuorum as the block chain client
   │           └── ibft
   │               └── ...
-  ├── helm
-  │   ├── dev                       # dev helm charts
-  │   ├── prod                      # prod helm charts - these will use cloud native services where possible eg IAM for identity, keyvault for secrets etc
-  └── static                        # images and other static assets
+  ├── dev                       
+  │   └── helm  
+  │       ├── charts            
+  │       │   ├── ...               # dev helm charts, hidden here for brevity
+  │       └── values            
+  │           ├── ...               # values.yml overrides for various node types
+  ├── prod                      
+  │   └── helm  
+  │       ├── charts            
+  │       │   ├── ...              # prod helm charts - these will use cloud native services where possible eg IAM for identity, keyvault for secrets etc
+  │       └── values            
+  │           ├── ...              # values.yml overrides for various node types
+  └── static                       # images and other static assets
   
 
 
 ```
 
-We recommend starting with the `playground` folder and working through the examples and setups there and then moving to the next stage. The `dev` and `prod` folders are pretty identical in terms of what gets deployed, but differ in that the prod folder natively uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
+We recommend starting with the `playground` folder and working through the example setups there and then moving to the next `dev` stage.
+
+The `dev` and `prod` folders are pretty identical in terms of what gets deployed, but differ in that the prod folder natively uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
 
 ## Concepts:
 
@@ -82,13 +93,13 @@ We encourage the use of RBAC's for access to the private key of each node, ie. o
 #### Monitoring
 As always please ensure you have sufficient monitoring and alerting setup.
 
-Besu publishes metrics to [Prometheus](https://prometheus.io/) and metrics can be configured using the [kubernetes scraper config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config).
+Besu & GoQuorum publish metrics to [Prometheus](https://prometheus.io/) and metrics can be configured using the [kubernetes scraper config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config).
 
-Besu also has a custom Grafana [dashboard](https://grafana.com/grafana/dashboards/10273) to make monitoring of the nodes easier.
+Besu & GoQuorum also have a custom Grafana [dashboards](https://grafana.com/orgs/pegasyseng) to make monitoring of the nodes easier.
 
 For ease of use, the kubectl & helm examples included have both installed and included as part of the setup. Please configure the kubernetes scraper and grafana security to suit your requirements, grafana supports multiple options that can be configured using env vars
 
-We also have [example ingress controller config rules](deprecated/helm/ingress/), should you want to use a setup that makes use of ingress controllers.
+We also have [example ingress controller config rules](./ingress/), should you want to use a setup that makes use of ingress controllers.
 
 #### Logging
 Node logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
@@ -119,27 +130,7 @@ Additionally if you’re using permissioning on your network you will also have 
 
 
 #### Pod Resources:
-The templates in this repository have been set to run locally on Minikube to get the user familiar with the setup. Hence the resources are set to:
-
-```bash
-besu:
-  pvcSizeLimit: "1Gi"
-  pvcStorageClass: "standard"
-  memRequest: "1024Mi"
-  memLimit: "2048Mi"
-  cpuRequest: "100m"
-  cpuLimit: "500m"
-
-orion:
-  pvcSizeLimit: "1Gi"
-  pvcStorageClass: "standard"
-  memRequest: "512Mi"
-  memLimit: "1024Mi"
-  cpuRequest: "100m"
-  cpuLimit: "500m"
-```
-
-When designing your setup to run in `staging` or `production` environments, please ensure you **grant at least 4GB of memory to Besu pods and 2GB of memory to Tessera pods.** Also ensure you **select the appropriate storage class and size for your nodes.**
+The templates in this repository have been set to run locally on Minikube to get the user familiar with the setup. Hence the resources are set low, when designing your setup to run in `staging` or `production` environments, please ensure you **grant at least 4GB of memory to Besu pods and 2GB of memory to Tessera pods.** Also ensure you **select the appropriate storage class and size for your nodes.**
 
 Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
 
@@ -167,8 +158,4 @@ Please note that the documentation and steps listed use *helm3*. The API has bee
 ```bash
 $ helm plugin install https://github.com/databus23/helm-diff --version master
 ```
-
-
-
-
 

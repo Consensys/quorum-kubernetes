@@ -11,11 +11,12 @@ metadata:
     component: grafana
   namespace: {{ .Release.Namespace }}
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     component: grafana
   ports:
     - port: 3000
       targetPort: 3000
+      nodePort: 30030
       protocol: TCP
       name: grafana

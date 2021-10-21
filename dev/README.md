@@ -35,7 +35,7 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 *For Besu:*
 ```bash
 
-cd dev/charts/
+cd dev/helm/
 helm install monitoring ./charts/besu-monitoring --namespace monitoring --create-namespace
 helm install genesis ./charts/besu-genesis --namespace besu --create-namespace --values ./values/genesis-besu.yml 
 
@@ -69,13 +69,10 @@ kubectl apply -f ./ingress/ingress-rules-besu.yml
 ```
 
 *For GoQuorum:*
-
-Change directory to the charts folder ie `/charts/dev` or `/charts/prod`
-```
-cd helm/dev/  
-# Please do not use this monitoring chart in prod, it needs authentication, pending close of https://github.com/ConsenSys/cakeshop/issues/86 
-helm install monitoring ./charts/quorum-monitoring --create-namespace --namespace quorum 
-helm install genesis ./charts/quorum-genesis --create-namespace --namespace quorum --values ./values/genesis-quorum.yml 
+```bash
+cd dev/helm/  
+helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install genesis ./charts/quorum-genesis --namespace quorum --create-namespace --values ./values/genesis-quorum.yml 
 
 helm install validator-1 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
 helm install validator-2 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
@@ -83,7 +80,7 @@ helm install validator-3 ./charts/quorum-node --namespace quorum --values ./valu
 helm install validator-4 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
 
 # spin up a quorum and tessera node pair
-helm install tx-1 ./charts/quorum-node --namespace quorum --values ./values/txnode.yml
+helm install member-1 ./charts/quorum-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -111,8 +108,8 @@ Monitoring (if deployed)
 # For Besu's grafana address: 
 http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
 
-# For GoQuorum's cakeshop address: 
-http://<INGRESS_IP>
+# For GoQuorum's grafana address: 
+http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
 
 ```
 

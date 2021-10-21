@@ -24,32 +24,37 @@ spec:
     app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: json-rpc
-      port: {{ .Values.node.quorumConfig.rpc.port }}
+      port: {{ .Values.node.quorum.rpc.port }}
       targetPort: json-rpc
       protocol: TCP
     - name: ws
-      port: {{ .Values.node.quorumConfig.ws.port }}
+      port: {{ .Values.node.quorum.ws.port }}
       targetPort: ws
       protocol: TCP
     - name: graphql
-      port: {{ .Values.node.quorumConfig.graphql.port }}
+      port: {{ .Values.node.quorum.graphql.port }}
       targetPort: graphql
       protocol: TCP
     - name: rlpx
-      port: {{ .Values.node.quorumConfig.p2p.port }}
+      port: {{ .Values.node.quorum.p2p.port }}
       targetPort: rlpx
       protocol: TCP
     - name: discovery
-      port: {{ .Values.node.quorumConfig.p2p.port }}
+      port: {{ .Values.node.quorum.p2p.port }}
       targetPort: discovery
       protocol: UDP
-    {{- if .Values.node.quorumConfig.tessera.enabled }}      
+
+{{- if .Values.nodeFlags.privacy }}
     - name: tessera
-      port: {{ .Values.node.quorumConfig.tessera.port }}
+      port: {{ .Values.node.tessera.port }}
       targetPort: tessera
       protocol: TCP
     - name: tessera-tp
-      port: {{ .Values.node.quorumConfig.tessera.tpport }}
+      port: {{ .Values.node.tessera.tpport }}
       targetPort: tessera-tp
-      protocol: TCP      
-    {{- end }}   
+      protocol: TCP
+    - name: tessera-q2t
+      port: {{ .Values.node.tessera.q2tport }}
+      targetPort: tessera-q2t
+      protocol: TCP
+{{- end }}

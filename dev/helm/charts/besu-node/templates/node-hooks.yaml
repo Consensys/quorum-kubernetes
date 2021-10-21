@@ -45,6 +45,7 @@ subjects:
   name: {{ include "besu-node.fullname" . }}-hooks-sa
   namespace:  {{ .Release.Namespace }}
 
+
 ---
 apiVersion: batch/v1
 kind: Job
@@ -75,20 +76,20 @@ spec:
             - |
 
               function update_tessera_peers_configmap {
-                /usr/local/bin/kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
+                kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
                 # first time a tx node is deployed and there is no configmap
                 if [ $? -ne 0 ]; then
                   echo "No tessera-peers found, creating a new one..."
                   echo "[{ \"url\": \"http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000\" }]"  > /tmp/tessera-peers
-                  /usr/local/bin/kubectl --namespace {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers
+                  kubectl --namespace {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers
 
                 # update the entries
                 else
                   echo "Tessera-peers found, updating existing..."
-                  echo $(/usr/local/bin/kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
                   NEEDLE="http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
                   cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
-                  /usr/local/bin/kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
                 fi
               }
 
@@ -100,7 +101,7 @@ spec:
               # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
               sed 's/^0x//' ./public${j}.key > enode
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
-              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=./enode
+              kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=./enode
               echo "Besu Completed"
 
             {{- end }}
@@ -116,7 +117,7 @@ spec:
 
               /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
               echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
-              /usr/local/bin/kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tm.key --from-file=tm.pub=/tmp/tm.pub --from-file=password=/tmp/password.txt
+              kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tm.key --from-file=tm.pub=/tmp/tm.pub --from-file=password=/tmp/password.txt
               update_tessera_peers_configmap
               echo "Tessera Completed"
             {{- end }}
@@ -175,10 +176,10 @@ spec:
               apt-get update && apt-get install -y curl
               curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting node secrets in k8s ..."
-              /usr/local/bin/kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
+              kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
 
             {{- if .Values.nodeFlags.privacy }}
-              /usr/local/bin/kubectl delete secret {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
+              kubectl delete secret {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
               delete_node_from_tessera_peers_configmap
             {{- end }}
 

@@ -34,6 +34,8 @@ subjects:
   name: {{ include "quorum-node.fullname" . }}-sa
   namespace:  {{ .Release.Namespace }}
 
+{{- if eq .Values.provider "azure" }}
+
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -50,8 +52,28 @@ allowVolumeExpansion: true
 parameters:
   skuName: Standard_LRS
 
+{{- else }}
+
 ---
-{{- if .Values.node.quorumConfig.storage.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "quorum-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    type: local
+spec:
+  storageClassName: {{ include "quorum-node.fullname" . }}-storage
+  capacity:
+    storage: "{{ .Values.node.storage.sizeLimit }}"
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/{{ include "quorum-node.fullname" . }}"
+
+{{- end }}
+
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -63,8 +85,7 @@ spec:
   storageClassName: {{ include "quorum-node.fullname" . }}-storage
   resources:
     requests:
-      storage: "{{ .Values.node.quorumConfig.storage.pvcSizeLimit }}"
-{{- end }}
+      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
 
 ---
 apiVersion: apps/v1
@@ -109,17 +130,18 @@ spec:
     spec:
       serviceAccountName: {{ include "quorum-node.fullname" . }}-sa
       containers:
+
       {{- if .Values.nodeFlags.privacy }}
       - name: {{ include "quorum-node.fullname" . }}-tessera
         image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        imagePullPolicy: {{ .Values.image.tessera.imagePullPolicy }}
         resources:
           requests:
-            cpu: "{{ .Values.node.resources.cpuRequest }}"
-            memory: "{{ .Values.node.resources.memRequest }}"
+            cpu: "{{ .Values.node.tessera.resources.cpuRequest }}"
+            memory: "{{ .Values.node.tessera.resources.memRequest }}"
           limits:
-            cpu: "{{ .Values.node.resources.cpuLimit }}"
-            memory: "{{ .Values.node.resources.memLimit }}"
+            cpu: "{{ .Values.node.tessera.resources.cpuLimit }}"
+            memory: "{{ .Values.node.tessera.resources.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -133,24 +155,22 @@ spec:
             value: "-09"
 
         volumeMounts:
-          - name: tessera-secrets
-            mountPath: {{ .Values.node.quorumConfig.keysPath }}
+          - name: tessera-keys
+            mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
           - name: data
-            mountPath: {{ .Values.node.quorumConfig.dataDir }}
-          - name: ipc-volume
-            mountPath: /ipc/
+            mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
             mountPath: /config/tessera-peers
         ports:
           - name: tessera
-            containerPort: {{ .Values.node.quorumConfig.tessera.port }}
+            containerPort: {{ .Values.node.tessera.port }}
             protocol: TCP
           - name: tessera-tp
-            containerPort: {{ .Values.node.quorumConfig.tessera.tpport }}
+            containerPort: {{ .Values.node.tessera.tpport }}
             protocol: TCP
           - name: tessera-q2t
-            containerPort: {{ .Values.node.quorumConfig.tessera.q2tport }}
+            containerPort: {{ .Values.node.tessera.q2tport }}
             protocol: TCP
         command:
           - /bin/sh
@@ -158,30 +178,29 @@ spec:
         args:
           - |
             exec
-            mkdir -p /ipc/tm/;
-            mkdir {{ .Values.node.quorumConfig.dataDir }}/tm/;
-            cp {{ .Values.node.quorumConfig.keysPath }}/tm.* {{ .Values.node.quorumConfig.dataDir }}/tm/ ;
 
-                cat <<EOF > {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+            cp {{ .Values.node.tessera.keysPath }}/tm.* {{ .Values.node.tessera.dataPath }}/ ;
+
+                cat <<EOF > {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
                 {
                   "useWhiteList": false,
                   "jdbc": {
                     "username": "sa",
                     "password": "",
-                    "url": "jdbc:h2:{{ .Values.node.quorumConfig.dataDir }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
+                    "url": "jdbc:h2:{{ .Values.node.tessera.dataPath }}/tm/db;MODE=Oracle;TRACE_LEVEL_SYSTEM_OUT=0",
                     "autoCreateTables": true
                   },
                   "serverConfigs":[
                   {
                     "app":"ThirdParty",
                     "enabled": true,
-                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.quorumConfig.tessera.tpport }}",
+                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.tpport }}",
                     "communicationType" : "REST"
                   },
                   {
                     "app":"Q2T",
                     "enabled": true,
-                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.quorumConfig.tessera.q2tport }}",
+                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.q2tport }}",
                     "sslConfig": {
                       "tls": "OFF"
                     },
@@ -190,7 +209,7 @@ spec:
                   {
                     "app":"P2P",
                     "enabled": true,
-                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.quorumConfig.tessera.port }}",
+                    "serverAddress": "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.port }}",
                     "sslConfig": {
                       "tls": "OFF"
                     },
@@ -202,8 +221,8 @@ spec:
                     "passwords": [],
                     "keyData": [
                       {
-                        "config": $$(cat {{ .Values.node.quorumConfig.dataDir }}/tm/tm.key),
-                        "publicKey": "$$(cat {{ .Values.node.quorumConfig.dataDir }}/tm/tm.pub)"
+                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm.key),
+                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm.pub)"
                       }
                     ]
                   },
@@ -211,21 +230,21 @@ spec:
                 }
             EOF
 
-                cat {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
-                /tessera/bin/tessera -configfile {{ .Values.node.quorumConfig.dataDir }}/tm/tessera-config-09.json
+                cat {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
+                /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
 
       {{- end }}
 
       - name: {{ include "quorum-node.fullname" . }}-quorum
         image: {{ .Values.image.quorum.repository }}:{{ .Values.image.quorum.tag }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        imagePullPolicy: {{ .Values.image.quorum.imagePullPolicy }}
         resources:
           requests:
-            cpu: "{{ .Values.node.resources.cpuRequest }}"
-            memory: "{{ .Values.node.resources.memRequest }}"
+            cpu: "{{ .Values.node.quorum.resources.cpuRequest }}"
+            memory: "{{ .Values.node.quorum.resources.memRequest }}"
           limits:
-            cpu: "{{ .Values.node.resources.cpuLimit }}"
-            memory: "{{ .Values.node.resources.memLimit }}"
+            cpu: "{{ .Values.node.quorum.resources.cpuLimit }}"
+            memory: "{{ .Values.node.quorum.resources.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -236,45 +255,48 @@ spec:
               fieldRef:
                 fieldPath: metadata.name
           - name: QUORUM_NETWORK_ID
-            value: "{{ .Values.node.quorumConfig.networkId }}"
+            value: "{{ .Values.node.quorum.networkId }}"
           - name: QUORUM_CONSENSUS
             value: istanbul
-          {{- if .Values.nodeFlags.privacy }}
+        {{- if .Values.nodeFlags.privacy }}
           - name: QUORUM_PTM_URL
-            value: "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.quorumConfig.tessera.q2tport }}"
-          {{ else }}
+            value: "http://{{ include "quorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.q2tport }}"
+        {{ else }}
           - name: PRIVATE_CONFIG
             value: "ignore"
-          {{- end }}
+        {{- end }}
         volumeMounts:
-          - name: secrets
-            mountPath: {{ .Values.node.quorumConfig.keysPath }}
+        {{- if .Values.nodeFlags.privacy }}
+          - name: tessera-keys
+            mountPath: {{ .Values.node.quorum.privacy.pubkeysPath }}
             readOnly: true
-          - name: genesis-file
-            mountPath: /config/quorum/
+        {{- end}}
+          - name: quorum-keys
+            mountPath: {{ .Values.node.quorum.keysPath }}
+            readOnly: true
+          - name: genesis
+            mountPath: /etc/genesis
             readOnly: true
           - name: static-nodes
-            mountPath: /config/static/
+            mountPath: /config/static
             readOnly: true
           - name: data
-            mountPath: {{ .Values.node.quorumConfig.dataDir }}
-          - name: ipc-volume
-            mountPath: /ipc/
+            mountPath: {{ .Values.node.quorum.dataPath }}
         ports:
           - name: json-rpc
-            containerPort: {{ .Values.node.quorumConfig.rpc.port }}
+            containerPort: {{ .Values.node.quorum.rpc.port }}
             protocol: TCP
           - name: ws
-            containerPort: {{ .Values.node.quorumConfig.ws.port }}
+            containerPort: {{ .Values.node.quorum.ws.port }}
             protocol: TCP
           - name: graphql
-            containerPort: {{ .Values.node.quorumConfig.graphql.port }}
+            containerPort: {{ .Values.node.quorum.graphql.port }}
             protocol: TCP
           - name: rlpx
-            containerPort: {{ .Values.node.quorumConfig.p2p.port }}
+            containerPort: {{ .Values.node.quorum.p2p.port }}
             protocol: TCP
           - name: discovery
-            containerPort: {{ .Values.node.quorumConfig.p2p.port }}
+            containerPort: {{ .Values.node.quorum.p2p.port }}
             protocol: UDP
         command:
           - /bin/sh
@@ -282,43 +304,42 @@ spec:
         args:
           - |
             exec
-            mkdir -p /ipc/geth/
+
             apk add curl
           {{- if .Values.nodeFlags.privacy }}
-            until $(curl --output /dev/null --silent --head --fail http://127.0.0.1:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
+            until $(curl --output /dev/null --silent --head --fail http://localhost:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
             echo 'transaction manager is up';
           {{- end }}
-            geth --datadir={{ .Values.node.quorumConfig.dataDir }}/dd init {{ .Values.node.quorumConfig.genesisPath }}
-            cp {{ .Values.node.quorumConfig.keysPath }}/nodekey {{ .Values.node.quorumConfig.dataDir }}/dd/geth/nodekey
-            cp /config/static/static-nodes.json {{ .Values.node.quorumConfig.dataDir }}/dd/geth/static-nodes.json
+
+            geth --datadir={{ .Values.node.quorum.dataPath }} init {{ .Values.node.quorum.genesisFilePath }}
+            cp {{ .Values.node.quorum.keysPath }}/nodekey {{ .Values.node.quorum.dataPath }}/geth/nodekey
+            cp /config/static/static-nodes.json {{ .Values.node.quorum.dataPath }}/geth/static-nodes.json
 
             geth \
-            --datadir {{ .Values.node.quorumConfig.dataDir }}/dd \
-            --nodiscover \
+            --datadir {{ .Values.node.quorum.dataPath }} \
+            --nodiscover --ipcdisable \
             --nat extip:$POD_IP \
-            --verbosity {{ .Values.node.quorumConfig.log.verbosity }} \
-            --istanbul.blockperiod {{ .Values.node.quorumConfig.miner.blockPeriod }} --mine --minerthreads {{ .Values.node.quorumConfig.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
+            --verbosity {{ .Values.node.quorum.log.verbosity }} \
+            --istanbul.blockperiod {{ .Values.node.quorum.miner.blockPeriod }} --mine --minerthreads {{ .Values.node.quorum.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
             --syncmode full --nousb \
-            --ipcpath /ipc/geth/geth.ipc \
-            --metrics --pprof --pprofaddr {{ .Values.node.quorumConfig.metrics.pprofaddr | quote }} --pprofport {{ .Values.node.quorumConfig.metrics.pprofport }} \
-            --networkid {{ .Values.node.quorumConfig.networkId }} \
-            --port {{ .Values.node.quorumConfig.p2p.port }} \
-          {{- if .Values.node.quorumConfig.rpc.enabled }}
-            --rpc --rpcaddr {{ .Values.node.quorumConfig.rpc.addr }} --rpcport {{ .Values.node.quorumConfig.rpc.port }} --rpccorsdomain {{ .Values.node.quorumConfig.rpc.corsDomain | quote }} --rpcvhosts {{ .Values.node.quorumConfig.rpc.vHosts | quote }} --rpcapi {{ .Values.node.quorumConfig.rpc.api | quote }} \
+            --metrics --pprof --pprofaddr {{ .Values.node.quorum.metrics.pprofaddr | quote }} --pprofport {{ .Values.node.quorum.metrics.pprofport }} \
+            --networkid {{ .Values.node.quorum.networkId }} \
+            --port {{ .Values.node.quorum.p2p.port }} \
+          {{- if .Values.node.quorum.rpc.enabled }}
+            --rpc --rpcaddr {{ .Values.node.quorum.rpc.addr }} --rpcport {{ .Values.node.quorum.rpc.port }} --rpccorsdomain {{ .Values.node.quorum.rpc.corsDomain | quote }} --rpcvhosts {{ .Values.node.quorum.rpc.vHosts | quote }} --rpcapi {{ .Values.node.quorum.rpc.api | quote }} \
           {{- end }}
-          {{- if .Values.node.quorumConfig.ws.enabled }}
-            --ws --wsaddr {{ .Values.node.quorumConfig.ws.addr }} --wsport {{ .Values.node.quorumConfig.ws.port }} --wsorigins {{ .Values.node.quorumConfig.ws.origins | quote }} --wsapi {{ .Values.node.quorumConfig.ws.api | quote }} \
+          {{- if .Values.node.quorum.ws.enabled }}
+            --ws --wsaddr {{ .Values.node.quorum.ws.addr }} --wsport {{ .Values.node.quorum.ws.port }} --wsorigins {{ .Values.node.quorum.ws.origins | quote }} --wsapi {{ .Values.node.quorum.ws.api | quote }} \
           {{- end }}
-          {{- if hasKey .Values.node.quorumConfig.account "unlock" }}
-             --unlock {{ .Values.node.quorumConfig.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.quorumConfig.account.password }} \
+          {{- if hasKey .Values.node.quorum.account "unlock" }}
+             --unlock {{ .Values.node.quorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.quorum.account.password }} \
           {{- end }}
-
 
       volumes:
-      - name: secrets
+      - name: quorum-keys
         secret:
           secretName: {{ include "quorum-node.fullname" . }}-keys
-      - name: genesis-file
+      - name: genesis
         configMap:
           name: quorum-genesis
           items:
@@ -330,23 +351,18 @@ spec:
           items:
             - key: static-nodes.json
               path: static-nodes.json
-      - name: ipc-volume
-        emptyDir: {}
       - name: data
-        {{- if .Values.node.quorumConfig.storage.enabled }}
         persistentVolumeClaim:
           claimName: {{ include "quorum-node.fullname" . }}-pvc
-        {{- else }}
-        emptyDir: {}
-        {{- end }}
       {{- if .Values.nodeFlags.privacy }}
+      - name: tessera-keys
+        secret:
+          secretName: {{ include "quorum-node.fullname" . }}-tessera-keys
       - name: tessera-peers
         configMap:
           name: tessera-peers
           items:
             - key: tesseraPeers
               path: tesseraPeers
-      - name: tessera-secrets
-        secret:
-          secretName: {{ include "quorum-node.fullname" . }}-tessera-keys
       {{- end }}
+
