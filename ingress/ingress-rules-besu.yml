@@ -15,14 +15,14 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: besu-node-tx-1
+                name: besu-node-member-1
                 port:
                   number: 8545
           - path: /ws
             pathType: Prefix
             backend:
               service:
-                name: besu-node-tx-1
+                name: besu-node-member-1
                 port:
                   number: 8546
           - path: /

@@ -17,7 +17,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: quorum-node-validator-4
+            name: quorum-node-member-1
             port:
               number: 8545
       - path: /

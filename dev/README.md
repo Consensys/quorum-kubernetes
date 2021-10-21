@@ -1,3 +1,4 @@
+
 # Dev
 
 The dev area has basic examples you can use to setup your network with. They use `helm` exclusively and there are various charts each with specfic functionality.
@@ -65,7 +66,7 @@ helm install besu-ingress ingress-nginx/ingress-nginx \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
 
-kubectl apply -f ./ingress/ingress-rules-besu.yml
+kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```
 
 *For GoQuorum:*
@@ -92,12 +93,12 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install quorum-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
-    --set controller.replicaCount=2 \
+    --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
 
-kubectl apply -f ./ingress/ingress-rules-quorum.yml
+kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 ```
 
 

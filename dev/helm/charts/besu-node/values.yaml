@@ -25,8 +25,8 @@ nodeFlags:
 
 node:
   storage:
-    sizeLimit: "10Gi"
-    pvcSizeLimit: "10Gi"
+    sizeLimit: "30Gi"
+    pvcSizeLimit: "30Gi"
   besu:
     resources:
       cpuLimit: 0.7

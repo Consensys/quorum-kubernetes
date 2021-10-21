@@ -31,6 +31,11 @@ The current repo layout is:
 ```bash
   ├── docker
   │   └── istanbul-tools            # helper docker images used for various tasks
+  ├── ingress                       # ingress rules, hidden here for brevity
+  │   ├── ...                       
+  ├── azure                         # azure specific artifacts
+  │   ├── arm                       # azure ARM templates to deploy resources ie cluster, keyvault, identity etc
+  │   └── scripts                   # azure scripts to install CSI drivers on the AKS cluster and the like
   ├── playground                    # playground for users to get familiar with concepts and how to run and tweak things - START HERE 
   │   └── kubectl
   │       ├── quorum-besu           # use Hyperledger Besu as the block chain client
@@ -66,6 +71,11 @@ We recommend starting with the `playground` folder and working through the examp
 The `dev` and `prod` folders are pretty identical in terms of what gets deployed, but differ in that the prod folder natively uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
 
 ## Concepts:
+
+#### Providers
+If you are deploying to Azure, please refer to the ARM templates and deployment [documentation](./azure/README.md)
+
+If you are deploying locally you need a Kubernetes cluster like [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
 
 #### Namespaces:
 Currently we do not deploy anything in the 'default' namespace. Anything related to Besu gets spun up in a 'besu' namespace, and 'quorum' for GoQuorum; with the monitoring pieces get spun up in a 'monitoring' namespace.
