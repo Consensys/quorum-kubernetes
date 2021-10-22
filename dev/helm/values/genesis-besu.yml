@@ -25,4 +25,4 @@ rawGenesisConfig:
       generate: true
       count: 4
 
-
+provider: local

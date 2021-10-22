@@ -3,12 +3,12 @@
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in development or production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 ## Background
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes. 
+The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template]('./arm/azuredeploy.json'). We also make use some Azure native services and features (tha are are provisioned via a [script]('./scripts/bootstrap.sh')) after the cluster is created. These incluide:
-- [AAD pod identities](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity). 
+- [AAD pod identities](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity).
 - [Secrets Store CSI drivers](https://docs.microsoft.com/en-us/azure/key-vault/general/key-vault-integrate-kubernetes)
-- Data is stored using dynamic StorageClasses backed by Azure Files. Please note the [Volume Claims](https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv) are fixed sizes and can be updated as you grow via a helm update, and will not need reprovisioning of the underlying storage class. 
+- Data is stored using dynamic StorageClasses backed by Azure Files. Please note the [Volume Claims](https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv) are fixed sizes and can be updated as you grow via a helm update, and will not need reprovisioning of the underlying storage class.
 - [CNI](https://docs.microsoft.com/en-us/azure/aks/configure-azure-cni#:~:text=With%20Azure%20Container%20Networking%20Interface,of%20pods%20that%20it%20supports.) networking mode for AKS. By default, AKS clusters use **kubenet**, and a virtual network and subnet are created for you. With kubenet, nodes get an IP address from a virtual network subnet. Network address translation (NAT) is then configured on the nodes, and pods receive an IP address "hidden" behind the node IP. This approach reduces the number of IP addresses that you need to reserve in your network space for pods to use, however places constraints on what can connect to the nodes from outside the cluster (eg on prem nodes)
 
 With Azure Container Networking Interface (CNI), every pod gets an IP address from the subnet and can be accessed directly. These IP addresses must be unique across your network space, and must be planned in advance. Each node has a configuration parameter for the maximum number of pods that it supports. The equivalent number of IP addresses per node are then reserved up front for that node. This approach requires more planning, and can leads to IP address exhaustion as your application demands grow, however makes it easier for external nodes to connect to your cluster.
@@ -44,12 +44,12 @@ az feature list --namespace Microsoft.ContainerService -o table
 
 Then install the aks-preview Azure CLI
 ```bash
-az extension add --name aks-preview 
-az extension update --name aks-preview 
+az extension add --name aks-preview
+az extension update --name aks-preview
 ```
 
-Create a resource group if you haven't got one ready for use. 
-```bash 
+Create a resource group if you haven't got one ready for use.
+```bash
 az group create --name ExampleGroup --location "East US"
 ```
 
@@ -70,7 +70,7 @@ az deployment create \
   --name blockchain-aks \
   --location eastus \
   --template-file ./arm/azuredeploy.json \
-  --parameters env=dev location=eastus 
+  --parameters env=dev location=eastus
 ```
 
 2. Provision Drivers
@@ -86,10 +86,10 @@ Use `besu` or `quorum` for AKS_NAMESPACE depending on which blockchain client yo
 3. Deploy the charts as per the `dev` or `prod` folder readme files
 
 ## Customizing for production
-Once you are familiar with the base setup using the dev charts, please adjust the configuration ie num of nodes, topology etc to suit your requirements. 
+Once you are familiar with the base setup using the dev charts, please adjust the configuration ie num of nodes, topology etc to suit your requirements.
 
 Some things are already setup and mereley need your config eg:
-- Alerting has been setup via an Action group but requires either an email address or slack webhook to send the alerts to. There are also basic alerts created for you which will utilize the action group. The list is not exhaustive and you should add alerts based on log queries in Azure Monitor to suit your requirements. Please refer to the [Azure Docs](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups-create-resource-manager-template) for more information 
+- Alerting has been setup via an Action group but requires either an email address or slack webhook to send the alerts to. There are also basic alerts created for you which will utilize the action group. The list is not exhaustive and you should add alerts based on log queries in Azure Monitor to suit your requirements. Please refer to the [Azure Docs](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups-create-resource-manager-template) for more information
 
 - Monitoring via Prometheus and Grafana with the Besu and GoQuorum dashboards is enabled, but for production use please configure Grafana with your choice of auth mechanism eg OAuth.
 
@@ -98,5 +98,3 @@ Some things are already setup and mereley need your config eg:
 - In the production setup, we do **not** overwrite or delete node keys or the like from KeyVault and the charts are designed to be fail-safe ie if you accidentally delete the deployment and rerun it you will have you existing keys to match any permissions setup that you have. You will need to manually delete anything in vault.
 
 - To extend your nodes and allow other nodes (in a different cluster or outside Azure), you will need to peer your VNet with the other one and ensure that the CIDR blocks don't conflict. Once done the external nodes should be able to communicate with your nodes in AKS
-
- 

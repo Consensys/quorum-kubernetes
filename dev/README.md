@@ -5,7 +5,7 @@ The dev area has basic examples you can use to setup your network with. They use
 
 The dev charts have:
 - Dynamic key & account generation
-- Agnostic of env - can be used locally and on azure. Edit the `provider: local` value in the values.yml
+- Agnostic of env - can be used locally and on azure. Edit the `provider: local` value in the [values overrides](./values)
 - Keys are stored as opaque secrets and not in keyvault if using Azure.
 - Use Nodeports to expose services if running
 
@@ -37,19 +37,19 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/besu-monitoring --namespace monitoring --create-namespace
-helm install genesis ./charts/besu-genesis --namespace besu --create-namespace --values ./values/genesis-besu.yml 
+helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
-helm install bootnode-1 ./charts/besu-node --namespace besu --values ./values/bootnode.yml
-helm install bootnode-2 ./charts/besu-node --namespace besu --values ./values/bootnode.yml
+helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
+helm install bootnode-2 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
 
-helm install validator-1 ./charts/besu-node --namespace besu --values ./values/validator.yml
-helm install validator-2 ./charts/besu-node --namespace besu --values ./values/validator.yml
-helm install validator-3 ./charts/besu-node --namespace besu --values ./values/validator.yml
-helm install validator-4 ./charts/besu-node --namespace besu --values ./values/validator.yml
+helm install validator-1 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-2 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-3 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
 # spin up a besu and orion node pair
-helm install member-1 ./charts/besu-node --namespace besu --values ./values/txnode.yml
+helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -73,15 +73,15 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```bash
 cd dev/helm/  
 helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
-helm install genesis ./charts/quorum-genesis --namespace quorum --create-namespace --values ./values/genesis-quorum.yml 
+helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
-helm install validator-1 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
-helm install validator-2 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
-helm install validator-3 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
-helm install validator-4 ./charts/quorum-node --namespace quorum --values ./values/validator.yml
+helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
+helm install validator-2 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
+helm install validator-3 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
+helm install validator-4 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
 
 # spin up a quorum and tessera node pair
-helm install member-1 ./charts/quorum-node --namespace quorum --values ./values/txnode.yml
+helm install member-1 ./charts/goquorum-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -106,10 +106,10 @@ kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 
 Monitoring (if deployed)
 ```bash
-# For Besu's grafana address: 
+# For Besu's grafana address:
 http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
 
-# For GoQuorum's grafana address: 
+# For GoQuorum's grafana address:
 http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
 
 ```
@@ -130,7 +130,7 @@ curl -v -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","me
 
 # HTTP GRAPHQL API:
 curl -X POST -H "Content-Type: application/json" --data '{ "query": "{syncing{startingBlock currentBlock highestBlock}}"}' http://<INGRESS_IP>/graphql/
-# which should return 
+# which should return
 {
   "data" : {
     "syncing" : null

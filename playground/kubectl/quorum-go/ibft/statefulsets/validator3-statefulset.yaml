@@ -179,7 +179,7 @@ spec:
             secretName: quorum-validator3-accountkey
         - name: genesis-file
           configMap:
-            name: quorum-genesis-configmap
+            name: goquorum-genesis-configmap
             items:
               - key: genesis.json
                 path: genesis.json                

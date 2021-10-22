@@ -1,0 +1,177 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "goquorum-genesis.name" . }}-sa
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "goquorum-genesis.name" . }}-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
+    helm.sh/chart: {{ include "goquorum-genesis.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["create", "get", "list", "update", "delete" ]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch" ]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "goquorum-genesis.name" . }}-rb
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "goquorum-genesis.name" . }}-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "goquorum-genesis.name" . }}-sa
+    namespace: {{ .Release.Namespace }}
+
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "goquorum-genesis.name" . }}-init
+  labels:
+    app: {{ template "goquorum-genesis.name" . }}
+    chart: {{ template "goquorum-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "goquorum-genesis.chart" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 3
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
+      restartPolicy: "Never"
+      containers:
+        - name: generate-genesis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              mkdir /generated-config/ && cd /generated-config/
+              echo "Creating config ..."
+              /opt/istanbul-tools/bin/istanbul setup --num {{ .Values.rawGenesisConfig.blockchain.nodes.count }} --nodes --quorum --save --verbose
+              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=/generated-config/genesis.json
+
+              # create the static-nodes with proper dns names for the quorum nodes  
+              echo "[" > /generated-config/static-nodes.json
+
+              # 0 index so setting this to the num of validators
+              echo "Creating validator keys ..."
+              for f in `seq 0 $(( {{ .Values.rawGenesisConfig.blockchain.nodes.count  }} -1 ))`; do 
+                c=$(($f + 1));
+                /opt/istanbul-tools/bin/bootnode -nodekey /generated-config/$f/nodekey -writeaddress > /generated-config/$f/nodekey.pub
+                echo -ne $(cat /generated-config/$f/nodekey.pub) > /generated-config/$f/enode
+                kubectl create secret generic goquorum-node-validator-$c-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=/generated-config/$f/nodekey --from-file=nodekey.pub=/generated-config/$f/nodekey.pub --from-file=enode=/generated-config/$f/enode 
+                
+                # add to the static-nodes
+                pubkey=$(cat /generated-config/$f/nodekey.pub )
+                echo ",\"enode://$pubkey@goquorum-node-validator-$c-0.goquorum-node-validator-$c.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+              done
+
+              echo "]" >> /generated-config/static-nodes.json
+              # remove the extra comma to make it valid json
+              sed -i '0,/,/s///' /generated-config/static-nodes.json
+              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes  --from-file=static-nodes.json=/generated-config/static-nodes.json
+
+              echo "Completed"
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "goquorum-genesis.name" . }}-cleanup
+  labels:
+    app: {{ template "goquorum-genesis.name" . }}
+    chart: {{ template "goquorum-genesis.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "goquorum-genesis.chart" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook-weight: "0"
+    helm.sh/hook: "pre-delete"
+    helm.sh/hook-delete-policy: "hook-succeeded"
+spec:
+  backoffLimit: 3
+  completions: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
+      restartPolicy: "Never"
+      containers:
+        - name: delete-genesis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          securityContext:
+            runAsUser: 0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              echo "Deleting genesis configmap in k8s ..."
+              kubectl delete configmap --namespace {{ .Release.Namespace }} goquorum-genesis
+
+              echo "Deleting node-enodes configmap in k8s ..."
+              kubectl delete configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes
+
+              echo "Deleting validator secrets in k8s ..."
+              for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
+                echo $f
+                kubectl delete secret goquorum-node-validator-${f}-keys --namespace {{ .Release.Namespace }}
+              done
+
+              echo "Deleting bootnode secrets in k8s ..."
+              for j in {1..2}
+              do
+                ./kubectl delete secret goquorum-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
+              done
+
+              echo "Completed ..."
+
+
+
