@@ -125,7 +125,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9545"
+        prometheus.io/port: {{ .Values.node.quorum.metrics.pprofport | quote}}
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
