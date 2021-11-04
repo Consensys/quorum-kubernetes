@@ -127,7 +127,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "9545"
+        prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
