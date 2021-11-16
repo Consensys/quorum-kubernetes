@@ -1,0 +1,67 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: cluster-19
+  region: ap-southeast-2
+  version: "1.21"
+
+vpc:
+  id: vpc-
+  cidr: "10.0.0.0/16"
+  subnets:
+    public:
+      public-a:
+        id: subnet-
+      public-b:
+        id: subnet-
+      public-c:
+        id: subnet-
+    private:
+      private-a:
+        id: subnet-
+      private-b:
+        id: subnet-
+      private-c:
+        id: subnet-
+
+managedNodeGroups:
+  - name: ng-1
+    instanceType: t3.xlarge
+    desiredCapacity: 6
+    privateNetworking: true
+    labels: { role: workers }
+    subnets:
+      - private-a
+      - private-b
+      - private-c
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+    logRetentionInDays: 60
+
+secretsEncryption:
+  keyARN: "arn:aws:kms:ap-southeast-2:..."
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: s3-reader
+        namespace: quorum
+        labels: {aws-usage: "application"}
+      attachPolicyARNs:
+        - "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+
+addons:
+  - name: vpc-cni
+    version: latest
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+    serviceAccountRoleARN: arn:aws:iam::aws:policy/AmazonEKSCNIAccess
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
