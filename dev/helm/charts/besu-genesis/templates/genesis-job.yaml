@@ -94,6 +94,9 @@ spec:
               echo "Creating genesis configmap in k8s ..."
               ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
 
+              # create the static-nodes with proper dns names for the quorum nodes
+              echo "[" > /generated-config/static-nodes.json
+
               echo "Creating validator secrets in k8s ..."
               i=1
               for f in /generated-config/keys/*; do
@@ -102,6 +105,11 @@ spec:
                   # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
                   sed 's/^0x//' ${f}/key.pub > ${f}/enode
                   ./kubectl create secret generic besu-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode=${f}/enode
+
+                  # add to the static-nodes
+                  pubkey=$(cat ${f}/enode )
+                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
                   i=$((i+1))
                 fi
               done
@@ -114,8 +122,18 @@ spec:
                 sed 's/^0x//' ./public${j}.key > enode${j}
                 echo "Creating bootnode ${j} secrets in k8s ..."
                 ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode=./enode${j}
+
+                # add to the static-nodes
+                pubkey=$(cat ./enode${j} )
+                echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.goquorum-node-validator-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
                 rm ./public${j}.key ./enode${j}.key /opt/besu/key
               done
+
+              echo "]" >> /generated-config/static-nodes.json
+              # remove the extra comma to make it valid json
+              sed -i '0,/,/s///' /generated-config/static-nodes.json
+              ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-enodes  --from-file=static-nodes.json=/generated-config/static-nodes.json
 
               echo "Completed ..."
       volumes:
@@ -182,6 +200,10 @@ spec:
               do
                 ./kubectl delete secret besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
               done
+
+              echo "Deleting node-enodes configmap in k8s ..."
+              ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
+
               echo "Completed ..."
 
 

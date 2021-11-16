@@ -1,3 +1,5 @@
+
+{{- if eq .Values.provider "azure" }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -5,6 +7,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
 
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -32,6 +35,13 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
+{{- if eq .Values.provider "azure" }}
+  name: {{ include "besu-node.fullname" . }}-sa
+{{- else }}
+  name: {{ .Values.aws.serviceAccountName }}
+{{- end }}
+
+{{- if eq .Values.provider "azure" }}
 
 ---
 apiVersion: storage.k8s.io/v1
@@ -51,6 +61,22 @@ mountOptions:
 parameters:
   skuName: Standard_LRS
 
+{{- else if eq .Values.provider "aws" }}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  type: gp2
+  fsType: ext4
+
+{{- end }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -72,7 +98,9 @@ kind: StatefulSet
 metadata:
   name: {{ template "besu-node.fullname" . }}
   labels:
+{{- if eq .Values.provider "azure" }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     app: {{ template "besu-node.fullname" . }}
     chart: {{ template "besu-node.chart" . }}
     release: {{ .Release.Name }}
@@ -98,7 +126,9 @@ spec:
   template:
     metadata:
       labels:
+{{- if eq .Values.provider "azure" }}        
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
         app: {{ template "besu-node.fullname" . }}
         release: {{ .Release.Name }}
         component: {{ .Release.Name }}
@@ -109,7 +139,11 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/metrics"
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end }}
       initContainers:
 
 {{- if not .Values.nodeFlags.bootnode }}
@@ -119,6 +153,19 @@ spec:
           - /bin/sh
           - -c
           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
+{{- end }}
+
+{{- if eq .Values.provider "aws" }}
+      # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
+      - name: volume-permission-besu
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /data"]
+        volumeMounts:
+          - name: data
+            mountPath: /data
+        securityContext:
+          runAsUser: 0
+
 {{- end}}
 
       containers:
@@ -146,7 +193,7 @@ spec:
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
         volumeMounts:
-          - name: akv-secrets-store
+          - name: secrets-store
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
           - name: data
@@ -257,12 +304,14 @@ spec:
                 name: besu-node-bootnode-2-enode
                 key: enode
         volumeMounts:
-          - name: akv-secrets-store
+          - name: secrets-store
             mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
+          - name: static-nodes
+            mountPath: /config/static
           - name: besu-config
             mountPath: /etc/besu
             readOnly: true
@@ -309,18 +358,24 @@ spec:
           periodSeconds: 60
 
       volumes:
-      - name: akv-secrets-store
+      - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
-            secretProviderClass: {{ include "besu-node.fullname" . }}-azure-secret-provider
+            secretProviderClass: {{ include "besu-node.fullname" . }}-secret-provider
       - name: genesis
         configMap:
           name: besu-genesis
           items:
             - key: genesis.json
               path: genesis.json
+      - name: static-nodes
+        configMap:
+          name: besu-node-enodes
+          items:
+            - key: static-nodes.json
+              path: static-nodes.json
       - name: besu-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-besu-config

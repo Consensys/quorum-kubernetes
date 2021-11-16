@@ -37,6 +37,7 @@ data:
     # P2P network
     p2p-enabled={{ .Values.node.besu.p2p.enabled }}
     discovery-enabled={{ .Values.node.besu.p2p.discovery }}
+    static-nodes-file={{ .Values.node.besu.p2p.staticNodes | quote }}
     p2p-host={{ .Values.node.besu.p2p.host | quote }}
     p2p-port={{ .Values.node.besu.p2p.port }}
     max-peers={{ .Values.node.besu.p2p.maxPeers }}
@@ -104,5 +105,3 @@ data:
     metrics-push-interval={{ .Values.node.besu.metricsPush.interval }}
     metrics-push-prometheus-job={{ .Values.node.besu.metricsPush.prometheusJob | quote }}
     {{ end }}
-
-

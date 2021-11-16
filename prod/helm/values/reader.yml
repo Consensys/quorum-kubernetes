@@ -5,7 +5,8 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: true
 
-provider: azure
+provider: aws
+
 azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity
@@ -14,3 +15,7 @@ azure:
   keyvaultName: azure-keyvault
   # the tenant ID of the key vault
   tenantId: azure-tenantId
+
+aws:
+  serviceAccountName: quorum-node-secrets-sa
+  region: ap-southeast-2

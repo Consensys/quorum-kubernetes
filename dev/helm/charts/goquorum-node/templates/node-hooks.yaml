@@ -82,7 +82,7 @@ spec:
               echo "updating goquorum-node-enodes..."
               pubkey=$(cat /tmp/nodekey.pub )
               echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
-              NEEDLE="enode://$pubkey@.{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
+              NEEDLE="enode://$pubkey@{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
               cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
               kubectl -n {{ .Release.Namespace }} create configmap goquorum-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
             }
@@ -166,8 +166,6 @@ spec:
 
               echo "{{ template "goquorum-node.fullname" . }} Pre Delete hook ..."
 
-            {{- if .Values.nodeFlags.removeKeysOnDeletion }}     
-
               function delete_node_from_tessera_peers_configmap {
                 kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
                 # if there is no configmap, do nothing
@@ -196,13 +194,15 @@ spec:
                 fi
               }
 
+              delete_node_from_enodes_configmap
+              delete_node_from_tessera_peers_configmap
+
+            {{- if .Values.nodeFlags.removeKeysOnDeletion }}
               echo "Deleting node secrets in k8s ..."
               kubectl delete secret {{ template "goquorum-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
-              delete_node_from_enodes_configmap
 
             {{- if .Values.nodeFlags.privacy }}
               kubectl delete secret {{ template "goquorum-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
-              delete_node_from_tessera_peers_configmap
             {{- end }}
 
             {{- end }}       

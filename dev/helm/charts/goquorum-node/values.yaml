@@ -12,7 +12,7 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
 
-# local / azure
+# local / azure / aws
 provider: local
 
 nodeFlags:
@@ -23,8 +23,8 @@ nodeFlags:
 
 node:
   storage:
-    sizeLimit: "30Gi"
-    pvcSizeLimit: "30Gi"
+    sizeLimit: "20Gi"
+    pvcSizeLimit: "20Gi"
   quorum:
     resources:
       cpuLimit: 0.5

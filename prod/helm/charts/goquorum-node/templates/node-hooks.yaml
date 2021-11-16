@@ -1,3 +1,5 @@
+{{- if eq .Values.provider "azure" }}
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -7,6 +9,8 @@ metadata:
   annotations:
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook": "pre-install,pre-delete,post-delete"
+
+{{- end}}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -40,9 +44,12 @@ roleRef:
   name: {{ include "goquorum-node.fullname" . }}-hooks-role
 subjects:
 - kind: ServiceAccount
-  name: {{ include "goquorum-node.fullname" . }}-hooks-sa
   namespace:  {{ .Release.Namespace }}
-
+{{- if eq .Values.provider "azure" }}
+  name: {{ include "goquorum-node.fullname" . }}-hooks-sa
+{{- else }}
+  name: {{ .Values.aws.serviceAccountName }}
+{{- end}}
 
 ---
 apiVersion: batch/v1
@@ -54,17 +61,26 @@ metadata:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": "hook-succeeded"
+{{- if eq .Values.provider "azure" }}
   labels:
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end}}
 spec:
   backoffLimit: 1
   completions: 1
   template:
+{{- if eq .Values.provider "azure" }}
     metadata:
       labels:
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end}}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-hooks-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end}}
+
       restartPolicy: "OnFailure"
       containers:
       - name: {{ template "goquorum-node.fullname" . }}-quorum-pre-start-hook
@@ -80,6 +96,8 @@ spec:
 
             echo "{{ template "goquorum-node.fullname" . }} Pre Install hook ..."
 
+{{- if eq .Values.provider "azure" }}
+
             function safeWriteSecret {
               key=$1
               fpath=$2
@@ -91,6 +109,22 @@ spec:
                 az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key | jq -r '.value' > $fpath
               fi
             }
+            az login --identity --debug
+
+{{- else }}
+
+            function safeWriteSecret {
+              key=$1
+              fpath=$2
+              aws secretsmanager describe-secret --secret-id $key > /dev/null 2>&1
+              if [ $? -ne 0 ]; then
+                aws secretsmanager create-secret --name $key --description $key --secret-string file://$fpath
+              else
+                # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
+              fi
+            }
+{{- end }}
 
             function update_enodes_configmap {
               kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o json
@@ -101,7 +135,7 @@ spec:
               echo "updating goquorum-node-enodes..."
               pubkey=$(cat /tmp/nodekey.pub )
               echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
-              NEEDLE="enode://$pubkey@.{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
+              NEEDLE="enode://$pubkey@{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
               cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
               kubectl -n {{ .Release.Namespace }} create configmap goquorum-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
             }
@@ -124,21 +158,17 @@ spec:
               fi
             }
 
-            az login --identity --debug
-
             echo "Quorum nodekey generation ..."
             cd /tmp
             /opt/istanbul-tools/bin/bootnode -genkey /tmp/nodekey --writeaddress > /tmp/nodekey.pub
             echo -ne $(cat /tmp/nodekey.pub) > /tmp/enode
 
 
-          {{- if .Values.nodeFlags.generateKeys }}
-            echo "Creating keys in keyvault for {{ template "goquorum-node.fullname" . }} ..."
+            echo "Creating keys in vault for {{ template "goquorum-node.fullname" . }} ..."
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekey /tmp/nodekey
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub /tmp/nodekey.pub
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-enode /tmp/enode
             update_enodes_configmap
-          {{- end }}
 
           {{- if .Values.nodeFlags.privacy }}
 
@@ -172,17 +202,25 @@ metadata:
     helm.sh/hook: pre-delete
     helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: "hook-succeeded"
+{{- if eq .Values.provider "azure" }}
   labels:
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end}}
 spec:
   backoffLimit: 3
   completions: 1
   template:
+{{- if eq .Values.provider "azure" }}
     metadata:
       labels:
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end}}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-hooks-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end}}
       restartPolicy: "OnFailure"
       containers:
         - name: {{ template "goquorum-node.fullname" . }}-node-pre-delete-hook
