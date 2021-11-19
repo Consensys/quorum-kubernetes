@@ -4,7 +4,7 @@ kind: ClusterConfig
 
 metadata:
   name: cluster-1
-  region: us-east-2
+  region: eu-west-3
   version: "1.21"
 
 vpc:
@@ -44,7 +44,7 @@ cloudWatch:
 
 # optional but recommended
 #secretsEncryption:
-#  keyARN: "arn:aws:kms:ap-southeast-2:..."
+#  keyARN: "arn:aws:kms:us-east-2:..."
 
 iam:
   withOIDC: true
