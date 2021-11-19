@@ -182,8 +182,8 @@ spec:
                 writeK8sEnodeSecret besu-node-bootnode-${j}-enode /tmp/enode
 
                 # add to the static-nodes
-                pubkey=$(cat ./enode${j} )
-                echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.goquorum-node-validator-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+                pubkey=$(cat /tmp/enode )
+                echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
                 rm /tmp/public.key /tmp/enode /opt/besu/key
               done
