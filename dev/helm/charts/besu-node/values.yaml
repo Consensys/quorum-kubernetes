@@ -13,6 +13,11 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
 
+# fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
+volumePermissionsFix:
+  - local
+  - aws
+
 # local / azure
 provider: local
 

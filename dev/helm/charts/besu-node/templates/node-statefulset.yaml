@@ -157,7 +157,9 @@ spec:
           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
 {{- end}}
 
-{{- if eq .Values.provider "local" }}
+
+{{- if has .Values.provider .Values.volumePermissionsFix }}
+
       # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
       - name: volume-permission-besu
         image: busybox
