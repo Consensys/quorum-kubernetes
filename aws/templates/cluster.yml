@@ -4,7 +4,7 @@ kind: ClusterConfig
 
 metadata:
   name: cluster-1
-  region: eu-west-3
+  region: us-east-2
   version: "1.21"
 
 vpc:
