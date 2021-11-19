@@ -54,6 +54,7 @@ node:
       host: "0.0.0.0"
       port: 30303
       discovery: true
+      staticNodes: "/config/static/static-nodes.json"
       maxPeers: 25
     rpc:
       enabled: true

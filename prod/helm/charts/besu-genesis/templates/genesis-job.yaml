@@ -1,12 +1,13 @@
-
+{{- if eq .Values.provider "azure" }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "besu-genesis.name" . }}-sa
   namespace: {{ .Release.Namespace }}
-
+{{- end}}
 ---
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -38,8 +39,12 @@ roleRef:
   name: {{ include "besu-genesis.name" . }}-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "besu-genesis.name" . }}-sa
     namespace: {{ .Release.Namespace }}
+{{- if eq .Values.provider "azure" }}
+    name: {{ include "besu-genesis.name" . }}-sa
+{{- else }}
+    name: {{ .Values.aws.serviceAccountName }}
+{{- end}}
 
 ---
 apiVersion: batch/v1
@@ -47,7 +52,9 @@ kind: Job
 metadata:
   name: {{ include "besu-genesis.name" . }}-init
   labels:
+{{- if eq .Values.provider "azure" }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     app: {{ template "besu-genesis.name" . }}
     chart: {{ template "besu-genesis.chart" . }}
     release: {{ .Release.Name }}
@@ -66,11 +73,17 @@ spec:
   template:
     metadata:
       labels:
+{{- if eq .Values.provider "azure" }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
         app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "besu-genesis.name" . }}-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end }}
       restartPolicy: "Never"
       containers:
         - name: generate-genesis
@@ -88,13 +101,7 @@ spec:
             - -c
           args:
             - |
-
-              function writeK8sEnodeSecret {
-                key=$1
-                fpath=$2
-                kubectl create secret generic $key --namespace {{ .Release.Namespace }} --from-file=$fpath
-              }
-
+{{- if eq .Values.provider "azure" }}
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -106,6 +113,25 @@ spec:
                   az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key | jq -r '.value' > $fpath
                 fi
               }
+              az login --identity --debug
+{{- else }}
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                aws secretsmanager describe-secret --secret-id $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  aws secretsmanager create-secret --name $key --description $key --secret-string file://$fpath
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
+                fi
+              }
+{{- end}}
+              function writeK8sEnodeSecret {
+                key=$1
+                fpath=$2
+                kubectl create secret generic $key --namespace {{ .Release.Namespace }} --from-file=$fpath
+              }
 
               function safeWriteGenesisConfigmap {
                 kubectl get configmap --namespace {{ .Release.Namespace }} besu-genesis
@@ -114,12 +140,13 @@ spec:
                 fi
               }
 
-              az login --identity --debug
-
               echo "Creating config ..."
               /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
               echo "Creating genesis configmap in k8s ..."
               safeWriteGenesisConfigmap
+
+              # create the static-nodes with proper dns names for the quorum nodes
+              echo "[" > /generated-config/static-nodes.json
 
               echo "Creating validator secrets in k8s ..."
               i=1
@@ -129,10 +156,14 @@ spec:
                   # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
                   sed 's/^0x//' ${f}/key.pub > ${f}/enode
 
-                  echo "Creating keys in keyvault for validator-${i} ..."
+                  echo "Creating keys in vault for validator-${i} ..."
                   safeWriteSecret besu-node-validator-${i}-nodekey ${f}/key.priv
                   safeWriteSecret besu-node-validator-${i}-nodekeypub ${f}/key.pub
                   safeWriteSecret besu-node-validator-${i}-enode ${f}/enode
+
+                  # add to the static-nodes
+                  pubkey=$(cat ${f}/enode )
+                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
                   i=$((i+1))
                 fi
@@ -144,13 +175,23 @@ spec:
                 /opt/besu/bin/besu public-key export --to=/tmp/public.key
                 # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
                 sed 's/^0x//' /tmp/public.key > /tmp/enode
-                echo "Creating keys in keyvault for bootnode ${j} ..."
+                echo "Creating keys in vault for bootnode ${j} ..."
                 safeWriteSecret besu-node-bootnode-${j}-nodekey /opt/besu/key
                 safeWriteSecret besu-node-bootnode-${j}-nodekeypub /tmp/public.key
                 safeWriteSecret besu-node-bootnode-${j}-enode /tmp/enode
                 writeK8sEnodeSecret besu-node-bootnode-${j}-enode /tmp/enode
+
+                # add to the static-nodes
+                pubkey=$(cat ./enode${j} )
+                echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.goquorum-node-validator-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
                 rm /tmp/public.key /tmp/enode /opt/besu/key
               done
+
+              echo "]" >> /generated-config/static-nodes.json
+              # remove the extra comma to make it valid json
+              sed -i '0,/,/s///' /generated-config/static-nodes.json
+              kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-enodes  --from-file=static-nodes.json=/generated-config/static-nodes.json
 
               echo "Completed ..."
 

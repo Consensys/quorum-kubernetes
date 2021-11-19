@@ -53,6 +53,21 @@ mountOptions:
 parameters:
   skuName: Standard_LRS
 
+{{- else if eq .Values.provider "aws" }}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  type: gp2
+  fsType: ext4
+
 {{- else }}
 
 ---
@@ -302,6 +317,8 @@ spec:
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
+          - name: static-nodes
+            mountPath: /config/static
           - name: besu-config
             mountPath: /etc/besu
             readOnly: true
@@ -356,6 +373,12 @@ spec:
           items:
             - key: genesis.json
               path: genesis.json
+      - name: static-nodes
+        configMap:
+          name: besu-node-enodes
+          items:
+            - key: static-nodes.json
+              path: static-nodes.json
       - name: besu-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-besu-config

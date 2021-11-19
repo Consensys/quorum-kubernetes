@@ -1,3 +1,6 @@
+
+{{- if eq .Values.provider "azure" }}
+# only needs to be done in azure because of the way the identies work
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -5,6 +8,7 @@ metadata:
   name: {{ include "goquorum-genesis.name" . }}-sa
   namespace: {{ .Release.Namespace }}
 
+{{- end}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -37,9 +41,12 @@ roleRef:
   name: {{ include "goquorum-genesis.name" . }}-role
 subjects:
   - kind: ServiceAccount
-    name: {{ include "goquorum-genesis.name" . }}-sa
     namespace: {{ .Release.Namespace }}
-
+{{- if eq .Values.provider "azure" }}
+    name: {{ include "goquorum-genesis.name" . }}-sa
+{{- else }}
+    name: {{ .Values.aws.serviceAccountName }}
+{{- end}}
 
 ---
 apiVersion: batch/v1
@@ -47,7 +54,9 @@ kind: Job
 metadata:
   name: {{ include "goquorum-genesis.name" . }}-init
   labels:
+{{- if eq .Values.provider "azure" }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     app: {{ template "goquorum-genesis.name" . }}
     chart: {{ template "goquorum-genesis.chart" . }}
     release: {{ .Release.Name }}
@@ -66,11 +75,17 @@ spec:
   template:
     metadata:
       labels:
+{{- if eq .Values.provider "azure" }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end}}
         app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end}}
       restartPolicy: "Never"
       containers:
         - name: generate-genesis
@@ -84,6 +99,8 @@ spec:
           args:
             - |
 
+{{- if eq .Values.provider "azure" }}
+
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -96,6 +113,22 @@ spec:
                 fi
               }
 
+              az login --identity --debug
+
+{{- else }}
+
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                aws secretsmanager describe-secret --secret-id $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  aws secretsmanager create-secret --name $key --description $key --secret-string file://$fpath
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
+                fi
+              }
+{{- end}}
               function safeWriteGenesisConfigmap {
                 kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-genesis
                 if [ $? -ne 0 ]; then
@@ -110,7 +143,7 @@ spec:
                 fi
               }
 
-              az login --identity --debug
+
 
               mkdir /generated-config/ && cd /generated-config/
               echo "Creating config ..."
@@ -131,7 +164,7 @@ spec:
                 /opt/istanbul-tools/bin/bootnode -nodekey /generated-config/$validatorKey/nodekey -writeaddress > /generated-config/$validatorKey/nodekey.pub
                 echo -ne $(cat /generated-config/$validatorKey/nodekey.pub) > /generated-config/$validatorKey/enode
 
-                echo "Creating keys in keyvault for $validatorKey ..."
+                echo "Creating keys in vault for $validatorKey ..."
                 safeWriteSecret goquorum-node-$validatorKey-nodekey /generated-config/$validatorKey/nodekey
                 safeWriteSecret goquorum-node-$validatorKey-nodekeypub /generated-config/$validatorKey/nodekey.pub
                 safeWriteSecret goquorum-node-$validatorKey-enode /generated-config/$validatorKey/enode

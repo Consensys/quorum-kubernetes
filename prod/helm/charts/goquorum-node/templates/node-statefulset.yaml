@@ -1,9 +1,13 @@
+
+{{- if eq .Values.provider "azure" }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
+
+{{- end}}
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -33,12 +37,20 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "goquorum-node.fullname" . }}-sa
   namespace:  {{ .Release.Namespace }}
+{{- if eq .Values.provider "azure" }}
+    name: {{ include "quorum-node.fullname" . }}-sa
+{{- else }}
+    name: {{ .Values.aws.serviceAccountName }}
+{{- end}}
+
+{{- if eq .Values.provider "azure" }}
 
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
 mountOptions:
   - dir_mode=0755
@@ -49,6 +61,24 @@ mountOptions:
 allowVolumeExpansion: true
 parameters:
   skuName: Standard_LRS
+
+
+{{- else if eq .Values.provider "aws" }}
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "goquorum-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+parameters:
+  type: gp2
+  fsType: ext4
+
+{{- end }}
 
 ---
 apiVersion: v1
@@ -70,7 +100,9 @@ kind: StatefulSet
 metadata:
   name: {{ template "goquorum-node.fullname" . }}
   labels:
+{{- if eq .Values.provider "azure" }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     app: {{ template "goquorum-node.name" . }}
     chart: {{ template "goquorum-node.chart" . }}
     release: {{ .Release.Name }}
@@ -96,7 +128,9 @@ spec:
   template:
     metadata:
       labels:
+{{- if eq .Values.provider "azure" }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
         app: {{ include "goquorum-node.fullname" . }}
         release: {{ .Release.Name }}
         component: {{ .Release.Name }}
@@ -107,7 +141,11 @@ spec:
         prometheus.io/port: "9545"
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
-      serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
+{{- if eq .Values.provider "azure" }}
+      serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end}}
       containers:
 
       {{- if .Values.nodeFlags.privacy }}
@@ -134,7 +172,7 @@ spec:
             value: "-09"
 
         volumeMounts:
-          - name: akv-secrets-store
+          - name: secrets-store
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
           - name: data
@@ -245,7 +283,7 @@ spec:
             value: "ignore"
         {{- end }}
         volumeMounts:
-          - name: akv-secrets-store
+          - name: secrets-store
             mountPath: {{ .Values.node.quorum.keysPath }}
           - name: genesis
             mountPath: /etc/genesis
@@ -320,7 +358,7 @@ spec:
 
 
       volumes:
-      - name: akv-secrets-store
+      - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
           readOnly: true

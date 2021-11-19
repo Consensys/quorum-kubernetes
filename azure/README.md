@@ -1,11 +1,10 @@
 
 # Azure
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in development or production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 ## Background
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
-It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template]('./arm/azuredeploy.json'). We also make use some Azure native services and features (tha are are provisioned via a [script]('./scripts/bootstrap.sh')) after the cluster is created. These incluide:
+It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template]('./arm/azuredeploy.json'). We also make use some Azure native services and features (tha are are provisioned via a [script]('./scripts/bootstrap.sh')) after the cluster is created. These include:
 - [AAD pod identities](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity).
 - [Secrets Store CSI drivers](https://docs.microsoft.com/en-us/azure/key-vault/general/key-vault-integrate-kubernetes)
 - Data is stored using dynamic StorageClasses backed by Azure Files. Please note the [Volume Claims](https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv) are fixed sizes and can be updated as you grow via a helm update, and will not need reprovisioning of the underlying storage class.
@@ -20,7 +19,7 @@ If you have existing VNets, you can easily connect to the VNet with the k8s clus
 ### Operation flow:
 1. Read this file in its entirety before proceeding
 2. See the  [Prerequisites](#prerequisites) section to enable some features before doing the deployment
-3. Use the [Usage](#usage) section
+3. See the [Usage](#usage) section
 
 #### Helm Charts:
 The dev charts are aimed at getting you up and running so you can experiment with the client and functionality of the tools, contracts etc. They embed node keys etc as secrets so that these are visible to you during development and you can learn about discovery. The prod charts utilize all the built in Azure functionality and recommended best practices such as identities, secrets stored in keyvault with limited access etc. **When using the prod charts please ensure you add the necessary values to the `azure` section of the values.yml file**

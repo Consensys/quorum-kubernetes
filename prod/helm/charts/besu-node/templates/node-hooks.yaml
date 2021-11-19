@@ -1,5 +1,4 @@
-
-
+{{- if eq .Values.provider "azure" }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -9,7 +8,7 @@ metadata:
   annotations:
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook": "pre-install,pre-delete,post-delete"
-
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -42,8 +41,12 @@ roleRef:
   name: {{ include "besu-node.fullname" . }}-hooks-role
 subjects:
 - kind: ServiceAccount
-  name: {{ include "besu-node.fullname" . }}-hooks-sa
   namespace:  {{ .Release.Namespace }}
+{{- if eq .Values.provider "azure" }}
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
+{{- else }}
+  name: {{ .Values.aws.serviceAccountName }}
+{{- end }}
 
 
 ---
@@ -57,16 +60,24 @@ metadata:
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": "hook-succeeded"
   labels:
+{{- if eq .Values.provider "azure" }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
 spec:
   backoffLimit: 1
   completions: 1
   template:
+{{- if eq .Values.provider "azure" }}
     metadata:
       labels:
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end }}
       restartPolicy: "OnFailure"
       containers:
         - name: {{ template "besu-node.fullname" . }}-pre-start-hook
@@ -85,13 +96,13 @@ spec:
               function update_enodes_configmap {
                 kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o json
                 if [ $? -ne 0 ]; then
-                    echo "[]" > /tmp/static-nodes.json.raw
+                echo "[]" > /tmp/static-nodes.json.raw
                 fi
                 # update the entries
                 echo "updating besu-node-enodes..."
                 pubkey=$(cat /tmp/nodekey.pub )
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
-                NEEDLE="enode://$pubkey@.{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
+                NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
                 cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
                 kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
               }
@@ -114,6 +125,8 @@ spec:
                 fi
               }
 
+            {{- if eq .Values.provider "azure" }}
+
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -126,8 +139,22 @@ spec:
                 fi
               }
 
-
               az login --identity --debug
+
+            {{- else }}
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                aws secretsmanager describe-secret --secret-id $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  aws secretsmanager create-secret --name $key --description $key --secret-string file://$fpath
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
+                fi
+              }
+
+            {{- end }}
 
             {{- if .Values.nodeFlags.generateKeys }}
 
@@ -136,11 +163,11 @@ spec:
               # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
               sed 's/^0x//' /tmp/public.key > /tmp/enode
 
-              echo "Creating keys in keyvault for {{ template "besu-node.fullname" . }} ..."
+              echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey /opt/besu/key
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub /tmp/public.key
               safeWriteSecret {{ template "besu-node.fullname" . }}-enode /tmp/enode
-
+              update_enodes_configmap
               echo "Besu Completed"
 
             {{- end }}
@@ -179,19 +206,27 @@ metadata:
     helm.sh/hook-weight: "0"
     helm.sh/hook: "pre-delete"
     helm.sh/hook-delete-policy: "hook-succeeded"
+{{- if eq .Values.provider "azure" }}
   labels:
     aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
 spec:
   backoffLimit: 1
   completions: 1
   template:
     metadata:
       labels:
+{{- if eq .Values.provider "azure" }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
         app.kubernetes.io/name: {{ include "besu-node.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+{{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+{{- else }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- end }}
       restartPolicy: "OnFailure"
       containers:
         - name: delete-keys
@@ -216,6 +251,20 @@ spec:
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
                   cat /tmp/tessera-peers.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( .url | contains($NEEDLE) ))' > /tmp/tessera-peers
                   kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                fi
+              }
+
+              function delete_node_from_enodes_configmap {
+                kubectl -n {{ .Release.Namespace }}  get configmap besu-node-enodes -o json
+                # if there is no configmap, do nothing
+                if [ $? -ne 0 ]; then
+                  echo "No peers found, nothing to do..."
+                # delete the one
+                else
+                  echo "besu-node-enodes found, deleting {{ template "besu-node.fullname" . }}..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+                  cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
+                  kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
                 fi
               }
 
