@@ -1,4 +1,6 @@
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: besu-ingress-routes
   namespace: quorum
@@ -29,6 +31,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: besu-monitoring-monitoring-grafana
+                name: quorum-monitoring-monitoring-grafana
                 port:
                   number: 3000

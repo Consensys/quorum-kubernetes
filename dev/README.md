@@ -60,7 +60,7 @@ NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install besu-ingress ingress-nginx/ingress-nginx \
-    --namespace besu \
+    --namespace quorum \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
