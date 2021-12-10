@@ -11,7 +11,7 @@
       },
       "bcClient": {
         "type": "string",
-        "defaultValue": "goq",
+        "defaultValue": "besu",
         "metadata": {
           "description": "The blockchain client you are using, ie. besu or goq (goquorum)"
         }
@@ -60,7 +60,7 @@
       "clusterName": "[concat(variables('namePrefix'), '-cluster')]",
       "aksNodeResourceGroupName": "[concat('MC_', resourceGroup().name, '_', variables('clusterName'), '_', parameters('location'))]",
       "aksNodeResourceGroupId": "[concat(subscription().id, '/resourcegroups/', variables('aksNodeResourceGroupName'))]",
-      "aksNodeCount": 6,
+      "aksNodeCount": 8,
       "aksNodeVmSize": "Standard_D2a_v4",
       "aksNodeDiskSizeGB": 100,
       "keyVaultName": "[concat(variables('namePrefix'), '-vault')]",

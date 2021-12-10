@@ -5,13 +5,14 @@ rawGenesisConfig:
     config:
       chainId: 1337
       constantinoplefixblock: 0
+      contractSizeLimit: 2147483647
       ibft2:
-        blockperiodseconds: 10
+        blockperiodseconds: 2
         epochlength: 30000
-        requesttimeoutseconds: 20
+        requesttimeoutseconds: 10
     nonce: '0x0'
-    timestamp: '0x58ee40ba'
-    gasLimit: '0x47b760'
+    timestamp: '0x0'
+    gasLimit: '0x1fffffffffffff'
     difficulty: '0x1'
     mixHash: '0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365'
     coinbase: '0x0000000000000000000000000000000000000000'
@@ -25,4 +26,4 @@ rawGenesisConfig:
       generate: true
       count: 4
 
-provider: local
+provider: azure

@@ -2,11 +2,11 @@
 image:
   besu:
     repository: hyperledger/besu
-    tag: latest
+    tag: 21.10.2
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
-    tag: latest
+    tag: 21.10.0
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks
@@ -30,8 +30,8 @@ nodeFlags:
 
 node:
   storage:
-    sizeLimit: "20Gi"
-    pvcSizeLimit: "20Gi"
+    sizeLimit: "80Gi"
+    pvcSizeLimit: "80Gi"
   besu:
     resources:
       cpuLimit: 0.7

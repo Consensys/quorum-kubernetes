@@ -37,7 +37,7 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -49,7 +49,7 @@ helm install validator-3 ./charts/besu-node --namespace quorum --values ./values
 helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
 # spin up a besu and orion node pair
-helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
+helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -60,11 +60,12 @@ NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 helm install besu-ingress ingress-nginx/ingress-nginx \
-    --namespace besu \
+    --namespace quorum \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
+    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```
@@ -96,7 +97,8 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux
+    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 ```

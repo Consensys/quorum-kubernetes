@@ -1,4 +1,6 @@
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
   name: besu-ingress-routes
   namespace: quorum
@@ -7,6 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/whitelist-source-range: 115.70.158.109/32,220.235.200.155/32,117.20.70.36/32,101.190.32.55/32
 spec:
   rules:
     - http:
@@ -15,20 +18,20 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: besu-node-member-1
+                name: besu-node-rpc-1
                 port:
                   number: 8545
           - path: /ws
             pathType: Prefix
             backend:
               service:
-                name: besu-node-member-1
+                name: besu-node-rpc-1
                 port:
                   number: 8546
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: besu-monitoring-monitoring-grafana
+                name: quorum-monitoring-monitoring-grafana
                 port:
                   number: 3000
