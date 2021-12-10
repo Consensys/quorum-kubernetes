@@ -82,7 +82,7 @@ spec:
                 fi
                 # update the entries
                 echo "updating besu-node-enodes..."
-                pubkey=$(cat /tmp/nodekey.pub )
+                pubkey=$(cat /tmp/enode )
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
                 cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
