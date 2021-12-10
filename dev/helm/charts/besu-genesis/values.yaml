@@ -1,7 +1,7 @@
 ---
 image:
   repository: hyperledger/besu
-  tag: 'latest'
+  tag: '21.10.2'
   pullPolicy: IfNotPresent
 
 # local / azure

@@ -52,8 +52,8 @@ helm install validator-2 ./charts/besu-node --namespace quorum --values ./values
 helm install validator-3 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
-# spin up a besu and tessera node pair
-helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
+# spin up a besu and orion node pair
+helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy blockscout:
