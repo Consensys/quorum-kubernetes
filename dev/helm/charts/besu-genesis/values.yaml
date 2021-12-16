@@ -7,6 +7,9 @@ image:
 # local / azure
 provider: local
 
+nodeFlags:
+  removeKeysOnDeletion: false
+
 # the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
 rawGenesisConfig:
   genesis:

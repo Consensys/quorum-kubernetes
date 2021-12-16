@@ -2,7 +2,7 @@
 image:
   grafana:
     repository: grafana/grafana
-    tag: 8.2.1
+    tag: 8.3.3
     pullPolicy: IfNotPresent
   prometheus:
     repository: prom/prometheus

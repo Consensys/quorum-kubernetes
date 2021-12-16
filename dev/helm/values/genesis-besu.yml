@@ -1,15 +1,21 @@
 ---
+
+nodeFlags:
+  removeKeysOnDeletion: true
+
+
 # the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
 rawGenesisConfig:
   genesis:
     config:
       chainId: 1337
+      ecCurve: 'secp256r1'
       constantinoplefixblock: 0
       contractSizeLimit: 2147483647
       ibft2:
         blockperiodseconds: 2
         epochlength: 30000
-        requesttimeoutseconds: 10
+        requesttimeoutseconds: 4
     nonce: '0x0'
     timestamp: '0x0'
     gasLimit: '0x1fffffffffffff'

@@ -3,6 +3,6 @@ nodeFlags:
   bootnode: false
   generateKeys: true
   privacy: false
-  removeKeysOnDeletion: true
+  removeKeysOnDeletion: false
 
-provider: local
+provider: azure

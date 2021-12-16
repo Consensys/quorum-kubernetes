@@ -350,6 +350,7 @@ spec:
           - -c
         args:
           - |
+
             exec
             export BOOTNODE_ENODE1="enode://${BOOTNODE1_PUBKEY}@besu-node-bootnode-1-0.besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
             export BOOTNODE_ENODE2="enode://${BOOTNODE2_PUBKEY}@besu-node-bootnode-2-0.besu-node-bootnode-2.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
@@ -357,6 +358,8 @@ spec:
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
               --min-gas-price=0 \
+              --Xp2p-tls-enabled --Xp2p-tls-keystore-type=JKS --Xp2p-tls-truststore-type=JKS --Xp2p-tls-keystore-file={{ .Values.node.besu.keysPath }}/keystore.jks --Xp2p-tls-keystore-password-file={{ .Values.node.besu.keysPath }}/jkspassword.txt \
+              --Xp2p-tls-truststore-file={{ .Values.node.besu.keysPath }}/truststore.jks --Xp2p-tls-truststore-password-file={{ .Values.node.besu.keysPath }}/jkspassword.txt \
               --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
 
         livenessProbe:
