@@ -28,7 +28,7 @@ vpc:
 
 managedNodeGroups:
   - name: ng-1
-    instanceType: t3.xlarge
+    instanceType: m5.xlarge
     desiredCapacity: 6
     privateNetworking: true
     labels: { role: workers }
