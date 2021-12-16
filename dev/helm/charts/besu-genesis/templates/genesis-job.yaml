@@ -79,6 +79,8 @@ spec:
           volumeMounts:
             - name: raw-config
               mountPath: /raw-config
+            - name: tls-secret
+              mountPath: /tls-secret
             - name: generated-config
               mountPath: /generated-config
           command:
@@ -104,7 +106,7 @@ spec:
                   echo $f
                   # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
                   sed 's/^0x//' ${f}/key.pub > ${f}/enode
-                  ./kubectl create secret generic besu-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode=${f}/enode
+                  ./kubectl create secret generic besu-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode=${f}/enode --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/validator-${i}.jks --from-file=validator-${i}.pem=/tls-secret/validator-${i}.pem
 
                   # add to the static-nodes
                   pubkey=$(cat ${f}/enode )
@@ -117,17 +119,25 @@ spec:
               echo "Creating bootnode keys ..."
               for j in {1..2}
               do
-                /opt/besu/bin/besu public-key export --to=public${j}.key
-                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-                sed 's/^0x//' ./public${j}.key > /tmp/enode${j}
                 echo "Creating bootnode ${j} secrets in k8s ..."
-                ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode=/tmp/enode${j}
+                ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/tls-secret/bootnode-${j}-nodekey --from-file=public.key=/tls-secret/bootnode-${j}-nodekey.pub --from-file=enode=/tls-secret/bootnode-${j}-nodekey.pub --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/bootnode-${j}.jks --from-file=bootnode-${j}.pem=/tls-secret/bootnode-${j}.pem
 
                 # add to the static-nodes
-                pubkey=$(cat /tmp/enode${j} )
+                pubkey=$(cat /tls-secret/bootnode-${j}-nodekey.pub )
                 echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
-                rm ./public${j}.key /tmp/enode${j}.key /opt/besu/key
+              done
+
+              echo "Creating rpc keys ..."
+              for k in {1..2}
+              do
+                echo "Creating rpc ${k} secrets in k8s ..."
+                ./kubectl create secret generic besu-node-rpc-${k}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/tls-secret/rpc-${k}-nodekey --from-file=public.key=/tls-secret/rpc-${k}-nodekey.pub --from-file=enode=/tls-secret/rpc-${k}-nodekey.pub --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/rpc-${k}.jks --from-file=rpc-${k}.pem=/tls-secret/rpc-${k}.pem
+
+                # add to the static-nodes
+                pubkey=$(cat /tls-secret/rpc-${k}-nodekey.pub )
+                echo ",\"enode://$pubkey@besu-node-rpc-$k-0.besu-node-rpc-$k.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
               done
 
               echo "]" >> /generated-config/static-nodes.json
@@ -140,6 +150,9 @@ spec:
         - name: raw-config
           configMap:
             name: {{ include "besu-genesis.fullname" . }}-raw-json-config
+        - name: tls-secret
+          secret:
+            secretName: {{ include "besu-genesis.fullname" . }}-tls-secret
         - name: generated-config
           emptyDir: {}
 
@@ -187,6 +200,9 @@ spec:
           args:
             - |
               apt-get update && apt-get install -y curl
+
+            {{- if .Values.nodeFlags.removeKeysOnDeletion }}
+
               curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting genesis configmap in k8s ..."
               ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
@@ -206,5 +222,6 @@ spec:
 
               echo "Completed ..."
 
+            {{- end }}
 
 

@@ -1,8 +1,8 @@
 
 nodeFlags:
   bootnode: false
-  generateKeys: true
-  privacy: true
-  removeKeysOnDeletion: true
+  generateKeys: false
+  privacy: false
+  removeKeysOnDeletion: false
 
 provider: azure
