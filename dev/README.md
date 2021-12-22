@@ -1,7 +1,7 @@
 
 # Dev
 
-The dev area has basic examples you can use to setup your network with. They use `helm` exclusively and there are various charts each with specfic functionality.
+The dev area has basic examples you can use to setup your network with. They use `helm` exclusively and there are various charts each with specific functionality.
 
 The dev charts have:
 - Dynamic key & account generation
@@ -37,7 +37,7 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -73,7 +73,7 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 *For GoQuorum:*
 ```bash
 cd dev/helm/  
-helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
