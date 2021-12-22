@@ -3,8 +3,6 @@
 
 The following will only work on Azure, please refer to the ARM templates deployment [documentation](./azure/README.md) before proceeding. Please proceed only after using the `dev` section to gain an understanding of how things work
 
-*AWS support will be added shortly.*
-
 The prod charts have:
 - Dynamic key & account generation
 - Can be used only in cloud. Edit the `provider: azure` value in the values.yml.
@@ -18,20 +16,27 @@ You are encouraged to use a HA SQL database for Tessera nodes (create externally
 - [Helmfile](https://github.com/roboll/helmfile)
 - [Helm Diff plugin](https://github.com/databus23/helm-diff)
 
-Verify kubectl is connected to yout cluster with:
+
+## Usage
+
+Ensure you have followed the steps completed to setup the clusters in (AWS)[../aws/README.md] or in (Azure)[../azure/README.md]. The Azure setup requires a script to be run to provision drivers on the cluster
+
+Once completed, update the `aws` or `azure` section of the [values yml files](./helm/values/)  
+
+Verify kubectl is connected to your cluster with:
 ```bash
 $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
-## Usage
+Then deploy the charts like so: 
 
 *For Besu:*
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -67,7 +72,7 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 *For GoQuorum:*
 ```bash
 cd dev/helm/  
-helm install monitoring ./charts/quorum-monitoring --namespace monitoring --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml

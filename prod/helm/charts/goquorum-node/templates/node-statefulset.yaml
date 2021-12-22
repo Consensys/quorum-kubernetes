@@ -35,12 +35,11 @@ roleRef:
   name: {{ include "goquorum-node.fullname" . }}-role
 subjects:
 - kind: ServiceAccount
-  name: {{ include "goquorum-node.fullname" . }}-sa
   namespace:  {{ .Release.Namespace }}
 {{- if eq .Values.provider "azure" }}
-    name: {{ include "quorum-node.fullname" . }}-sa
-{{- else }}
-    name: {{ .Values.aws.serviceAccountName }}
+  name: {{ include "goquorum-node.fullname" . }}-sa
+{{- else -}}
+  name: {{ .Values.aws.serviceAccountName }}
 {{- end}}
 
 {{- if eq .Values.provider "azure" }}
@@ -142,7 +141,7 @@ spec:
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
 {{- if eq .Values.provider "azure" }}
-      serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
+      serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
 {{- else }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- end}}
