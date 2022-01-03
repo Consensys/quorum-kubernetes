@@ -15,6 +15,8 @@ azure:
   keyvaultName: azure-keyvault
   # the tenant ID of the key vault
   tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
 
 # the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
 rawGenesisConfig:
