@@ -114,6 +114,7 @@ spec:
                 fi
               }
               az login --identity --debug
+              az account set --subscription {{ .Values.azure.subscriptionId }}
 {{- else }}
               function safeWriteSecret {
                 key=$1
