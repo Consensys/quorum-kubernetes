@@ -131,10 +131,3 @@ spec:
           - |
             exec
             cd /opt/app/ && echo $$MIX_ENV && mix do ecto.create, ecto.migrate; mix phx.server;
-
-        # livenessProbe:
-        #   httpGet:
-        #     path: /liveness
-        #     port: 8545
-        #   initialDelaySeconds: 180
-        #   periodSeconds: 60
