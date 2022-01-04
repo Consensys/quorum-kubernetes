@@ -56,14 +56,14 @@ node:
       enabled: true
       host: "0.0.0.0"
       port: 8545
-      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA"]'
       corsOrigins: '["all"]'
       authenticationEnabled: false
     ws:
       enabled: false
       host: "0.0.0.0"
       port: 8546
-      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET"]'
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA"]'
       authenticationEnabled: false
     graphql:
       enabled: false
