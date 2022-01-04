@@ -56,8 +56,8 @@ Optionally deploy blockscout:
 
 ```
 
-helm dependency update
-helm install blockscout ./charts/blockscout --namespace quorum
+helm dependency update ./charts/blockscout
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yaml
 
 ```
 
@@ -102,8 +102,8 @@ helm install member-1 ./charts/goquorum-node --namespace quorum --values ./value
 Optionally deploy blockscout:
 
 ```
-helm dependency update
-helm install blockscout ./charts/blockscout --namespace quorum
+helm dependency update ./charts/blockscout
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-goquorum.yaml
 ```
 
 Optionally deploy the ingress controller like so:

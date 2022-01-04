@@ -27,7 +27,7 @@ blockscout: # cpu dependent
   subnetwork: consensys
   chain_id: 1337
   coin: eth
-  ethereum_jsonrpc_variant: besu
+  ethereum_jsonrpc_variant: geth
   ethereum_jsonrpc_transport: http
-  ethereum_jsonrpc_endpoint: "besu-node-bootnode-2" # service name to be used
+  ethereum_jsonrpc_endpoint: "goquorum-node-member-1" # service name to be used
   secret_key_base: "VTIB3uHDNbvrY0+60ZWgUoUBKDn9ppLR8MI4CpRz4/qLyEFs54ktJfaNT6Z221" # change me please
