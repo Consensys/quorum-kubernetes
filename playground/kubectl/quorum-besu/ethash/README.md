@@ -8,7 +8,7 @@
 - Credentials for grafana are admin:password. When grafana loads up select the "Besu Dashboard"
 
 ## Overview of Setup
-![Image ethash](../../images/ethash.png)
+![Image ethash](../../../../static/ethash.png)
 
 #### 1. Boot nodes private keys
 Create private/public keys for the bootnodes using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
@@ -25,29 +25,21 @@ Update the configmap/configmap.yaml with the public keys
 **Note:** Please remove the '0x' prefix of the public keys
 
 #### 2. Genesis.json
-Create the genesis.json file and copy its contents into the configmap/configmap as shown
+Create the genesis.json file and copy its contents into the [configmap/configmap](./configmap/besu-genesis-configmap.yaml)
 
-#### 3. Update any more config if required
-eg: To alter the number of nodes on the network, alter the `replicas: 2` in the deployments/node-deployments.yaml to suit
-
-#### 4. Deploy:
+#### 3. Deploy:
 ```bash
 ./deploy.sh
-
-# optionally deploy with miner
-./deploy-with-miner.sh
-
 ```
 
-
-#### 5. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
+#### 4. In the dashboard, you will see each bootnode deployment & service, nodes & a node service, miner if enabled, secrets(opaque) and a configmap
 
 If using minikube
 ```bash
 minikube dashboard &
 ```
 
-#### 6. Verify that the nodes are communicating:
+#### 5. Verify that the nodes are communicating:
 ```bash
 minikube ssh
 
@@ -64,7 +56,7 @@ The result confirms that the node running the JSON-RPC service has two peers:
 
 ```
 
-#### 7. Monitoring
+#### 6. Monitoring
 Get the ip that minikube is running on
 ```bash
 minikube ip
