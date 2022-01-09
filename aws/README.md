@@ -3,9 +3,7 @@
 
 ## Background
 
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
-
-It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an ARM template. We also make use some Azure native services and features (tha are are provisioned via a script) after the cluster is created. These incluide:
+The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 It essentially comprises base infrastructure that is used to build the cluster & other resources in AWS via a [template]('./templates/cluster.yml'). We also make use some AWS native services and features after the cluster is created. These include:
 - [Pod identities](hhttps://github.com/aws/amazon-eks-pod-identity-webhook).
@@ -56,7 +54,7 @@ helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kuberne
 helm install --namespace quorum --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver 
 kubectl apply --namespace quorum -f templates/secrets-manager/aws-provider-installer.yml
 
-POLICY_ARN=$(aws --region ap-southeast-2 --query Policy.Arn --output text iam create-policy --policy-name quorum-node-secrets-mgr-policy --policy-document '{
+POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create-policy --policy-name quorum-node-secrets-mgr-policy --policy-document '{
     "Version": "2012-10-17",
     "Statement": [ {
         "Effect": "Allow",

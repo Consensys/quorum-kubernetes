@@ -41,7 +41,7 @@ This takes a little while and you can check on progress by:
 az feature list --namespace Microsoft.ContainerService -o table
 ```
 
-Then install the aks-preview Azure CLI
+Then install or update your local Azure CLI with preview features
 ```bash
 az extension add --name aks-preview
 az extension update --name aks-preview
