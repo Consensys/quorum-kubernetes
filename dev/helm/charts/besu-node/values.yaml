@@ -28,10 +28,11 @@ nodeFlags:
   # be careful with this one
   removeKeysOnDeletion: false
 
+storage:
+  sizeLimit: "20Gi"
+  pvcSizeLimit: "20Gi"
+
 node:
-  storage:
-    sizeLimit: "20Gi"
-    pvcSizeLimit: "20Gi"
   besu:
     resources:
       cpuLimit: 0.7

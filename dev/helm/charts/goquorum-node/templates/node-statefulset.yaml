@@ -81,7 +81,7 @@ metadata:
 spec:
   storageClassName: {{ include "goquorum-node.fullname" . }}-storage
   capacity:
-    storage: "{{ .Values.node.storage.sizeLimit }}"
+    storage: "{{ .Values.storage.sizeLimit }}"
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -101,7 +101,7 @@ spec:
   storageClassName: {{ include "goquorum-node.fullname" . }}-storage
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.storage.pvcSizeLimit }}"
 
 ---
 apiVersion: apps/v1
@@ -123,6 +123,8 @@ metadata:
 spec:
   replicas: 1
   podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: {{ include "goquorum-node.fullname" . }}

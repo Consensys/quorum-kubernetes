@@ -1,7 +1,7 @@
 
 # Prod
 
-The following will only work on Azure, please refer to the ARM templates deployment [documentation](./azure/README.md) before proceeding. Please proceed only after using the `dev` section to gain an understanding of how things work
+The following will only work on Azure or AWS. Please proceed only after using the `dev` section to gain an understanding of how things work
 
 The prod charts have:
 - Dynamic key & account generation
@@ -36,7 +36,7 @@ Then deploy the charts like so:
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -72,7 +72,7 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 *For GoQuorum:*
 ```bash
 cd dev/helm/  
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
