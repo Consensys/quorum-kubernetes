@@ -71,7 +71,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/aws-ebs
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
   type: gp2
