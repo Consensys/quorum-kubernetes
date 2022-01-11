@@ -21,10 +21,11 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: false
 
+storage:
+  sizeLimit: "20Gi"
+  pvcSizeLimit: "20Gi"
+
 node:
-  storage:
-    sizeLimit: "20Gi"
-    pvcSizeLimit: "20Gi"
   quorum:
     resources:
       cpuLimit: 0.5

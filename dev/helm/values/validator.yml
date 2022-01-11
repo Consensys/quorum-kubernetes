@@ -1,5 +1,4 @@
 ---
-
 nodeFlags:
   bootnode: false
   generateKeys: false

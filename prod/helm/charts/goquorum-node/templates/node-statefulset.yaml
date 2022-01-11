@@ -71,7 +71,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/aws-ebs
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
   type: gp2
@@ -91,7 +91,7 @@ spec:
   storageClassName: {{ include "goquorum-node.fullname" . }}-storage
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.storage.pvcSizeLimit }}"
 
 ---
 apiVersion: apps/v1
@@ -116,6 +116,8 @@ metadata:
 spec:
   replicas: 1
   podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: {{ include "goquorum-node.fullname" . }}

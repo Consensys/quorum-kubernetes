@@ -41,7 +41,7 @@ _For Besu:_
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -54,16 +54,13 @@ helm install validator-4 ./charts/besu-node --namespace quorum --values ./values
 
 # spin up a besu and tessera node pair
 helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
-
 ```
 
 Optionally deploy blockscout:
 
-```
-
+```bash
 helm dependency update ./charts/blockscout
-helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yaml
-
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -88,7 +85,7 @@ _For GoQuorum:_
 
 ```bash
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace
+helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
@@ -104,7 +101,7 @@ Optionally deploy blockscout:
 
 ```
 helm dependency update ./charts/blockscout
-helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-goquorum.yaml
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-goquorum.yml
 ```
 
 Optionally deploy the ingress controller like so:
@@ -145,7 +142,7 @@ API Calls to either client
 # HTTP RPC API:
 curl -v -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://<INGRESS_IP>/rpc
 
-# which should return (confirming that the node running the JSON-RPC service has peers):
+# which should return (confirming that the node running the JSON-RPC service is syncing):
 {
   "jsonrpc" : "2.0",
   "id" : 1,

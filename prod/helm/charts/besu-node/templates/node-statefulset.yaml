@@ -50,7 +50,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 allowVolumeExpansion: true
 mountOptions:
   - dir_mode=0755
@@ -70,7 +70,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/aws-ebs
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
   type: gp2
@@ -89,7 +89,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.storage.pvcSizeLimit }}"
 
 
 ---
@@ -115,6 +115,8 @@ metadata:
 spec:
   replicas: 1
   podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: {{ template "besu-node.fullname" . }}
