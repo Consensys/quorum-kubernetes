@@ -31,10 +31,11 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: false
 
+storage:
+  sizeLimit: "30Gi"
+  pvcSizeLimit: "30Gi"
+
 node:
-  storage:
-    sizeLimit: "30Gi"
-    pvcSizeLimit: "30Gi"
   quorum:
     resources:
       cpuLimit: 0.5

@@ -89,7 +89,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: "{{ .Values.node.storage.pvcSizeLimit }}"
+      storage: "{{ .Values.storage.pvcSizeLimit }}"
 
 
 ---
@@ -115,6 +115,8 @@ metadata:
 spec:
   replicas: 1
   podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: {{ template "besu-node.fullname" . }}
