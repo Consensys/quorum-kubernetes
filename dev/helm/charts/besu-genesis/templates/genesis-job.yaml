@@ -119,23 +119,30 @@ spec:
               echo "Creating bootnode keys ..."
               for j in {1..2}
               do
+                /opt/besu/bin/besu public-key export --to=public${j}.key
+                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+                sed 's/^0x//' ./public${j}.key > /tmp/enode${j}
                 echo "Creating bootnode ${j} secrets in k8s ..."
-                ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/tls-secret/bootnode-${j}-nodekey --from-file=public.key=/tls-secret/bootnode-${j}-nodekey.pub --from-file=enode=/tls-secret/bootnode-${j}-nodekey.pub --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/bootnode-${j}.jks --from-file=bootnode-${j}.pem=/tls-secret/bootnode-${j}.pem
+                ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode=/tmp/enode${j} --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/bootnode-${j}.jks --from-file=bootnode-${j}.pem=/tls-secret/bootnode-${j}.pem
 
                 # add to the static-nodes
-                pubkey=$(cat /tls-secret/bootnode-${j}-nodekey.pub )
+                pubkey=$(cat /tmp/enode${j} )
                 echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
+                rm ./public${j}.key /tmp/enode${j}.key /opt/besu/key
               done
 
               echo "Creating rpc keys ..."
               for k in {1..2}
               do
+                /opt/besu/bin/besu public-key export --to=public${k}.key
+                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
+                sed 's/^0x//' ./public${k}.key > /tmp/enode${k}
                 echo "Creating rpc ${k} secrets in k8s ..."
-                ./kubectl create secret generic besu-node-rpc-${k}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/tls-secret/rpc-${k}-nodekey --from-file=public.key=/tls-secret/rpc-${k}-nodekey.pub --from-file=enode=/tls-secret/rpc-${k}-nodekey.pub --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/rpc-${k}.jks --from-file=rpc-${k}.pem=/tls-secret/rpc-${k}.pem
+                ./kubectl create secret generic besu-node-rpc-${k}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=./public${k}.key --from-file=enode=/tmp/enode${k} --from-file=truststore.jks=/tls-secret/truststore.jks --from-file=jkspassword.txt=/tls-secret/jkspassword.txt --from-file=keystore.jks=/tls-secret/rpc-${k}.jks --from-file=rpc-${k}.pem=/tls-secret/rpc-${k}.pem
 
                 # add to the static-nodes
-                pubkey=$(cat /tls-secret/rpc-${k}-nodekey.pub )
+                pubkey=$(cat /tmp/enode${k} )
                 echo ",\"enode://$pubkey@besu-node-rpc-$k-0.besu-node-rpc-$k.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
               done

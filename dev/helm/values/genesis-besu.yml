@@ -9,7 +9,6 @@ rawGenesisConfig:
   genesis:
     config:
       chainId: 1337
-      ecCurve: 'secp256r1'
       constantinoplefixblock: 0
       contractSizeLimit: 2147483647
       ibft2:
