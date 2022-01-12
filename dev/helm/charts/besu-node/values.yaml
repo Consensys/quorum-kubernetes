@@ -2,7 +2,7 @@
 image:
   besu:
     repository: hyperledger/besu
-    tag: 21.10.2
+    tag: develop
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
