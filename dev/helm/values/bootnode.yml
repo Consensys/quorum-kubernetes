@@ -6,4 +6,4 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: false
 
-provider: azure
+provider: local

@@ -381,4 +381,3 @@ spec:
             - key: tesseraPeers
               path: tesseraPeers
       {{- end }}
-
