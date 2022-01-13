@@ -133,7 +133,7 @@ spec:
               fi
               # update the entries
               echo "updating goquorum-node-enodes..."
-              pubkey=$(cat /tmp/nodekey.pub )
+              pubkey=$(cat /tmp/enode )
               echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
               NEEDLE="enode://$pubkey@{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
               cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
