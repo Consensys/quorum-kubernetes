@@ -74,7 +74,7 @@ az deployment create \
 
 2. Provision Drivers
 
-Once the deployment has completed, please run the [bootstrap](../scripts/bootstrap.sh) to provision the AAD pod identity and the CSI drivers
+Once the deployment has completed, please run the [bootstrap](../scripts/bootstrap.sh) to provision the AAD pod identity and the CSI drivers ([jq](https://stedolan.github.io/jq/) JSON processor is required)
 
 Use `besu` or `quorum` for AKS_NAMESPACE depending on which blockchain client you are using
 
