@@ -36,8 +36,16 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 
 ## Usage
 
-_For Besu:_
+*To spin up ELK for logs:*
+```bash
+helm repo add elastic https://helm.elastic.co
+helm repo update
+helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
+helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values ./values/kibana.yml
+helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
+```
 
+*For Besu:*
 ```bash
 
 cd dev/helm/
@@ -46,7 +54,6 @@ helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
 helm install bootnode-2 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
-helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/reader.yml
 
 helm install validator-1 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 helm install validator-2 ./charts/besu-node --namespace quorum --values ./values/validator.yml
@@ -54,7 +61,7 @@ helm install validator-3 ./charts/besu-node --namespace quorum --values ./values
 helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
 # spin up a besu and orion node pair
-helm install rpc-2 ./charts/besu-node --namespace quorum --values ./values/reader.yml
+helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 
 # delete rpc-1 and restart and see if it joins
 ```

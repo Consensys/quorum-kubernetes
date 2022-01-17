@@ -1,0 +1,15 @@
+{{- if .Values.node.besu.elk -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "besu-node.fullname" . }}-log4j
+  labels:
+    app.kubernetes.io/name: {{ include "besu-node.name" . }}
+    helm.sh/chart: {{ include "besu-node.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  besu-log-config.xml: |-
+{{ .Files.Get "besu-log4j.xml" | indent 4}}
+
+{{- end -}}
