@@ -9,7 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/whitelist-source-range: 115.70.158.109/32,220.235.200.155/32,117.20.70.36/32,101.190.32.55/32
+#    nginx.ingress.kubernetes.io/whitelist-source-range: 115.70.158.109/32,220.235.200.155/32,117.20.70.36/32,101.190.32.55/32
 spec:
   rules:
     - http:
@@ -28,10 +28,17 @@ spec:
                 name: besu-node-rpc-1
                 port:
                   number: 8546
-          - path: /
+          - path: /grafana
             pathType: Prefix
             backend:
               service:
                 name: quorum-monitoring-monitoring-grafana
                 port:
                   number: 3000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kibana-kibana
+                port:
+                  number: 5601

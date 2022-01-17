@@ -33,6 +33,15 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 
 ## Usage
 
+*To spin up ELK for logs:*
+```bash
+helm repo add elastic https://helm.elastic.co
+helm repo update
+helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
+helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values ./values/kibana.yml
+helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
+```
+
 *For Besu:*
 ```bash
 

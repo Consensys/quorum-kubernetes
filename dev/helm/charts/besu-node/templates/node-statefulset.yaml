@@ -103,7 +103,6 @@ spec:
     requests:
       storage: "{{ .Values.node.storage.pvcSizeLimit }}"
 
-
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -307,6 +306,10 @@ spec:
               secretKeyRef:
                 name: besu-node-bootnode-2-keys
                 key: enode
+        {{- if .Values.node.besu.elk }}
+          - name: LOG4J_CONFIGURATION_FILE
+            value: "/log4j/log-config.xml"
+        {{- end }}
         volumeMounts:
         {{- if .Values.nodeFlags.privacy }}
           - name: tessera-keys
@@ -381,6 +384,14 @@ spec:
           items:
             - key: genesis.json
               path: genesis.json
+      {{- if .Values.node.besu.elk }}
+      - name: log4j
+        configMap:
+          name: {{ include "besu-node.fullname" . }}-log4j
+          items:
+            - key: besu-log-config.xml
+              path: log-config.xml
+      {{- end }}
       - name: static-nodes
         configMap:
           name: besu-node-enodes
