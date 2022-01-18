@@ -33,8 +33,25 @@ $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ```
-
 ## Usage
+
+_Spin up ELK for logs: (Optional but recommended)_  
+
+**NOTE:** this uses charts from Elastic - please configure this as per your requirements and policies
+
+```bash
+helm repo add elastic https://helm.elastic.co
+helm repo update
+helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
+helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values ./values/kibana.yml
+helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
+```
+
+Please also deploy the ingress (below) and the ingress rules to access kibana on path `http://<INGRESS_IP>/kibana`.
+Alternatively configure the kibana ingress settings in the [values.yml](./helm/values/kibana.yml)
+
+Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
+per your requirements and policies
 
 _For Besu:_
 
