@@ -44,7 +44,7 @@ node:
     keysPath: "/keys"
     privateKeyPath: "/keys/private.key"
     genesisFilePath: "/etc/genesis/genesis.json"
-    logging: INFO
+    logging: DEBUG
     elk: true
     p2p:
       enabled: true

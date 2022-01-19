@@ -11,17 +11,17 @@ daemonset:
   envFrom: []
   # - configMapRef:
   #     name: config-secret
-#  extraEnvs:
-#    - name: "ELASTICSEARCH_USERNAME"
-#      valueFrom:
-#        secretKeyRef:
-#          name: elasticsearch-master-credentials
-#          key: username
-#    - name: "ELASTICSEARCH_PASSWORD"
-#      valueFrom:
-#        secretKeyRef:
-#          name: elasticsearch-master-credentials
-#          key: password
+  #  extraEnvs:
+  #    - name: "ELASTICSEARCH_USERNAME"
+  #      valueFrom:
+  #        secretKeyRef:
+  #          name: elasticsearch-master-credentials
+  #          key: username
+  #    - name: "ELASTICSEARCH_PASSWORD"
+  #      valueFrom:
+  #        secretKeyRef:
+  #          name: elasticsearch-master-credentials
+  #          key: password
   # Allows you to add any config files in /usr/share/filebeat
   extraVolumes: []
   # - name: extras
@@ -38,6 +38,18 @@ daemonset:
       filebeat.inputs:
       - type: container
         paths:
+          - /var/log/containers/goquorum-node-*.log
+        fields:
+          logtype: goquorum
+        fields_under_root: true   
+        processors:
+        - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+            - logs_path:
+                logs_path: "/var/log/containers/"
+      - type: container
+        paths:
           - /var/log/containers/besu-node-*.log
         fields:
           logtype: besu
@@ -48,38 +60,6 @@ daemonset:
             matchers:
             - logs_path:
                 logs_path: "/var/log/containers/"
-        - decode_json_fields:
-            fields: ["message"]
-            process_array: false
-            max_depth: 2
-            target: "json"
-            overwrite_keys: false
-            add_error_key: true
-        - drop_fields:
-            fields:
-             - "message"
-      - type: container
-        paths:
-          - /var/log/containers/tessera-node-*.log
-        fields:
-          logtype: tessera
-        fields_under_root: true   
-        processors:
-        - add_kubernetes_metadata:
-            host: ${NODE_NAME}
-            matchers:
-            - logs_path:
-                logs_path: "/var/log/containers/"
-        - decode_json_fields:
-            fields: ["message"]
-            process_array: false
-            max_depth: 2
-            target: "json"
-            overwrite_keys: false
-            add_error_key: true
-        - drop_fields:
-            fields:
-             - "message"      
       output.elasticsearch:
         host: '${NODE_NAME}'
         hosts: '${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}'

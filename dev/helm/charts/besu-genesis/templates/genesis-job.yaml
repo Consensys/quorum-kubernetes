@@ -126,6 +126,7 @@ spec:
                 pubkey=$(cat /tls-secret/bootnode-${j}-nodekey.pub )
                 echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
+                rm ./public${j}.key /tmp/enode${j}.key /opt/besu/key
               done
 
               echo "Creating rpc keys ..."
@@ -137,6 +138,8 @@ spec:
                 # add to the static-nodes
                 pubkey=$(cat /tls-secret/rpc-${k}-nodekey.pub )
                 echo ",\"enode://$pubkey@besu-node-rpc-$k-0.besu-node-rpc-$k.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
+                rm ./public${k}.key /tmp/enode${k}.key /opt/besu/key
 
               done
 
@@ -216,7 +219,11 @@ spec:
               do
                 ./kubectl delete secret besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
               done
-
+              echo "Deleting rpc secrets in k8s ..."
+              for k in {1..2}
+              do
+                ./kubectl delete secret besu-node-rpc-${k}-keys --namespace {{ .Release.Namespace }}
+              done
               echo "Deleting node-enodes configmap in k8s ..."
               ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
 
