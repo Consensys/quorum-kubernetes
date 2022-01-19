@@ -225,7 +225,11 @@ spec:
               do
                 ./kubectl delete secret besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
               done
-
+              echo "Deleting rpc secrets in k8s ..."
+              for j in {1..2}
+              do
+                ./kubectl delete secret besu-node-rpc-${j}-keys --namespace {{ .Release.Namespace }}
+              done
               echo "Deleting node-enodes configmap in k8s ..."
               ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
 
