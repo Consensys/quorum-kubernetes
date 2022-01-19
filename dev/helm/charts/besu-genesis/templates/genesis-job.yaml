@@ -145,6 +145,8 @@ spec:
                 pubkey=$(cat /tmp/enode${k} )
                 echo ",\"enode://$pubkey@besu-node-rpc-$k-0.besu-node-rpc-$k.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
+                rm ./public${k}.key /tmp/enode${k}.key /opt/besu/key
+
               done
 
               echo "]" >> /generated-config/static-nodes.json
