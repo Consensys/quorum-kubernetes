@@ -17,11 +17,18 @@
 1. validators1 and 2 serve as bootnodes as well. Adjust according to your needs
 2. If you add more validators in past the initial setup, they need to be voted in to be validators i.e they will serve as normal nodes and not validators until they've been voted in.
 
-#### 1. Boot nodes private keys
+#### 1. Boot nodes private keys 
+**Note:** Please note that steps 1-3 have already been run and the k8s objects already have keys. You are welcome to run steps 1-3 yourself though and create fresh keys
+
 Create private/public keys for the validators using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
 Repeat this process for as many validators as you would like to provision i.e keys and replicate the deployment & service
 
+Essentially you are following the [genesis tutorial](https://besu.hyperledger.org/en/latest/Tutorials/Private-Network/Create-IBFT-Network/) here. Create a folder called `ibftSetup` and copy the `ibftConfigFile.json`
+from the tutorial in there to run the key generation process. 
+
 ```bash
+mkdir -p $PWD/ibftSetup
+# copy the `ibftConfigFile.json` file from the tutorial here and then proceed
 docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:latest operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 mv ./ibftSetup/networkFiles/genesis.json ./ibftSetup/
