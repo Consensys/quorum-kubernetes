@@ -123,16 +123,10 @@ spec:
 
 
             {{- if .Values.nodeFlags.privacy }}
-
-            {{- if .Values.node.tessera.password }}
-              echo $'{{.Values.node.tessera.password }}\n{{ .Values.node.tessera.password }}\n' > /tmp/password.txt
-            {{- else }}
-              echo $'\n\n' > /tmp/password.txt
-            {{- end }}
-
+              npx --yes quorum-genesis-tool@latest --validators 0 --members 0 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera
               /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
               echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
-              kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tm.key --from-file=tm.pub=/tmp/tm.pub --from-file=password=/tmp/password.txt
+              kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tessera/*/tessera.key --from-file=tm.pub=/tmp/tessera/*/tessera.pub --from-file=password=/tmp/tessera/*/passwordFile.txt
               update_tessera_peers_configmap
               echo "Tessera Completed"
             {{- end }}

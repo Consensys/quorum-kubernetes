@@ -1,8 +1,8 @@
 ---
 image:
-  repository: hyperledger/besu
-  tag: 'latest'
-  pullPolicy: IfNotPresent
+  repository: local/quorum-k8s-hooks #consensys/quorum-k8s-hooks
+  tag: latest
+  pullPolicy: Never #IfNotPresent
 
 # local / azure
 provider: local
