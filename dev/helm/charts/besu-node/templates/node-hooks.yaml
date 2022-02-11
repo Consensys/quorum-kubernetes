@@ -111,11 +111,10 @@ spec:
             {{- if .Values.nodeFlags.generateKeys }}       
 
               echo "Besu nodekey generation ..."
-              /opt/besu/bin/besu public-key export --to=public.key
-              # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-              sed 's/^0x//' ./public${j}.key > /tmp/enode
+              # /opt/besu/bin/besu public-key export --to=public.key
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus ibft2 --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
-              kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public.key --from-file=enode=/tmp/enode
+              kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=$FOLDER_PATH/member0/nodekey --from-file=public.key=$FOLDER_PATH/member0/nodekey.pub --from-file=enode=$FOLDER_PATH/member0/nodekey.pub
               update_enodes_configmap
               echo "Besu Completed"
 
