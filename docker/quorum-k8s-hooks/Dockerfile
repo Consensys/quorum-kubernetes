@@ -20,7 +20,8 @@ RUN set -eux; \
 RUN set -eux; \
     # az cli
     curl -s https://packages.microsoft.com/keys/microsoft.asc | apt-key --keyring /etc/apt/trusted.gpg.d/microsoft.asc.gpg add - ; \
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ buster main" | tee /etc/apt/sources.list.d/azure-cli.list ; \
+    AZ_REPO=$(lsb_release -cs) ; \
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | tee /etc/apt/sources.list.d/azure-cli.list ; \
     apt-get update && apt-get install -y azure-cli ; \
     # aws cli
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"; \

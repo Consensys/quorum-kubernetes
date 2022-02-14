@@ -42,7 +42,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
-reclaimPolicy: Retain
+reclaimPolicy: Delete
 allowVolumeExpansion: true
 mountOptions:
   - dir_mode=0755
@@ -262,11 +262,13 @@ spec:
                   ],
                   "peer": $$(cat /config/tessera-peers/tesseraPeers),
                   "keys": {
-                    "passwords": [],
+                  {{ if .Values.node.tessera.password }}
+                    "passwordFile": "/keys/passwordFile.txt",
+                  {{ end }}
                     "keyData": [
                       {
-                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm.key),
-                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm.pub)"
+                        "privateKeyPath": "/keys/tm.key",
+                        "publicKeyPath": "/keys/tm.pub"
                       }
                     ]
                   },

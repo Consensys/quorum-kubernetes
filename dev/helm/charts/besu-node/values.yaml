@@ -9,9 +9,9 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
   hooks:
-    repository: local/quorum-k8s-hooks # consensys/quorum-k8s-hooks
+    repository: ezzah/quorum-k8s-hooks # consensys/quorum-k8s-hooks
     tag: latest
-    pullPolicy: Never
+    pullPolicy: IfNotPresent
 
 # fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
 volumePermissionsFix:
