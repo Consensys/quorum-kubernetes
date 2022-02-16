@@ -81,26 +81,37 @@ spec:
             - -c
           args:
             - |
-
-              mkdir /generated-config/ && cd /generated-config/
               echo "Creating config ..."
-              /opt/istanbul-tools/bin/istanbul setup --num {{ .Values.rawGenesisConfig.blockchain.nodes.count }} --nodes --quorum --save --verbose
-              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=/generated-config/genesis.json
+              {{ if hasKey .Values.rawGenesisConfig.genesis.config "qbft" }}
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus qbft {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.qbft.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.qbft.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.qbft.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              {{ else if hasKey .Values.rawGenesisConfig.genesis.config "clique" }}
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus clique {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.clique.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.clique.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.clique.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              {{ else if hasKey .Values.rawGenesisConfig.genesis.config "raft" }}
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus raft {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.raft.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.raft.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.raft.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              {{ else if hasKey .Values.rawGenesisConfig.genesis.config "ibft" }}
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus ibft {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.ibft.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.ibft.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.ibft.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              {{ else }}
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus qbft {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.qbft.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.qbft.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.qbft.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              {{ end }}
+              echo $FOLDER_PATH
+              echo "Creating genesis configmap in k8s ..."
+              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=$FOLDER_PATH/goQuorum/genesis.json
 
               # create the static-nodes with proper dns names for the quorum nodes  
               echo "[" > /generated-config/static-nodes.json
-
-              # 0 index so setting this to the num of validators
+              i=1
               echo "Creating validator keys ..."
-              for f in `seq 0 $(( {{ .Values.rawGenesisConfig.blockchain.nodes.count  }} -1 ))`; do 
-                c=$(($f + 1));
-                /opt/istanbul-tools/bin/bootnode -nodekey /generated-config/$f/nodekey -writeaddress > /generated-config/$f/nodekey.pub
-                echo -ne $(cat /generated-config/$f/nodekey.pub) > /generated-config/$f/enode
-                kubectl create secret generic goquorum-node-validator-$c-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=/generated-config/$f/nodekey --from-file=nodekey.pub=/generated-config/$f/nodekey.pub --from-file=enode=/generated-config/$f/enode 
-                
-                # add to the static-nodes
-                pubkey=$(cat /generated-config/$f/nodekey.pub )
-                echo ",\"enode://$pubkey@goquorum-node-validator-$c-0.goquorum-node-validator-$c.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+              for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
+                if [ -d $FOLDER_PATH/${f} ]; then
+                  echo $f
+                  kubectl create secret generic goquorum-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=$FOLDER_PATH/${f}/nodekey --from-file=nodekey.pub=$FOLDER_PATH/${f}/nodekey.pub --from-file=enode=$FOLDER_PATH/${f}/nodekey.pub
+                  
+                  # add to the static-nodes
+                  pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
+                  echo ",\"enode://$pubkey@goquorum-node-validator-$i-0.goquorum-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
+                  i=$((i+1))
+                fi
               done
 
               echo "]" >> /generated-config/static-nodes.json
@@ -108,7 +119,7 @@ spec:
               sed -i '0,/,/s///' /generated-config/static-nodes.json
               kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes  --from-file=static-nodes.json=/generated-config/static-nodes.json
 
-              echo "Completed"
+              echo "Completed ..."
 
 ---
 apiVersion: batch/v1

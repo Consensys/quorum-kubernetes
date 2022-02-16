@@ -92,10 +92,10 @@ spec:
           {{- if .Values.nodeFlags.generateKeys }}       
     
             echo "Quorum nodekey generation ..."
-            cd /tmp
-            /opt/istanbul-tools/bin/bootnode -genkey /tmp/nodekey --writeaddress > /tmp/nodekey.pub
-            echo -ne $(cat /tmp/nodekey.pub) > /tmp/enode
-            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=/tmp/nodekey --from-file=nodekey.pub=/tmp/nodekey.pub --from-file=enode=/tmp/enode
+            FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+            echo "Creating {{ template "goquorum-node.fullname" . }} secrets in k8s ..."
+            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=$FOLDER_PATH/member0/nodekey --from-file=nodekey.pub=$FOLDER_PATH/member0/nodekey.pub --from-file=enode=$FOLDER_PATH/member0/nodekey.pub
+            cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
 
             update_enodes_configmap
           {{- end }}       
@@ -122,16 +122,13 @@ spec:
               fi
             }
 
-          {{- if .Values.node.tessera.password }}
-            echo $'{{ .Values.node.tessera.password  }}\n{{ .Values.node.tessera.password }}\n' > /tmp/password.txt
-          {{- else }} 
-            echo $'\n\n' > /tmp/password.txt
-          {{- end }}
-
-            /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
-            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=/tmp/tm.key --from-file=tm.pub=/tmp/tm.pub --from-file=password=/tmp/password.txt
+            FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
+            if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
+              echo "" > $FOLDER_PATH/member0/passwordFile.txt
+            fi
+            echo "Creating {{ template "goquorum-node.fullname" . }}-tessera-keys secrets in k8s ..."
+            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
             update_tessera_peers_configmap
-            echo "Tessera Completed"
 
           {{- end }}
             echo "Completed"

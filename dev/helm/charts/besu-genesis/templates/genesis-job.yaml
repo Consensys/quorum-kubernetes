@@ -87,8 +87,6 @@ spec:
           args:
             - |
               # apt-get update && apt-get install -y curl jq
-              curl -LOs https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl && echo "Downloaded kubectl..."
-
               echo "Creating config ..."
               {{ if hasKey .Values.rawGenesisConfig.genesis.config "ibft2" }}
               FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus ibft2 {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 2 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.ibft2.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.ibft2.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.ibft2.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")

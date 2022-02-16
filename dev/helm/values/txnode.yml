@@ -7,4 +7,5 @@ nodeFlags:
 node:
   tessera:
     password: ""
-provider: azure
+
+provider: local
