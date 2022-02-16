@@ -5,7 +5,7 @@ rawGenesisConfig:
     config:
       chainId: 1337
       constantinoplefixblock: 0
-      ibft2:
+      qbft:
         blockperiodseconds: 10
         epochlength: 30000
         requesttimeoutseconds: 20

@@ -4,5 +4,7 @@ nodeFlags:
   generateKeys: true
   privacy: true
   removeKeysOnDeletion: true
-
-provider: local
+node:
+  tessera:
+    password: ""
+provider: azure

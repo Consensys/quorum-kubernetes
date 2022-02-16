@@ -15,7 +15,8 @@ RUN set -eux; \
 RUN set -eux; \
     # install nodejs 17.x
     curl -fsSL https://deb.nodesource.com/setup_17.x | bash - ; \
-    apt-get install -y nodejs;
+    apt-get install -y nodejs; \
+    npm install -g npm@latest;
 
 RUN set -eux; \
     # az cli
