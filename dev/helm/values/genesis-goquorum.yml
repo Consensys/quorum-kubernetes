@@ -7,7 +7,6 @@ rawGenesisConfig:
         blockperiodseconds: 10
         epochlength: 30000
         requesttimeoutseconds: 20
-    nonce: '0x0'
     gasLimit: '0x47b760'
     difficulty: '0x1'
     coinbase: '0x0000000000000000000000000000000000000000'
@@ -15,10 +14,5 @@ rawGenesisConfig:
     nodes:
       generate: true
       count: 4
-
-node:
-  quorum:
-    miner:
-      blockPeriod: 10
 
 provider: local

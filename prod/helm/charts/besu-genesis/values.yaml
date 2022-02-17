@@ -24,10 +24,10 @@ rawGenesisConfig:
     config:
       chainId: 1337
       constantinoplefixblock: 0
-      ibft2:
-        blockperiodseconds: 10
-        epochlength: 30000
-        requesttimeoutseconds: 20
+      # ibft2:
+      #   blockperiodseconds: 10
+      #   epochlength: 30000
+      #   requesttimeoutseconds: 20
     nonce: '0x0'
     timestamp: '0x58ee40ba'
     gasLimit: '0x47b760'

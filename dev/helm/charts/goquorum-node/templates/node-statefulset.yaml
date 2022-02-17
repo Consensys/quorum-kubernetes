@@ -43,7 +43,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
-reclaimPolicy: Delete
+reclaimPolicy: Retain
 mountOptions:
   - dir_mode=0755
   - file_mode=0755
