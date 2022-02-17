@@ -8,7 +8,7 @@ image:
     repository: quorumengineering/tessera
     tag: latest
   hooks:
-    repository: ezzah/quorum-k8s-hooks
+    repository: consensys/quorum-k8s-hooks
     tag: latest
     pullPolicy: IfNotPresent
 

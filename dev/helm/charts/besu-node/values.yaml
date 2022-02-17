@@ -9,7 +9,7 @@ image:
     tag: latest
     pullPolicy: IfNotPresent
   hooks:
-    repository: ezzah/quorum-k8s-hooks # consensys/quorum-k8s-hooks
+    repository: consensys/quorum-k8s-hooks
     tag: latest
     pullPolicy: IfNotPresent
 
