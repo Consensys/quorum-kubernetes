@@ -6,6 +6,6 @@ nodeFlags:
   removeKeysOnDeletion: true
 node:
   tessera:
-    password: ""
+    password: "123455"
 
 provider: local

@@ -105,6 +105,7 @@ spec:
                 if [ -d $FOLDER_PATH/${f} ]; then
                   echo $f
                   kubectl create secret generic goquorum-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=$FOLDER_PATH/${f}/nodekey --from-file=nodekey.pub=$FOLDER_PATH/${f}/nodekey.pub --from-file=enode=$FOLDER_PATH/${f}/nodekey.pub
+                  kubectl create configmap goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
                   
                   # add to the static-nodes
                   pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
@@ -174,6 +175,12 @@ spec:
               for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
                 echo $f
                 kubectl delete secret goquorum-node-validator-${f}-keys --namespace {{ .Release.Namespace }}
+              done
+
+              echo "Deleting validator addresses in k8s ..."
+              for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
+                echo $f
+                kubectl delete configmap goquorum-node-validator-${f}-address --namespace {{ .Release.Namespace }}
               done
 
               echo "Deleting bootnode secrets in k8s ..."

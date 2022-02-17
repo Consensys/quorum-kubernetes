@@ -116,6 +116,9 @@ spec:
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
               kubectl create secret generic {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=$FOLDER_PATH/member0/nodekey --from-file=public.key=$FOLDER_PATH/member0/nodekey.pub --from-file=enode=$FOLDER_PATH/member0/nodekey.pub
               cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+              kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
+
+
               update_enodes_configmap
               echo " Completed"
 
@@ -203,6 +206,7 @@ spec:
 
               echo "Deleting node secrets in k8s ..."
               kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
+              kubectl delete configmap {{ template "besu-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
 
             {{- if .Values.nodeFlags.privacy }}
               kubectl delete secret {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
