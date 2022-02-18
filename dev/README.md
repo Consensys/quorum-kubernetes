@@ -62,16 +62,16 @@ cd dev/helm/
 helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
-helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml &
-helm install bootnode-2 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml &
+helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
+helm install bootnode-2 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
 
-helm install validator-1 ./charts/besu-node --namespace quorum --values ./values/validator.yml &
-helm install validator-2 ./charts/besu-node --namespace quorum --values ./values/validator.yml &
-helm install validator-3 ./charts/besu-node --namespace quorum --values ./values/validator.yml &
-helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml &
+helm install validator-1 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-2 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-3 ./charts/besu-node --namespace quorum --values ./values/validator.yml
+helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
 # spin up a besu and tessera node pair
-helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml &
+helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 ```
 
 Optionally deploy blockscout:
