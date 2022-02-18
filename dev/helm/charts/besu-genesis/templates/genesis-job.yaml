@@ -60,7 +60,7 @@ metadata:
   annotations:
     helm.sh/hook-delete-policy: "hook-succeeded"
 spec:
-  backoffLimit: 3
+  # backoffLimit: 3
   completions: 1
   template:
     metadata:
@@ -86,7 +86,6 @@ spec:
             - -c
           args:
             - |
-              # apt-get update && apt-get install -y curl jq
               echo "Creating config ..."
               {{ if hasKey .Values.rawGenesisConfig.genesis.config "ibft2" }}
               FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus ibft2 {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 2 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.ibft2.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.ibft2.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.ibft2.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")

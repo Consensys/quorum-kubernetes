@@ -5,12 +5,12 @@ RUN set -eux; \
     #https://github.com/balena-io-library/base-images/issues/273
     mkdir -p /usr/share/man/man1; \
     apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config ca-certificates apt-transport-https gnupg gnupg2 lsb-release software-properties-common jq libc6-dev make curl wget vim unzip openjdk-11-jre libsodium-dev; \
+    pkg-config ca-certificates apt-transport-https gnupg gnupg2 lsb-release software-properties-common jq libc6-dev make curl wget vim unzip libsodium-dev; \
     echo "fd97de6b91a121428112c52e5fe04a15" > /etc/machine-id ; \
     # kubectl    
     curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && chmod a+x ./kubectl && mv ./kubectl /usr/local/bin/kubectl ; \
     # helm
-    wget -q https://get.helm.sh/helm-v3.5.2-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm && chmod +x /usr/local/bin/helm ;
+    wget -q https://get.helm.sh/helm-v3.8.0-linux-amd64.tar.gz -O - | tar -xzO linux-amd64/helm > /usr/local/bin/helm && chmod +x /usr/local/bin/helm ;
 
 RUN set -eux; \
     # install nodejs 17.x
