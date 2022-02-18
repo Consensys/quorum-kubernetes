@@ -1,9 +1,9 @@
-
 # Prod
 
 The following will only work on Azure or AWS. Please proceed only after using the `dev` section to gain an understanding of how things work
 
 The prod charts have:
+
 - Dynamic key & account generation
 - Can be used only in cloud. Edit the `provider: azure` value in the values.yml.
 - Keys are stored in keyvault on Azure and pods make use of Managed Identities
@@ -12,18 +12,19 @@ The prod charts have:
 You are encouraged to use a HA SQL database for Tessera nodes (create externally and pass connection details to the values.yml)
 
 ## Development:
+
 - [Helm](https://helm.sh/docs/)
 - [Helmfile](https://github.com/roboll/helmfile)
 - [Helm Diff plugin](https://github.com/databus23/helm-diff)
-
 
 ## Usage
 
 Ensure you have followed the steps completed to setup the clusters in (AWS)[../aws/README.md] or in (Azure)[../azure/README.md]. The Azure setup requires a script to be run to provision drivers on the cluster
 
-Once completed, update the `aws` or `azure` section of the [values yml files](./helm/values/)  
+Once completed, update the `aws` or `azure` section of the [values yml files](./helm/values/)
 
 Verify kubectl is connected to your cluster with:
+
 ```bash
 $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
@@ -48,13 +49,13 @@ Alternatively configure the kibana ingress settings in the [values.yml](./helm/v
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
 per your requirements and policies
 
+Then deploy the charts like so:
 
-Then deploy the charts like so: 
+_For Besu:_
 
-*For Besu:*
 ```bash
 
-cd dev/helm/
+cd prod/helm/
 helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
@@ -88,9 +89,10 @@ helm install besu-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```
 
-*For GoQuorum:*
+_For GoQuorum:_
+
 ```bash
-cd dev/helm/  
+cd prod/helm/
 helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
@@ -121,10 +123,10 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 ```
 
-
 4. Once deployed, services are available as follows on the IP/ of the ingress controllers:
 
 Monitoring (if deployed)
+
 ```bash
 # For Besu's grafana address:
 http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
@@ -134,8 +136,8 @@ http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
 
 ```
 
-
 API Calls to either client
+
 ```bash
 
 # HTTP RPC API:
