@@ -48,7 +48,7 @@ helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values 
 helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
 ```
 
-Please also deploy the ingress (below) and the ingress rulranches to access kibana on path `http://<INGRESS_IP>/kibana`.
+Please also deploy the ingress (below) and the ingress rules to access kibana on path `http://<INGRESS_IP>/kibana`.
 Alternatively configure the kibana ingress settings in the [values.yml](./helm/values/kibana.yml)
 
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
