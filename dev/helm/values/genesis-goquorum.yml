@@ -1,5 +1,16 @@
 ---
 rawGenesisConfig:
+  genesis:
+    config:
+      chainId: 1337
+      algorithm:
+        consensus: qbft # choose from: ibft | qbft | raft | clique
+        blockperiodseconds: 10
+        epochlength: 30000
+        requesttimeoutseconds: 20
+    gasLimit: '0x47b760'
+    difficulty: '0x1'
+    coinbase: '0x0000000000000000000000000000000000000000'
   blockchain:
     nodes:
       generate: true

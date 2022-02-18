@@ -43,6 +43,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
+reclaimPolicy: Retain
 mountOptions:
   - dir_mode=0755
   - file_mode=0755
@@ -236,11 +237,13 @@ spec:
                   ],
                   "peer": $$(cat /config/tessera-peers/tesseraPeers),
                   "keys": {
-                    "passwords": [],
+                  {{ if .Values.node.tessera.password }}
+                    "passwordFile": "/keys/passwordFile.txt",
+                  {{ end }}
                     "keyData": [
                       {
-                        "config": $$(cat {{ .Values.node.tessera.dataPath }}/tm.key),
-                        "publicKey": "$$(cat {{ .Values.node.tessera.dataPath }}/tm.pub)"
+                        "privateKeyPath": "/keys/tm.key",
+                        "publicKeyPath": "/keys/tm.pub"
                       }
                     ]
                   },
@@ -338,16 +341,16 @@ spec:
             --nodiscover --ipcdisable \
             --nat extip:$POD_IP \
             --verbosity {{ .Values.node.quorum.log.verbosity }} \
-            --istanbul.blockperiod {{ .Values.node.quorum.miner.blockPeriod }} --mine --minerthreads {{ .Values.node.quorum.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
+            --istanbul.blockperiod {{ .Values.node.quorum.miner.blockPeriod }} --mine --miner.threads {{ .Values.node.quorum.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
             --syncmode full --nousb \
-            --metrics --pprof --pprofaddr {{ .Values.node.quorum.metrics.pprofaddr | quote }} --pprofport {{ .Values.node.quorum.metrics.pprofport }} \
+            --metrics --pprof --pprof.addr {{ .Values.node.quorum.metrics.pprofaddr | quote }} --pprof.port {{ .Values.node.quorum.metrics.pprofport }} \
             --networkid {{ .Values.node.quorum.networkId }} \
             --port {{ .Values.node.quorum.p2p.port }} \
           {{- if .Values.node.quorum.rpc.enabled }}
-            --rpc --rpcaddr {{ .Values.node.quorum.rpc.addr }} --rpcport {{ .Values.node.quorum.rpc.port }} --rpccorsdomain {{ .Values.node.quorum.rpc.corsDomain | quote }} --rpcvhosts {{ .Values.node.quorum.rpc.vHosts | quote }} --rpcapi {{ .Values.node.quorum.rpc.api | quote }} \
+            --http --http.addr {{ .Values.node.quorum.rpc.addr }} --http.port {{ .Values.node.quorum.rpc.port }} --http.corsdomain {{ .Values.node.quorum.rpc.corsDomain | quote }} --http.vhosts {{ .Values.node.quorum.rpc.vHosts | quote }} --http.api {{ .Values.node.quorum.rpc.api | quote }} \
           {{- end }}
           {{- if .Values.node.quorum.ws.enabled }}
-            --ws --wsaddr {{ .Values.node.quorum.ws.addr }} --wsport {{ .Values.node.quorum.ws.port }} --wsorigins {{ .Values.node.quorum.ws.origins | quote }} --wsapi {{ .Values.node.quorum.ws.api | quote }} \
+            --ws --ws.addr {{ .Values.node.quorum.ws.addr }} --ws.port {{ .Values.node.quorum.ws.port }} --ws.origins {{ .Values.node.quorum.ws.origins | quote }} --ws.api {{ .Values.node.quorum.ws.api | quote }} \
           {{- end }}
           {{- if hasKey .Values.node.quorum.account "unlock" }}
              --unlock {{ .Values.node.quorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.quorum.account.password }} \

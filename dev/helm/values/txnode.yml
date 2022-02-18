@@ -4,5 +4,8 @@ nodeFlags:
   generateKeys: true
   privacy: true
   removeKeysOnDeletion: true
+node:
+  tessera:
+    password: "test"
 
 provider: local

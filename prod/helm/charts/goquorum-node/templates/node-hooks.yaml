@@ -159,32 +159,26 @@ spec:
             }
 
             echo "Quorum nodekey generation ..."
-            cd /tmp
-            /opt/istanbul-tools/bin/bootnode -genkey /tmp/nodekey --writeaddress > /tmp/nodekey.pub
-            echo -ne $(cat /tmp/nodekey.pub) > /tmp/enode
-
+            FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
 
             echo "Creating keys in vault for {{ template "goquorum-node.fullname" . }} ..."
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekey /tmp/nodekey
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub /tmp/nodekey.pub
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-enode /tmp/enode
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub 
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub 
+            echo "Creating {{ template "goquorum-node.fullname" . }} configmap address in k8s ..."
+            kubectl create configmap {{ template "goquorum-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
+
             update_enodes_configmap
 
           {{- if .Values.nodeFlags.privacy }}
-
-          {{- if .Values.node.tessera.password }}
-            echo $'{{ .Values.node.tessera.password  }}\n{{ .Values.node.tessera.password }}\n' > /tmp/password.txt
-          {{- else }}
-            echo $'\n\n' > /tmp/password.txt
-          {{- end }}
-
-            /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
-
+            FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
+            if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
+              echo "" > $FOLDER_PATH/member0/passwordFile.txt
+            fi
             echo "Creating tessera keys in keyvault for {{ template "goquorum-node.fullname" . }} ..."
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkey /tmp/tm.key
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkeypub /tmp/tm.pub
-            echo -ne $(sed -n '1p' /tmp/password.txt )> /tmp/password
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmpassword /tmp/password
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
 
             update_tessera_peers_configmap
 
@@ -259,6 +253,9 @@ spec:
                  echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                  cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "goquorum-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
                  kubectl -n {{ .Release.Namespace }} create configmap goquorum-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
+
+                 echo "Deleting node address configmap... "
+                 kubectl delete configmap {{ template "goquorum-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
                fi
               }
 

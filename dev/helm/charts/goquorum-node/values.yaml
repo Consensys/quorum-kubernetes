@@ -85,8 +85,8 @@ node:
     resources:
       cpuLimit: 0.7
       cpuRequest: 0.5
-      memLimit: "1G"
-      memRequest: "500m"
+      memLimit: "2G"
+      memRequest: "1G"
     tmkey: ""
     tmpub: ""
     password: ""

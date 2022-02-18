@@ -30,3 +30,4 @@ site/
 /kubernetes/reports/
 /kubernetes/besu-*.tar.gz
 .envrc
+.lh

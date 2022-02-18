@@ -104,7 +104,7 @@ spec:
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
                 cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
-                kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
+                kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
               }
 
               function update_tessera_peers_configmap {
@@ -121,7 +121,7 @@ spec:
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
                   NEEDLE="http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
                   cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
-                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run=client | kubectl replace -f -
                 fi
               }
 
@@ -160,14 +160,15 @@ spec:
             {{- if .Values.nodeFlags.generateKeys }}
 
               echo "Besu nodekey generation ..."
-              /opt/besu/bin/besu public-key export --to=/tmp/public.key
-              # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-              sed 's/^0x//' /tmp/public.key > /tmp/enode
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+              echo "Creating node address configmap..."
+              kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
 
               echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
-              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey /opt/besu/key
-              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub /tmp/public.key
-              safeWriteSecret {{ template "besu-node.fullname" . }}-enode /tmp/enode
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub
+              safeWriteSecret {{ template "besu-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub
               update_enodes_configmap
               echo "Besu Completed"
 
@@ -175,20 +176,16 @@ spec:
 
 
             {{- if .Values.nodeFlags.privacy }}
+              FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
+              if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
+                echo "" > $FOLDER_PATH/member0/passwordFile.txt
+              fi
 
-            {{- if .Values.node.tessera.password }}
-              echo $'{{.Values.node.tessera.password }}\n{{ .Values.node.tessera.password }}\n' > /tmp/password.txt
-            {{- else }}
-              echo $'\n\n' > /tmp/password.txt
-            {{- end }}
-
-              /opt/tessera/bin/tessera -keygen -filename /tmp/tm < /tmp/password.txt
               echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
 
-              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey /tmp/tm.key
-              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub /tmp/tm.pub
-              echo -ne $(sed -n '1p' /tmp/password.txt )> /tmp/password
-              safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword /tmp/password
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
 
               update_tessera_peers_configmap
               echo "Tessera Completed"
@@ -251,7 +248,7 @@ spec:
                   echo "tessera-peers found, deleting {{ template "besu-node.fullname" . }}..."
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
                   cat /tmp/tessera-peers.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( .url | contains($NEEDLE) ))' > /tmp/tessera-peers
-                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run=client | kubectl replace -f -
                 fi
               }
 
@@ -265,7 +262,10 @@ spec:
                   echo "besu-node-enodes found, deleting {{ template "besu-node.fullname" . }}..."
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                   cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
-                  kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
+
+                  echo "Removing the current node's address from configmap..."
+                  kubectl delete configmap {{ template "besu-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
                 fi
               }
 

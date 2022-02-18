@@ -135,58 +135,58 @@ spec:
               }
 
               function safeWriteGenesisConfigmap {
+                FOLDER_PATH=$1
                 kubectl get configmap --namespace {{ .Release.Namespace }} besu-genesis
                 if [ $? -ne 0 ]; then
-                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=$FOLDER_PATH/besu/genesis.json
                 fi
               }
 
               echo "Creating config ..."
-              /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 2 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+
+              echo $FOLDER_PATH
               echo "Creating genesis configmap in k8s ..."
-              safeWriteGenesisConfigmap
+              safeWriteGenesisConfigmap $FOLDER_PATH
 
               # create the static-nodes with proper dns names for the quorum nodes
               echo "[" > /generated-config/static-nodes.json
 
               echo "Creating validator secrets in k8s ..."
               i=1
-              for f in /generated-config/keys/*; do
-                if [ -d ${f} ]; then
+              for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
+                if [ -d $FOLDER_PATH/${f} ]; then
                   echo $f
-                  # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-                  sed 's/^0x//' ${f}/key.pub > ${f}/enode
 
                   echo "Creating keys in vault for validator-${i} ..."
-                  safeWriteSecret besu-node-validator-${i}-nodekey ${f}/key.priv
-                  safeWriteSecret besu-node-validator-${i}-nodekeypub ${f}/key.pub
-                  safeWriteSecret besu-node-validator-${i}-enode ${f}/enode
+                  safeWriteSecret besu-node-validator-${i}-nodekey $FOLDER_PATH/${f}/nodekey
+                  safeWriteSecret besu-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret besu-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  kubectl create configmap besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   # add to the static-nodes
-                  pubkey=$(cat ${f}/enode )
-                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+                  pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
+                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json
 
                   i=$((i+1))
                 fi
               done
 
               echo "Creating bootnode keys ..."
-              for j in {1..2}
+              i=1
+              for j in $(find $FOLDER_PATH -type d -iname "bootnode*" -exec basename {} \;);
               do
-                /opt/besu/bin/besu public-key export --to=/tmp/public.key
-                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-                sed 's/^0x//' /tmp/public.key > /tmp/enode
                 echo "Creating keys in vault for bootnode ${j} ..."
-                safeWriteSecret besu-node-bootnode-${j}-nodekey /opt/besu/key
-                safeWriteSecret besu-node-bootnode-${j}-nodekeypub /tmp/public.key
-                safeWriteSecret besu-node-bootnode-${j}-enode /tmp/enode
-                writeK8sEnodeSecret besu-node-bootnode-${j}-enode /tmp/enode
+                safeWriteSecret besu-node-bootnode-${j}-nodekey $FOLDER_PATH/${j}/nodekey
+                safeWriteSecret besu-node-bootnode-${j}-nodekeypub $FOLDER_PATH/${j}/nodekey.pub
+                safeWriteSecret besu-node-bootnode-${j}-enode $FOLDER_PATH/${j}/nodekey.pub
+                writeK8sEnodeSecret besu-node-bootnode-${j}-enode $FOLDER_PATH/${j}/nodekey.pub
 
                 # add to the static-nodes
                 pubkey=$(cat /tmp/enode )
                 echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
 
-                rm /tmp/public.key /tmp/enode /opt/besu/key
+                i=$((i+1)
               done
 
               echo "]" >> /generated-config/static-nodes.json

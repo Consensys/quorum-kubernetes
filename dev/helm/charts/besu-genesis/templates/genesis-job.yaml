@@ -60,7 +60,7 @@ metadata:
   annotations:
     helm.sh/hook-delete-policy: "hook-succeeded"
 spec:
-  backoffLimit: 3
+  # backoffLimit: 3
   completions: 1
   template:
     metadata:
@@ -86,54 +86,52 @@ spec:
             - -c
           args:
             - |
-              apt-get update && apt-get install -y curl jq
-              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
-
               echo "Creating config ..."
-              /opt/besu/bin/besu operator generate-blockchain-config --config-file=/raw-config/raw-config-genesis.json --to=/generated-config
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 2 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+
+              echo $FOLDER_PATH
               echo "Creating genesis configmap in k8s ..."
-              ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=/generated-config/genesis.json
+              kubectl create configmap --namespace {{ .Release.Namespace }} besu-genesis --from-file=genesis.json=$FOLDER_PATH/besu/genesis.json
 
               # create the static-nodes with proper dns names for the quorum nodes
-              echo "[" > /generated-config/static-nodes.json
+              echo "[" > $FOLDER_PATH/static-nodes.json
 
               echo "Creating validator secrets in k8s ..."
               i=1
-              for f in /generated-config/keys/*; do
-                if [ -d ${f} ]; then
+              
+              for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
+                if [ -d $FOLDER_PATH/${f} ]; then
                   echo $f
-                  # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-                  sed 's/^0x//' ${f}/key.pub > ${f}/enode
-                  ./kubectl create secret generic besu-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=${f}/key.priv --from-file=public.key=${f}/key.pub --from-file=enode=${f}/enode
+                  kubectl create secret generic besu-node-validator-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=$FOLDER_PATH/${f}/nodekey --from-file=public.key=$FOLDER_PATH/${f}/nodekey.pub --from-file=enode=$FOLDER_PATH/${f}/nodekey.pub
+                  kubectl create configmap besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   # add to the static-nodes
-                  pubkey=$(cat ${f}/enode )
-                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+                  pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
+                  echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json
 
                   i=$((i+1))
                 fi
               done
 
+              i=1
+
               echo "Creating bootnode keys ..."
-              for j in {1..2}
+              for j in $(find $FOLDER_PATH -type d -iname "bootnode*" -exec basename {} \;);
               do
-                /opt/besu/bin/besu public-key export --to=public${j}.key
-                # the public key has an extra '0x' in front which isn't accepted by the enode format, this strips that out
-                sed 's/^0x//' ./public${j}.key > /tmp/enode${j}
-                echo "Creating bootnode ${j} secrets in k8s ..."
-                ./kubectl create secret generic besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=/opt/besu/key --from-file=public.key=./public${j}.key --from-file=enode=/tmp/enode${j}
+                echo "Creating ${j} secrets in k8s ..."
+                kubectl create secret generic besu-node-bootnode-${i}-keys --namespace {{ .Release.Namespace }} --from-file=private.key=$FOLDER_PATH/${j}/nodekey --from-file=public.key=$FOLDER_PATH/${j}/nodekey.pub --from-file=enode=$FOLDER_PATH/${j}/nodekey.pub
 
                 # add to the static-nodes
-                pubkey=$(cat /tmp/enode${j} )
-                echo ",\"enode://$pubkey@besu-node-bootnode-$j-0.besu-node-bootnode-$j.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+                pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
+                echo ",\"enode://$pubkey@besu-node-bootnode-$i-0.besu-node-bootnode-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json
 
-                rm ./public${j}.key /tmp/enode${j}.key /opt/besu/key
+                i=$((i+1))
               done
 
-              echo "]" >> /generated-config/static-nodes.json
+              echo "]" >> $FOLDER_PATH/static-nodes.json
               # remove the extra comma to make it valid json
-              sed -i '0,/,/s///' /generated-config/static-nodes.json
-              ./kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-enodes  --from-file=static-nodes.json=/generated-config/static-nodes.json
+              sed -i '0,/,/s///' $FOLDER_PATH/static-nodes.json
+              kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-enodes  --from-file=static-nodes.json=$FOLDER_PATH/static-nodes.json
 
               echo "Completed ..."
       volumes:
@@ -186,23 +184,26 @@ spec:
             - -c
           args:
             - |
-              apt-get update && apt-get install -y curl
-              curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && chmod +x ./kubectl
               echo "Deleting genesis configmap in k8s ..."
-              ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
+              kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
               echo "Deleting validator secrets in k8s ..."
               for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
                 echo $f
-                ./kubectl delete secret besu-node-validator-${f}-keys --namespace {{ .Release.Namespace }}
+                kubectl delete secret besu-node-validator-${f}-keys --namespace {{ .Release.Namespace }}
+              done
+              echo "Deleting validator addresses in k8s ..."
+              for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
+                echo $f
+                kubectl delete configmap besu-node-validator-${f}-address --namespace {{ .Release.Namespace }}
               done
               echo "Deleting bootnode secrets in k8s ..."
               for j in {1..2}
               do
-                ./kubectl delete secret besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
+                kubectl delete secret besu-node-bootnode-${j}-keys --namespace {{ .Release.Namespace }}
               done
 
               echo "Deleting node-enodes configmap in k8s ..."
-              ./kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
+              kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
 
               echo "Completed ..."
 

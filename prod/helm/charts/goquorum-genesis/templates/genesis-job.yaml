@@ -130,9 +130,10 @@ spec:
               }
 {{- end}}
               function safeWriteGenesisConfigmap {
+                FOLDER_PATH=$1
                 kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-genesis
                 if [ $? -ne 0 ]; then
-                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=/generated-config/genesis.json
+                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=$FOLDER_PATH/goQuorum/genesis.json
                 fi
               }
 
@@ -143,35 +144,34 @@ spec:
                 fi
               }
 
-
-
-              mkdir /generated-config/ && cd /generated-config/
               echo "Creating config ..."
-              /opt/istanbul-tools/bin/istanbul setup --num {{ .Values.rawGenesisConfig.blockchain.nodes.count }} --nodes --quorum --save --verbose
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
 
+              echo $FOLDER_PATH
               echo "Creating genesis configmap ..."
-              safeWriteGenesisConfigmap
+              safeWriteGenesisConfigmap $FOLDER_PATH
 
               # create the static-nodes with proper dns names for the quorum nodes
               echo "[" > /generated-config/static-nodes.json
 
               # 0 index so setting this to the num of validators
-              for f in `seq 0 $(( {{ .Values.rawGenesisConfig.blockchain.nodes.count  }} -1 ))`; do mv $f "validator-$(($f + 1))" ; done
-
               echo "Creating validator keys ..."
-              for v in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count  }}`; do
-                validatorKey="validator-$v"
-                /opt/istanbul-tools/bin/bootnode -nodekey /generated-config/$validatorKey/nodekey -writeaddress > /generated-config/$validatorKey/nodekey.pub
-                echo -ne $(cat /generated-config/$validatorKey/nodekey.pub) > /generated-config/$validatorKey/enode
+              i=1
+              for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
+                if [ -d $FOLDER_PATH/${f} ]; then
+                  echo $f
 
-                echo "Creating keys in vault for $validatorKey ..."
-                safeWriteSecret goquorum-node-$validatorKey-nodekey /generated-config/$validatorKey/nodekey
-                safeWriteSecret goquorum-node-$validatorKey-nodekeypub /generated-config/$validatorKey/nodekey.pub
-                safeWriteSecret goquorum-node-$validatorKey-enode /generated-config/$validatorKey/enode
+                  echo "Creating keys in vault for $validatorKey ..."
+                  safeWriteSecret goquorum-node-$validatorKey-nodekey $FOLDER_PATH/${f}/nodekey
+                  safeWriteSecret goquorum-node-$validatorKey-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret goquorum-node-$validatorKey-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  kubectl create configmap goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
-                # add to the static-nodes
-                pubkey=$(cat /generated-config/$validatorKey/nodekey.pub )
-                echo ",\"enode://$pubkey@goquorum-node-$validatorKey-0.goquorum-node-$validatorKey.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+
+                  # add to the static-nodes
+                  pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub)
+                  echo ",\"enode://$pubkey@goquorum-node-$validatorKey-0.goquorum-node-$validatorKey.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> /generated-config/static-nodes.json
+                fi
               done
 
               echo "]" >> /generated-config/static-nodes.json
