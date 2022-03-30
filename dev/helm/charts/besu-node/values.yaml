@@ -57,14 +57,14 @@ node:
       enabled: true
       host: "0.0.0.0"
       port: 8545
-      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA"]'
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA", "PRIV", "QBFT", "PERM"]'
       corsOrigins: '["all"]'
       authenticationEnabled: false
     ws:
       enabled: false
       host: "0.0.0.0"
       port: 8546
-      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA"]'
+      api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA", "PRIV", "QBFT", "PERM"]'
       authenticationEnabled: false
     graphql:
       enabled: false
@@ -92,16 +92,20 @@ node:
       pubkeyFile: "/tessera/tm.pub"
       onchainGroupsEnabled: false
     permissions:
-      enabled: false
+      enabled: true
+      filePath: ""
       nodes:
         enabled: false
         allowlist: ["enode://abcd..@1.2.3.3:30303","enode://efba..@1.2.3.4:besu-node-bootnode-1-0.besu-node-bootnode-1.besu.svc.cluster.local:30303"]
-      nodesContract:
-        enabled: false
-        address: "0x0000000000000000000000000000000000001234"
       accounts:
         enabled: false
-        allowlist: ["0x0000000000000000000000000000000000000009"]
+        allowlist: ["0x0000000000000000000000000000000000008888"]
+      nodesContract:
+        enabled: false
+        address: "0x0000000000000000000000000000000000009999"
+      accountsContract:
+        enabled: true
+        address: "0x0000000000000000000000000000000000008888"  
 
   tessera:
     resources:

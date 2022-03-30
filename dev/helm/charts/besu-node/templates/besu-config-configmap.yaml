@@ -55,6 +55,7 @@ data:
     rpc-http-api={{ .Values.node.besu.rpc.api }}
     rpc-http-cors-origins={{ .Values.node.besu.rpc.corsOrigins }}
     rpc-http-authentication-enabled={{ .Values.node.besu.rpc.authenticationEnabled }}
+    revert-reason-enabled=true
     {{ end }}
 
     {{ if  .Values.node.besu.graphql.enabled -}}
@@ -77,9 +78,13 @@ data:
     {{ if  .Values.node.besu.permissions.enabled -}}
     # Permissioning
     permissions-nodes-config-file-enabled={{ .Values.node.besu.permissions.nodes.enabled }}
+    permissions-nodes-config-file={{ .Values.node.besu.permissions.filePath | quote }}
     permissions-accounts-config-file-enabled={{ .Values.node.besu.permissions.accounts.enabled }}
+    permissions-accounts-config-file={{ .Values.node.besu.permissions.filePath | quote }}
     permissions-nodes-contract-enabled={{ .Values.node.besu.permissions.nodesContract.enabled }}
     permissions-nodes-contract-address={{ .Values.node.besu.permissions.nodesContract.address | quote }}
+    permissions-accounts-contract-enabled={{ .Values.node.besu.permissions.accountsContract.enabled }}
+    permissions-accounts-contract-address={{ .Values.node.besu.permissions.accountsContract.address | quote }}
     {{ end }}
 
     {{ if  .Values.nodeFlags.privacy -}}
