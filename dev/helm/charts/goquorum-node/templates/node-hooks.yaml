@@ -95,6 +95,9 @@ spec:
             FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
             echo "Creating {{ template "goquorum-node.fullname" . }} secrets in k8s ..."
             kubectl create secret generic {{ template "goquorum-node.fullname" . }}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=$FOLDER_PATH/member0/nodekey --from-file=nodekey.pub=$FOLDER_PATH/member0/nodekey.pub --from-file=enode=$FOLDER_PATH/member0/nodekey.pub
+
+            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=$FOLDER_PATH/member0/accountPrivateKey --from-file=accountPassword=$FOLDER_PATH/member0/accountPassword --from-file=accountKeystore=$FOLDER_PATH/member0/accountKeystore --from-file=accountAdddress=$FOLDER_PATH/member0/accountAddress
+
             cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
             echo "Creating {{ template "goquorum-node.fullname" . }} configmap address in k8s ..."
             kubectl create configmap {{ template "goquorum-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
@@ -199,6 +202,7 @@ spec:
             {{- if .Values.nodeFlags.removeKeysOnDeletion }}
               echo "Deleting node secrets in k8s ..."
               kubectl delete secret {{ template "goquorum-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
+              kubectl delete secret {{ template "goquorum-node.fullname" . }}-account --namespace {{ .Release.Namespace }}
               kubectl delete configmap {{ template "goquorum-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
 
             {{- if .Values.nodeFlags.privacy }}
