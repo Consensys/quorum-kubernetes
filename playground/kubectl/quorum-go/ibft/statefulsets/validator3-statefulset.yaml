@@ -153,15 +153,15 @@ spec:
               --permissioned \
               --emitcheckpoints \
               --verbosity 5 \
-              --istanbul.blockperiod 5 --mine --minerthreads 1 --emitcheckpoints \
+              --istanbul.blockperiod 5 --mine --miner.threads 1 --emitcheckpoints \
               --syncmode full --nousb \
               --networkid ${QUORUM_NETWORK_ID} \
               --rpc --rpcaddr 0.0.0.0 --rpcport 8545 --rpccorsdomain "*" --rpcvhosts "*" --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
-              --ws --wsaddr 0.0.0.0 --wsport 8546 --wsorigins "*" --wsapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
+              --ws --ws.addr 0.0.0.0 --ws.port 8546 --ws.origins "*" --ws.api admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul \
               --port 30303 \
               --unlock 0 \
               --allow-insecure-unlock \
-              --metrics --pprof --pprofaddr 0.0.0.0 --pprofport 9545 \
+              --metrics --pprof --pprof.addr 0.0.0.0 --pprof.port 9545 \
               --password /config/keys/password.txt 
           livenessProbe:
             httpGet:
