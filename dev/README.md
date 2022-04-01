@@ -65,8 +65,8 @@ _For Besu:_
 cd dev/helm/
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install monitoring prometheus-community/kube-prometheus-stack --namespace=quorum --values ./values/monitoring.yml --wait
-kubectl --namespace quorum apply -f  ./values/monitoring/*.yml
+helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
+kubectl --namespace quorum apply -f  ./values/monitoring/
 
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
@@ -113,8 +113,9 @@ _For GoQuorum:_
 cd dev/helm/
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm install monitoring prometheus-community/kube-prometheus-stack --namespace=quorum --values ./values/monitoring.yml --wait
-kubectl --namespace quorum apply -f  ./values/monitoring/*.yml
+helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
+kubectl --namespace quorum apply -f  ./values/monitoring/
+
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml

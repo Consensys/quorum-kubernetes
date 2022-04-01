@@ -82,7 +82,6 @@ node:
       port: 9545
       serviceMonitor:
         enabled: true
-        interval: 15s
     metricsPush:
       enabled: false
       host: "5.5.5.5"

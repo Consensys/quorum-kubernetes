@@ -316,7 +316,7 @@ data:
             ],
             "targets": [
               {
-                "expr": "sum by (instance) (ethereum_blockchain_height{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (ethereum_blockchain_height{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "interval": "",
@@ -325,21 +325,21 @@ data:
                 "refId": "A"
               },
               {
-                "expr": "sum by (instance) (ethereum_best_known_block_number{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (ethereum_best_known_block_number{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
                 "refId": "F"
               },
               {
-                "expr": "sum by (instance) (ethereum_best_known_block_number{app_kubernetes_io_instance=~\"$system\"} - ethereum_blockchain_height{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (ethereum_best_known_block_number{instance=~\"$system\"} - ethereum_blockchain_height{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
                 "refId": "G"
               },
               {
-                "expr": "sum by (instance) (besu_blockchain_difficulty_total{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (besu_blockchain_difficulty_total{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
@@ -347,21 +347,21 @@ data:
                 "refId": "B"
               },
               {
-                "expr": "sum by (instance) (1/rate(ethereum_blockchain_height{app_kubernetes_io_instance=~\"$system\"}[5m]))",
+                "expr": "sum by (instance) (1/rate(ethereum_blockchain_height{instance=~\"$system\"}[5m]))",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
                 "refId": "D"
               },
               {
-                "expr": "sum by (instance) (time() - besu_blockchain_chain_head_timestamp{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (time() - besu_blockchain_chain_head_timestamp{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
                 "refId": "E"
               },
               {
-                "expr": "sum by (instance) (ethereum_peer_count{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (ethereum_peer_count{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
@@ -369,7 +369,7 @@ data:
                 "refId": "C"
               },
               {
-                "expr": "sum by (instance) (ethereum_peer_count{app_kubernetes_io_instance=~\"$system\"} / ethereum_peer_limit{app_kubernetes_io_instance=~\"$system\"})",
+                "expr": "sum by (instance) (ethereum_peer_count{instance=~\"$system\"} / ethereum_peer_limit{instance=~\"$system\"})",
                 "format": "table",
                 "instant": true,
                 "intervalFactor": 1,
@@ -419,7 +419,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "1/rate(ethereum_blockchain_height{app_kubernetes_io_instance=~\"$system\"}[5m])",
+                "expr": "1/rate(ethereum_blockchain_height{instance=~\"$system\"}[5m])",
                 "format": "time_series",
                 "interval": "",
                 "intervalFactor": 1,
@@ -513,7 +513,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "ethereum_best_known_block_number{app_kubernetes_io_instance=~\"$system\"} - ethereum_blockchain_height{app_kubernetes_io_instance=~\"$system\"}",
+                "expr": "ethereum_best_known_block_number{instance=~\"$system\"} - ethereum_blockchain_height{instance=~\"$system\"}",
                 "format": "time_series",
                 "interval": "",
                 "intervalFactor": 1,
@@ -599,7 +599,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "irate(process_cpu_seconds_total{app_kubernetes_io_instance=~\"$system\"}[1m])",
+                "expr": "irate(process_cpu_seconds_total{instance=~\"$system\"}[1m])",
                 "format": "time_series",
                 "intervalFactor": 1,
                 "legendFormat": "CPU Time IRate [{{instance}}]",
@@ -685,7 +685,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "rate(jvm_gc_collection_seconds_sum{app_kubernetes_io_instance=~\"$system\"}[1m])",
+                "expr": "rate(jvm_gc_collection_seconds_sum{instance=~\"$system\"}[1m])",
                 "format": "time_series",
                 "interval": "",
                 "intervalFactor": 5,
@@ -775,7 +775,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "jvm_memory_bytes_used{app_kubernetes_io_instance=~\"$system\", area=\"heap\"} + ignoring(area) jvm_memory_bytes_used{app_kubernetes_io_instance=~\"$system\", area=\"nonheap\"}",
+                "expr": "jvm_memory_bytes_used{instance=~\"$system\", area=\"heap\"} + ignoring(area) jvm_memory_bytes_used{instance=~\"$system\", area=\"nonheap\"}",
                 "format": "time_series",
                 "intervalFactor": 5,
                 "legendFormat": "{{instance}}",

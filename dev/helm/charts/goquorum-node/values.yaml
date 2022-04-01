@@ -76,6 +76,8 @@ node:
       enabled: true
       pprofaddr: "0.0.0.0"
       pprofport: 9545
+      serviceMonitor:
+        enabled: true      
     privacy:
       url: "http://localhost:9101"
       pubkeysPath: "/tessera"

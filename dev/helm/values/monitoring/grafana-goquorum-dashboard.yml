@@ -714,7 +714,7 @@ data:
                 "refId": "B"
               },
               {
-                "expr": "txpool_local{app_kubernetes_io_instance=~\"$instance\", job=~\"$job\"}",
+                "expr": "txpool_local{instance=~\"$instance\", job=~\"$job\"}",
                 "format": "time_series",
                 "interval": "",
                 "intervalFactor": 1,
@@ -1324,7 +1324,7 @@ data:
             "steppedLine": false,
             "targets": [
               {
-                "expr": "eth_db_chaindata_disk_read{app_kubernetes_io_instance=~\"$instance\", job=~\"$job\"}",
+                "expr": "eth_db_chaindata_disk_read{instance=~\"$instance\", job=~\"$job\"}",
                 "format": "time_series",
                 "interval": "",
                 "intervalFactor": 1,

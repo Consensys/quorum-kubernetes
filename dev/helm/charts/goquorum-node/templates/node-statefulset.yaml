@@ -153,6 +153,7 @@ spec:
         component: {{ .Release.Name }}
         app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ .Release.Name }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.quorum.metrics.pprofport | quote}}
@@ -329,6 +330,9 @@ spec:
             protocol: TCP
           - name: discovery
             containerPort: {{ .Values.node.quorum.p2p.port }}
+            protocol: UDP
+          - name: metrics
+            containerPort: {{ .Values.node.quorum.metrics.pprofport }}
             protocol: UDP
         command:
           - /bin/sh
