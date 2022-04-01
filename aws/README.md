@@ -1,4 +1,3 @@
-
 # AWS
 
 ## Background
@@ -6,6 +5,7 @@
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 It essentially comprises base infrastructure that is used to build the cluster & other resources in AWS via a [template]('./templates/cluster.yml'). We also make use some AWS native services and features after the cluster is created. These include:
+
 - [Pod identities](hhttps://github.com/aws/amazon-eks-pod-identity-webhook).
 - [Secrets Store CSI drivers](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html)
 - Data is stored using dynamic StorageClasses backed by AWS EBS. Please note the [Volume Claims](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) are fixed sizes and can be updated as you grow via a helm update, and will not need reprovisioning of the underlying storage class.
@@ -15,13 +15,14 @@ With AWS Container Networking Interface (CNI), every pod gets an IP address from
 
 ![Image aks_cni](../static/aks_cni.png)
 
-
 ### Operation flow:
+
 1. Read this file in its entirety before proceeding
-2. See the  [Prerequisites](#prerequisites) section to enable some features before doing the deployment
+2. See the [Prerequisites](#prerequisites) section to enable some features before doing the deployment
 3. See the [Usage](#usage) section
 
 #### Helm Charts:
+
 The dev charts are aimed at getting you up and running so you can experiment with the client and functionality of the tools, contracts etc. They embed node keys etc as secrets so that these are visible to you during development and you can learn about discovery. The prod charts utilize all the built in AWS functionality and recommended best practices such as identities, secrets stored in keyvault with limited access etc. **When using the prod charts please ensure you add the necessary values to the `aws` section of the values.yml file**
 
 #### Warning:
@@ -30,19 +31,29 @@ The dev charts are aimed at getting you up and running so you can experiment wit
 2. EKS clusters may **not** use _169.254.0.0/16, 172.30.0.0/16, 172.31.0.0/16, or 192.0.2.0/24_ for the Kubernetes service address range.
 
 ## Pre-requisites:
-You will need to install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
 
+You will need to install [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
 
 ## Usage
 
 1. Update the [cluster.yml](./templates/cluster.yml) with your VPC details
 2. Deploy the template
+
 ```bash
 eksctl create cluster -f ./templates/cluster.yml
 ```
-3. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md) 
 
-4. Provision Drivers
+3. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)
+
+4. Provision EBS CSI Driver
+
+While it is possible to use the in-tree `aws-ebs` driver natively supported by Kubernetes, it is no longer being updated and does not support newer EBS features such as the cheaper and better gp3 volumes [see here](https://stackoverflow.com/questions/68359043/whats-the-difference-between-ebs-csi-aws-com-vs-kubernetes-io-aws-ebs-for-provi).
+
+The `cluster.yml` file that is included in this folder will automatically deploy the cluster with the EBS and EFS IAM policies.
+
+To install the EBS CSI drivers, you can do it through the [AWS Management Console](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html#adding-ebs-csi-eks-add-on) for simplicity.
+
+5. Provision Secrets Drivers
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
 
@@ -51,7 +62,7 @@ Use`quorum` (or equivalent) for `EKS_NAMESPACE` below and update `AWS_REGION` an
 ```bash
 
 helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
-helm install --namespace quorum --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver 
+helm install --namespace quorum --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
 kubectl apply --namespace quorum -f templates/secrets-manager/aws-provider-installer.yml
 
 POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create-policy --policy-name quorum-node-secrets-mgr-policy --policy-document '{
@@ -67,9 +78,8 @@ eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace quorum
 ```
 
 | ⚠️ **Note**: The above command creates a service account called `quorum-node-secrets-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |
-| --- |
- 
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
 4. Deploy the charts as per the `dev` or `prod` folder readme files
 
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in development or production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
-

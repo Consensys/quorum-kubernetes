@@ -62,11 +62,11 @@ kind: StorageClass
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
-provisioner: kubernetes.io/aws-ebs
+provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
-  type: gp2
+  type: gp3
   fsType: ext4
 
 {{- else }}
@@ -89,7 +89,7 @@ spec:
     path: "/tmp/{{ include "goquorum-node.fullname" . }}"
 
 {{- end }}
-
+{{- if eq .Values.provider "local" }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -103,7 +103,7 @@ spec:
   resources:
     requests:
       storage: "{{ .Values.storage.pvcSizeLimit }}"
-
+{{- end }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -134,6 +134,17 @@ spec:
       app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   serviceName: {{ include "goquorum-node.fullname" . }}
+  {{- if or (eq .Values.provider "aws") (eq .Values.provider "azure") }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ include "goquorum-node.fullname" . }}-storage
+      resources:
+        requests:
+          storage: "{{ .Values.storage.pvcSizeLimit }}"
+  {{- end }}
   template:
     metadata:
       labels:
@@ -372,9 +383,11 @@ spec:
           items:
             - key: static-nodes.json
               path: static-nodes.json
+      {{- if eq .Values.provider "local"}}
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "goquorum-node.fullname" . }}-pvc
+      {{- end }}
       {{- if .Values.nodeFlags.privacy }}
       - name: tessera-keys
         secret:
