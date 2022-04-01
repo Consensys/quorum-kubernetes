@@ -7,35 +7,43 @@ metadata:
   region: us-east-2
   version: "1.21"
 
+# It is recommended that you let eksctl deploy a new VPC for your cluster, it will automatically tag the subnets with the appropriate tags. You may use an existing VPC if you wish but take note of the necessary subnet tags: https://github.com/weaveworks/eksctl/blob/main/examples/04-existing-vpc.yaml https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html
 vpc:
-  id: vpc-
+  # id: vpc-
   cidr: "10.0.0.0/16"
-  subnets:
-    public:
-      public-a:
-        id: subnet-
-      public-b:
-        id: subnet-
-      public-c:
-        id: subnet-
-    private:
-      private-a:
-        id: subnet-
-      private-b:
-        id: subnet-
-      private-c:
-        id: subnet-
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+  # subnets:
+  #   public:
+  #     public-a:
+  #       id: subnet-
+  #     public-b:
+  #       id: subnet-
+  #     public-c:
+  #       id: subnet-
+  #   private:
+  #     private-a:
+  #       id: subnet-
+  #     private-b:
+  #       id: subnet-
+  #     private-c:
+  #       id: subnet-
 
 managedNodeGroups:
   - name: ng-1
     instanceType: m5.xlarge
-    desiredCapacity: 6
+    desiredCapacity: 6 # increase this capacity if you need member/rpc nodes or more validators
     privateNetworking: true
     labels: { role: workers }
-    subnets:
-      - private-a
-      - private-b
-      - private-c
+    # subnets:
+    #   - private-a
+    #   - private-b
+    #   - private-c
+    iam:
+      withAddonPolicies:
+        ebs: true
+        efs: true
 
 cloudWatch:
   clusterLogging:
