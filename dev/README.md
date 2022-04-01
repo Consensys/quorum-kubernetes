@@ -24,6 +24,10 @@ Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We 
 minikube start --memory 16384
 # or with RBAC
 minikube start --memory 16384 --extra-config=apiserver.Authorization.Mode=RBAC
+
+# enable the ingress
+minikube addons enable ingress
+
 ```
 
 Verify kubectl is connected to Minikube with:
@@ -59,7 +63,11 @@ _For Besu:_
 ```bash
 
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack --namespace=quorum --values ./values/monitoring.yml --wait
+kubectl --namespace quorum apply -f  ./values/monitoring/*.yml
+
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -103,7 +111,10 @@ _For GoQuorum:_
 
 ```bash
 cd dev/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack --namespace=quorum --values ./values/monitoring.yml --wait
+kubectl --namespace quorum apply -f  ./values/monitoring/*.yml
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml

@@ -126,6 +126,7 @@ kind: StatefulSet
 metadata:
   name: {{ template "besu-node.fullname" . }}
   labels:
+    prometheus: besu-scrape
     app: {{ template "besu-node.fullname" . }}
     chart: {{ template "besu-node.chart" . }}
     release: {{ .Release.Name }}
@@ -169,6 +170,8 @@ spec:
         component: {{ .Release.Name }}
         app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+                app.kubernetes.io/component: {{ .Release.Name }}
+
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
