@@ -80,8 +80,8 @@ node:
       enabled: true
       host: "0.0.0.0"
       port: 9545
-      serviceMonitor:
-        enabled: true
+      # enable if using prometheus-stack metrics monitoring
+      serviceMonitorEnabled: false      
     metricsPush:
       enabled: false
       host: "5.5.5.5"

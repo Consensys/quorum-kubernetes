@@ -40,7 +40,7 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 
 ## Usage
 
-_Spin up ELK for logs: (Optional but recommended)_
+### _Spin up ELK for logs: (Optional but recommended)_
 
 **NOTE:** this uses charts from Elastic - please configure this as per your requirements and policies
 
@@ -58,18 +58,24 @@ Alternatively configure the kibana ingress settings in the [values.yml](./helm/v
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
 per your requirements and policies
 
-### _For Besu:_
+### _Spin up prometheus-stack for metrics: (Optional but recommended)_
+
+**NOTE:** this uses charts from prometheus-community - please configure this as per your requirements and policies
 
 ```bash
-
-cd dev/helm/
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
 kubectl --namespace quorum apply -f  ./values/monitoring/
 
 # NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
+```
 
+### _For Besu:_
+
+```bash
+
+cd dev/helm/
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -113,13 +119,6 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 
 ```bash
 cd dev/helm/
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
-kubectl --namespace quorum apply -f  ./values/monitoring/
-
-# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
-
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml

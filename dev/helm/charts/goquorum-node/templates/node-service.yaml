@@ -25,27 +25,27 @@ spec:
     app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: json-rpc
-      port: {{ .Values.node.quorum.rpc.port }}
+      port: {{ .Values.node.goquorum.rpc.port }}
       targetPort: json-rpc
       protocol: TCP
     - name: ws
-      port: {{ .Values.node.quorum.ws.port }}
+      port: {{ .Values.node.goquorum.ws.port }}
       targetPort: ws
       protocol: TCP
     - name: graphql
-      port: {{ .Values.node.quorum.graphql.port }}
+      port: {{ .Values.node.goquorum.graphql.port }}
       targetPort: graphql
       protocol: TCP
     - name: rlpx
-      port: {{ .Values.node.quorum.p2p.port }}
+      port: {{ .Values.node.goquorum.p2p.port }}
       targetPort: rlpx
       protocol: TCP
     - name: discovery
-      port: {{ .Values.node.quorum.p2p.port }}
+      port: {{ .Values.node.goquorum.p2p.port }}
       targetPort: discovery
       protocol: UDP
     - name: metrics
-      port: {{ .Values.node.quorum.metrics.pprofport }}
+      port: {{ .Values.node.goquorum.metrics.pprofport }}
       targetPort: metrics
       protocol: TCP
 
@@ -65,7 +65,7 @@ spec:
 {{- end }}
 
 
-{{- if and .Values.node.quorum.metrics.enabled .Values.node.quorum.metrics.serviceMonitor.enabled }}
+{{- if and .Values.node.goquorum.metrics.enabled .Values.node.goquorum.metrics.serviceMonitorEnabled }}
 
 ---
 apiVersion: monitoring.coreos.com/v1

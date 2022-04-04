@@ -16,26 +16,26 @@ metadata:
 
 spec:
   rules:
-    - http:
-        paths:
-          - path: /rpc
-            pathType: Prefix
-            backend:
-              service:
-                name: besu-node-member-1
-                port:
-                  number: 8545
-          - path: /kibana
-            pathType: Prefix
-            backend:
-              service:
-                name: kibana-kibana
-                port:
-                  number: 5601
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: monitoring-grafana
-                port:
-                  number: 3000
+  - http:
+      paths:
+      - path: /rpc
+        pathType: Prefix
+        backend:
+          service:
+            name: besu-node-member-1
+            port:
+              number: 8545
+      - path: /kibana
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana-kibana
+            port:
+              number: 5601
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-grafana
+            port:
+              number: 3000

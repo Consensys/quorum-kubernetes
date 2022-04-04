@@ -174,7 +174,7 @@ spec:
         app.kubernetes.io/component: {{ .Release.Name }}
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: {{ .Values.node.quorum.metrics.pprofport | quote}}
+        prometheus.io/port: {{ .Values.node.goquorum.metrics.pprofport | quote}}
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
@@ -287,15 +287,15 @@ spec:
       {{- end }}
 
       - name: {{ include "goquorum-node.fullname" . }}-quorum
-        image: {{ .Values.image.quorum.repository }}:{{ .Values.image.quorum.tag }}
-        imagePullPolicy: {{ .Values.image.quorum.imagePullPolicy }}
+        image: {{ .Values.image.goquorum.repository }}:{{ .Values.image.goquorum.tag }}
+        imagePullPolicy: {{ .Values.image.goquorum.imagePullPolicy }}
         resources:
           requests:
-            cpu: "{{ .Values.node.quorum.resources.cpuRequest }}"
-            memory: "{{ .Values.node.quorum.resources.memRequest }}"
+            cpu: "{{ .Values.node.goquorum.resources.cpuRequest }}"
+            memory: "{{ .Values.node.goquorum.resources.memRequest }}"
           limits:
-            cpu: "{{ .Values.node.quorum.resources.cpuLimit }}"
-            memory: "{{ .Values.node.quorum.resources.memLimit }}"
+            cpu: "{{ .Values.node.goquorum.resources.cpuLimit }}"
+            memory: "{{ .Values.node.goquorum.resources.memLimit }}"
         env:
           - name: POD_IP
             valueFrom:
@@ -306,7 +306,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.name
           - name: QUORUM_NETWORK_ID
-            value: "{{ .Values.node.quorum.networkId }}"
+            value: "{{ .Values.node.goquorum.networkId }}"
           - name: QUORUM_CONSENSUS
             value: istanbul
         {{- if .Values.nodeFlags.privacy }}
@@ -319,11 +319,11 @@ spec:
         volumeMounts:
         {{- if .Values.nodeFlags.privacy }}
           - name: tessera-keys
-            mountPath: {{ .Values.node.quorum.privacy.pubkeysPath }}
+            mountPath: {{ .Values.node.goquorum.privacy.pubkeysPath }}
             readOnly: true
         {{- end}}
           - name: quorum-keys
-            mountPath: {{ .Values.node.quorum.keysPath }}
+            mountPath: {{ .Values.node.goquorum.keysPath }}
             readOnly: true
           - name: genesis
             mountPath: /etc/genesis
@@ -332,25 +332,25 @@ spec:
             mountPath: /config/static
             readOnly: true
           - name: data
-            mountPath: {{ .Values.node.quorum.dataPath }}
+            mountPath: {{ .Values.node.goquorum.dataPath }}
         ports:
           - name: json-rpc
-            containerPort: {{ .Values.node.quorum.rpc.port }}
+            containerPort: {{ .Values.node.goquorum.rpc.port }}
             protocol: TCP
           - name: ws
-            containerPort: {{ .Values.node.quorum.ws.port }}
+            containerPort: {{ .Values.node.goquorum.ws.port }}
             protocol: TCP
           - name: graphql
-            containerPort: {{ .Values.node.quorum.graphql.port }}
+            containerPort: {{ .Values.node.goquorum.graphql.port }}
             protocol: TCP
           - name: rlpx
-            containerPort: {{ .Values.node.quorum.p2p.port }}
+            containerPort: {{ .Values.node.goquorum.p2p.port }}
             protocol: TCP
           - name: discovery
-            containerPort: {{ .Values.node.quorum.p2p.port }}
+            containerPort: {{ .Values.node.goquorum.p2p.port }}
             protocol: UDP
           - name: metrics
-            containerPort: {{ .Values.node.quorum.metrics.pprofport }}
+            containerPort: {{ .Values.node.goquorum.metrics.pprofport }}
             protocol: TCP
         command:
           - /bin/sh
@@ -365,28 +365,28 @@ spec:
             echo 'transaction manager is up';
           {{- end }}
 
-            geth --datadir={{ .Values.node.quorum.dataPath }} init {{ .Values.node.quorum.genesisFilePath }}
-            cp {{ .Values.node.quorum.keysPath }}/nodekey {{ .Values.node.quorum.dataPath }}/geth/nodekey
-            cp /config/static/static-nodes.json {{ .Values.node.quorum.dataPath }}/geth/static-nodes.json
+            geth --datadir={{ .Values.node.goquorum.dataPath }} init {{ .Values.node.goquorum.genesisFilePath }}
+            cp {{ .Values.node.goquorum.keysPath }}/nodekey {{ .Values.node.goquorum.dataPath }}/geth/nodekey
+            cp /config/static/static-nodes.json {{ .Values.node.goquorum.dataPath }}/geth/static-nodes.json
 
             geth \
-            --datadir {{ .Values.node.quorum.dataPath }} \
+            --datadir {{ .Values.node.goquorum.dataPath }} \
             --nodiscover --ipcdisable \
             --nat extip:$POD_IP \
-            --verbosity {{ .Values.node.quorum.log.verbosity }} \
-            --istanbul.blockperiod {{ .Values.node.quorum.miner.blockPeriod }} --mine --miner.threads {{ .Values.node.quorum.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
+            --verbosity {{ .Values.node.goquorum.log.verbosity }} \
+            --istanbul.blockperiod {{ .Values.node.goquorum.miner.blockPeriod }} --mine --miner.threads {{ .Values.node.goquorum.miner.threads }} --miner.gasprice 0 --emitcheckpoints \
             --syncmode full --nousb \
-            --metrics --pprof --pprof.addr {{ .Values.node.quorum.metrics.pprofaddr | quote }} --pprof.port {{ .Values.node.quorum.metrics.pprofport }} \
-            --networkid {{ .Values.node.quorum.networkId }} \
-            --port {{ .Values.node.quorum.p2p.port }} \
-          {{- if .Values.node.quorum.rpc.enabled }}
-            --http --http.addr {{ .Values.node.quorum.rpc.addr }} --http.port {{ .Values.node.quorum.rpc.port }} --http.corsdomain {{ .Values.node.quorum.rpc.corsDomain | quote }} --http.vhosts {{ .Values.node.quorum.rpc.vHosts | quote }} --http.api {{ .Values.node.quorum.rpc.api | quote }} \
+            --metrics --pprof --pprof.addr {{ .Values.node.goquorum.metrics.pprofaddr | quote }} --pprof.port {{ .Values.node.goquorum.metrics.pprofport }} \
+            --networkid {{ .Values.node.goquorum.networkId }} \
+            --port {{ .Values.node.goquorum.p2p.port }} \
+          {{- if .Values.node.goquorum.rpc.enabled }}
+            --http --http.addr {{ .Values.node.goquorum.rpc.addr }} --http.port {{ .Values.node.goquorum.rpc.port }} --http.corsdomain {{ .Values.node.goquorum.rpc.corsDomain | quote }} --http.vhosts {{ .Values.node.goquorum.rpc.vHosts | quote }} --http.api {{ .Values.node.goquorum.rpc.api | quote }} \
           {{- end }}
-          {{- if .Values.node.quorum.ws.enabled }}
-            --ws --ws.addr {{ .Values.node.quorum.ws.addr }} --ws.port {{ .Values.node.quorum.ws.port }} --ws.origins {{ .Values.node.quorum.ws.origins | quote }} --ws.api {{ .Values.node.quorum.ws.api | quote }} \
+          {{- if .Values.node.goquorum.ws.enabled }}
+            --ws --ws.addr {{ .Values.node.goquorum.ws.addr }} --ws.port {{ .Values.node.goquorum.ws.port }} --ws.origins {{ .Values.node.goquorum.ws.origins | quote }} --ws.api {{ .Values.node.goquorum.ws.api | quote }} \
           {{- end }}
-          {{- if hasKey .Values.node.quorum.account "unlock" }}
-             --unlock {{ .Values.node.quorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.quorum.account.password }} \
+          {{- if hasKey .Values.node.goquorum.account "unlock" }}
+             --unlock {{ .Values.node.goquorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.goquorum.account.password }} \
           {{- end }}
 
       volumes:

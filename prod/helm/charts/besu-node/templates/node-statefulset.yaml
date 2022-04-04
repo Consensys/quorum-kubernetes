@@ -33,7 +33,6 @@ roleRef:
   name: {{ include "besu-node.fullname" . }}-role
 subjects:
 - kind: ServiceAccount
-  name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
 {{- if eq .Values.provider "azure" }}
   name: {{ include "besu-node.fullname" . }}-sa
@@ -125,6 +124,17 @@ spec:
       app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   serviceName: {{ include "besu-node.fullname" . }}
+  {{- if or (eq .Values.provider "aws") (eq .Values.provider "azure") }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ include "besu-node.fullname" . }}-storage
+      resources:
+        requests:
+          storage: "{{ .Values.storage.pvcSizeLimit }}"
+  {{- end }}
   template:
     metadata:
       labels:

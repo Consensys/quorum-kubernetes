@@ -36,7 +36,7 @@ storage:
   pvcSizeLimit: "30Gi"
 
 node:
-  quorum:
+  goquorum:
     resources:
       cpuLimit: 0.5
       cpuRequest: 0.1
@@ -86,6 +86,8 @@ node:
       enabled: true
       pprofaddr: "0.0.0.0"
       pprofport: 9545
+      # enable if using prometheus-stack metrics monitoring
+      serviceMonitorEnabled: false         
     privacy:
       url: "http://localhost:9101"
       pubkeysPath: "/tessera"

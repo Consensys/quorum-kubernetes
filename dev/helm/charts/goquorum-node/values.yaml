@@ -1,7 +1,7 @@
 ---
 
 image:
-  quorum:
+  goquorum:
     repository: quorumengineering/quorum
     tag: latest
   tessera:
@@ -26,7 +26,7 @@ storage:
   pvcSizeLimit: "20Gi"
 
 node:
-  quorum:
+  goquorum:
     resources:
       cpuLimit: 0.5
       cpuRequest: 0.1
@@ -76,8 +76,7 @@ node:
       enabled: true
       pprofaddr: "0.0.0.0"
       pprofport: 9545
-      serviceMonitor:
-        enabled: true      
+      serviceMonitorEnabled: false
     privacy:
       url: "http://localhost:9101"
       pubkeysPath: "/tessera"
