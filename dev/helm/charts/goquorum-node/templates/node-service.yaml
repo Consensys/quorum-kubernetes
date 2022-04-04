@@ -9,8 +9,8 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
     namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
     helm.sh/chart: {{ include "goquorum-node.chart" . }}
+    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/component: {{ .Release.Name }}

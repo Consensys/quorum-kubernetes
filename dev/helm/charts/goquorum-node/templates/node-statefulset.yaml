@@ -44,13 +44,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
 reclaimPolicy: Retain
+allowVolumeExpansion: true
 mountOptions:
   - dir_mode=0755
   - file_mode=0755
   - uid=0
   - gid=0
   - mfsymlinks
-allowVolumeExpansion: true
 parameters:
   skuName: Standard_LRS
 
@@ -68,6 +68,22 @@ allowVolumeExpansion: true
 parameters:
   type: gp3
   fsType: ext4
+
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: {{ include "besu-node.fullname" . }}-storage
+#   namespace: {{ .Release.Namespace }}
+# provisioner: efs.csi.aws.com
+# reclaimPolicy: Retain
+# parameters:
+#   provisioningMode: efs-ap
+#   fileSystemId: #your_file_system_id
+#   directoryPerms: "700"
+#   gidRangeStart: "1000" # optional
+#   gidRangeEnd: "2000" # optional
+#   basePath: "/dynamic_provisioning" # optional
 
 {{- else }}
 
@@ -89,6 +105,7 @@ spec:
     path: "/tmp/{{ include "goquorum-node.fullname" . }}"
 
 {{- end }}
+
 {{- if eq .Values.provider "local" }}
 ---
 apiVersion: v1
@@ -97,13 +114,14 @@ metadata:
   name:  {{ include "goquorum-node.fullname" . }}-pvc
   namespace: {{ .Release.Namespace }}
 spec:
+  storageClassName: {{ include "goquorum-node.fullname" . }}-storage
   accessModes:
     - ReadWriteOnce
-  storageClassName: {{ include "goquorum-node.fullname" . }}-storage
   resources:
     requests:
       storage: "{{ .Values.storage.pvcSizeLimit }}"
 {{- end }}
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -128,7 +146,7 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: {{ include "goquorum-node.fullname" . }}
+      app: {{ template "goquorum-node.fullname" . }}
       release: {{ .Release.Name }}
       component: {{ .Release.Name }}
       app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
@@ -333,7 +351,7 @@ spec:
             protocol: UDP
           - name: metrics
             containerPort: {{ .Values.node.quorum.metrics.pprofport }}
-            protocol: UDP
+            protocol: TCP
         command:
           - /bin/sh
           - -c

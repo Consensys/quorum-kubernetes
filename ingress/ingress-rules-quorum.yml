@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: quorum-ingress-routes
+  name: goquorum-ingress-routes
   namespace: quorum
   annotations:
     kubernetes.io/ingress.class: nginx
@@ -36,6 +36,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: quorum-monitoring-monitoring-grafana
+            name: monitoring-grafana
             port:
-              number: 3000              
+              number: 3000

@@ -229,6 +229,7 @@ spec:
                 fieldPath: metadata.name
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
+
         volumeMounts:
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}

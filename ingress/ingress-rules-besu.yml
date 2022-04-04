@@ -39,10 +39,3 @@ spec:
                 name: monitoring-grafana
                 port:
                   number: 3000
-          # - path: /
-          #   pathType: Prefix
-          #   backend:
-          #     service:
-          #       name: prometheus-operated
-          #       port:
-          #         number: 9090          

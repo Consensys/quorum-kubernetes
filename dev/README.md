@@ -58,7 +58,7 @@ Alternatively configure the kibana ingress settings in the [values.yml](./helm/v
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
 per your requirements and policies
 
-_For Besu:_
+### _For Besu:_
 
 ```bash
 
@@ -67,6 +67,8 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
 kubectl --namespace quorum apply -f  ./values/monitoring/
+
+# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
 
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
@@ -107,7 +109,7 @@ helm install besu-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```
 
-_For GoQuorum:_
+### _For GoQuorum:_
 
 ```bash
 cd dev/helm/
@@ -115,6 +117,8 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 helm repo update
 helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
 kubectl --namespace quorum apply -f  ./values/monitoring/
+
+# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
 
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
@@ -152,7 +156,7 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 ```
 
-4. Once deployed, services are available as follows on the IP/ of the ingress controllers:
+### Once deployed, services are available as follows on the IP/ of the ingress controllers:
 
 Monitoring (if deployed)
 
