@@ -18,6 +18,7 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "list"]
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -32,6 +33,7 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
+
 
 {{- if eq .Values.provider "azure" }}
 
@@ -67,6 +69,7 @@ allowVolumeExpansion: true
 parameters:
   type: gp3
   fsType: ext4
+
 # ---
 # apiVersion: storage.k8s.io/v1
 # kind: StorageClass
@@ -169,6 +172,7 @@ spec:
         component: {{ .Release.Name }}
         app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ .Release.Name }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
@@ -225,6 +229,7 @@ spec:
                 fieldPath: metadata.name
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
+
         volumeMounts:
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}

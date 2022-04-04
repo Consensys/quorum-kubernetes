@@ -80,6 +80,8 @@ node:
       enabled: true
       host: "0.0.0.0"
       port: 9545
+      serviceMonitor:
+        enabled: true
     metricsPush:
       enabled: false
       host: "5.5.5.5"
