@@ -65,7 +65,7 @@ spec:
 {{- end }}
 
 
-{{- if and .Values.node.besu.metrics.enabled .Values.node.besu.metrics.serviceMonitor.enabled }}
+{{- if and .Values.node.besu.metrics.enabled .Values.node.besu.metrics.serviceMonitorEnabled }}
 
 ---
 apiVersion: monitoring.coreos.com/v1

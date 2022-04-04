@@ -6,4 +6,9 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: false
 
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true  
+
 provider: local

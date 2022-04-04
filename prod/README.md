@@ -31,7 +31,7 @@ Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCom
 Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCommit:"e8462b5b5dc2584fdcd18e6bcfe9f1e4d970a529", GitTreeState:"clean", BuildDate:"2019-06-19T16:32:14Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
-_Spin up ELK for logs: (Optional but recommended)_
+### _Spin up ELK for logs: (Optional but recommended)_
 
 **NOTE:** this uses charts from Elastic - please configure this as per your requirements and policies
 
@@ -49,14 +49,26 @@ Alternatively configure the kibana ingress settings in the [values.yml](./helm/v
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
 per your requirements and policies
 
+### _Spin up prometheus-stack for metrics: (Optional but recommended)_
+
+**NOTE:** this uses charts from prometheus-community - please configure this as per your requirements and policies
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
+kubectl --namespace quorum apply -f  ./values/monitoring/
+
+# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
+```
+
 Then deploy the charts like so:
 
-_For Besu:_
+### _For Besu:_
 
 ```bash
 
 cd prod/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -67,7 +79,7 @@ helm install validator-2 ./charts/besu-node --namespace quorum --values ./values
 helm install validator-3 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 helm install validator-4 ./charts/besu-node --namespace quorum --values ./values/validator.yml
 
-# spin up a besu and orion node pair
+# spin up a besu and tessera node pair
 helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
 ```
 
@@ -89,11 +101,10 @@ helm install besu-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ```
 
-_For GoQuorum:_
+### _For GoQuorum:_
 
 ```bash
 cd prod/helm/
-helm install monitoring ./charts/quorum-monitoring --namespace quorum --create-namespace --values ./values/monitoring.yml
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml
@@ -123,7 +134,7 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
 kubectl apply -f ../../ingress/ingress-rules-quorum.yml
 ```
 
-4. Once deployed, services are available as follows on the IP/ of the ingress controllers:
+### Once deployed, services are available as follows on the IP/ of the ingress controllers:
 
 Monitoring (if deployed)
 
@@ -143,7 +154,7 @@ API Calls to either client
 # HTTP RPC API:
 curl -v -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' http://<INGRESS_IP>/rpc
 
-# which should return (confirming that the node running the JSON-RPC service has peers):
+# which should return (confirming that the node running the JSON-RPC service is syncing):
 {
   "jsonrpc" : "2.0",
   "id" : 1,

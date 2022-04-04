@@ -4,8 +4,15 @@ nodeFlags:
   generateKeys: true
   privacy: true
   removeKeysOnDeletion: true
+
 node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+  goquorum:
+    metrics:
+      serviceMonitorEnabled: true      
   tessera:
     password: "test"
-
+    
 provider: local

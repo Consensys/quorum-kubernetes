@@ -5,6 +5,14 @@ nodeFlags:
   privacy: true
   removeKeysOnDeletion: true
 
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+  goquorum:
+    metrics:
+      serviceMonitorEnabled: true    
+
 provider: aws
 
 azure:

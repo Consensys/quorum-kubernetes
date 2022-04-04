@@ -5,4 +5,12 @@ nodeFlags:
   privacy: false
   removeKeysOnDeletion: false
 
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+  goquorum:
+    metrics:
+      serviceMonitorEnabled: true          
+
 provider: local

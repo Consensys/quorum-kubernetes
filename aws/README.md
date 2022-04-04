@@ -53,6 +53,11 @@ The `cluster.yml` file that is included in this folder will automatically deploy
 
 To install the EBS CSI drivers, you can do it through the [AWS Management Console](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html#adding-ebs-csi-eks-add-on) for simplicity.
 
+
+```bash
+aws eks create-addon --cluster-name CLUSTER_NAME --addon-name aws-ebs-csi-driver --region AWS_REGION --service-account-role-arn arn:aws:iam::ACCOUNT_NUMBER:role/AmazonEKS_EBS_CSI_DriverRole
+```
+
 5. Provision Secrets Drivers
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
