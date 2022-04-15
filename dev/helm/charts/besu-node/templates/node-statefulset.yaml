@@ -67,7 +67,7 @@ provisioner: ebs.csi.aws.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
-  type: gp3
+  type: gp2
   fsType: ext4
 
 # ---
@@ -121,6 +121,22 @@ spec:
   resources:
     requests:
       storage: "{{ .Values.storage.pvcSizeLimit }}"
+
+{{- else if eq .Values.provider "aws" }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  storageClassName: {{ include "besu-node.fullname" . }}-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.storage.pvcSizeLimit }}"
+
 {{- end }}
 
 ---
@@ -424,6 +440,11 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc
+      {{- end }} 
+      {{- if eq .Values.provider "aws"}}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "besu-node.fullname" . }}-pvc    
       {{- end }}
       {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config
