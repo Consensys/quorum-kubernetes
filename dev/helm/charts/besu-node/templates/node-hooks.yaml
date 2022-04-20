@@ -199,7 +199,7 @@ spec:
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
-{{- else }}
+{{- else if eq .Values.cloudSecretsStore false }}
               kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
 {{- end }}
               update_tessera_peers_configmap
@@ -237,11 +237,10 @@ spec:
 {{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
 {{- else if and (eq .Values.provider "aws") (eq .Values.cloudSecretsStore true) }}
-      serviceAccountName: {{ .Values.aws.serviceAccountName }}{{- else }}
-    name: {{ include "besu-genesis.name" . }}-sa
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
-{{- end}}
+{{- end }}
       restartPolicy: "OnFailure"
       containers:
         - name: delete-keys
@@ -300,5 +299,3 @@ spec:
 
             {{- end }}
               echo "Completed"
-
-                           

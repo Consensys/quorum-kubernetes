@@ -13,4 +13,5 @@ node:
     metrics:
       serviceMonitorEnabled: true          
 
+cloudSecretsStore: false
 provider: local

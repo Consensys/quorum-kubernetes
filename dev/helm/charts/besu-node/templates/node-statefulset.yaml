@@ -38,11 +38,10 @@ subjects:
   name: {{ .Values.aws.serviceAccountName }}
 {{- else }}
   name: {{ include "besu-node.fullname" . }}-sa
-{{- end}}
+{{- end }}
 
 
 {{- if eq .Values.provider "azure" }}
-
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -62,7 +61,6 @@ parameters:
   skuName: Standard_LRS
 
 {{- else if eq .Values.provider "aws" }}
-
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -162,7 +160,8 @@ spec:
       app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   serviceName: {{ include "besu-node.fullname" . }}
-  {{- if or (eq .Values.provider "aws") (eq .Values.provider "azure") }}
+{{- if .Values.cloudSecretsStore }}
+{{- if (or (eq .Values.provider "aws") (eq .Values.provider "azure")) }}
   volumeClaimTemplates:
   - metadata:
       name: data
@@ -172,11 +171,12 @@ spec:
       resources:
         requests:
           storage: "{{ .Values.storage.pvcSizeLimit }}"
-  {{- end }}
+{{- end }}
+{{- end }}
   template:
     metadata:
       labels:
-{{- if and (eq .Values.provider "azure") (eq .Values.provider "azure") }}        
+{{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}        
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
         app: {{ template "besu-node.fullname" . }}
@@ -210,7 +210,6 @@ spec:
 
 
 {{- if has .Values.provider .Values.volumePermissionsFix }}
-
       # fix for minikube and PVC's only writable as root https://github.com/kubernetes/minikube/issues/1990
       - name: volume-permission-besu
         image: busybox
@@ -220,9 +219,7 @@ spec:
             mountPath: /data
         securityContext:
           runAsUser: 0
-
 {{- end}}
-
       containers:
 
 {{- if .Values.nodeFlags.privacy }}
@@ -247,11 +244,16 @@ spec:
                 fieldPath: metadata.name
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
-
         volumeMounts:
+{{- if eq .Values.cloudSecretsStore false }}
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
+{{- else if .Values.cloudSecretsStore }}
+          - name: secrets-store
+            mountPath: {{ .Values.node.tessera.keysPath }}
+            readOnly: true
+{{- end }}
           - name: data
             mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
@@ -362,18 +364,20 @@ spec:
                 name: besu-node-bootnode-2-keys
                 key: enode
         volumeMounts:
+        {{- if eq .Values.cloudSecretsStore false }}
+          - name: besu-keys
+            mountPath: {{ .Values.node.besu.keysPath }}
+            readOnly: true
+        {{- else if eq .Values.cloudSecretsStore true }}
+          - name: secrets-store
+            mountPath: {{ .Values.node.besu.keysPath }}
+            readOnly: true
+        {{- end }}
         {{- if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore false) }}
           - name: tessera-keys
             mountPath: {{ .Values.node.besu.privacy.pubkeysPath }}
             readOnly: true
-          - name: besu-keys
-            mountPath: {{ .Values.node.besu.keysPath }}
-            readOnly: true
-        {{- else if and .Values.nodeFlags.privacy (eq.Values.cloudSecretsStore true) }}
-          - name: secrets-store
-            mountPath: {{ .Values.node.besu.keysPath }}
-            readOnly: true
-        {{- end}}
+        {{- end }}
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
@@ -424,11 +428,11 @@ spec:
           initialDelaySeconds: 180
           periodSeconds: 60
       volumes:
-{{- if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore false) }}
+{{- if (eq .Values.cloudSecretsStore false) }}
       - name: besu-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-keys
-{{- else if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore true) }}
+{{- else if (eq .Values.cloudSecretsStore true) }}
       - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
@@ -462,7 +466,7 @@ spec:
           name: {{ include "besu-node.fullname" . }}-permissions
       {{- end }}
       {{- if .Values.nodeFlags.privacy }}
-      {{- if .Values.cloudSecretsStore }}
+      {{- if eq .Values.cloudSecretsStore false }}
       - name: tessera-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-tessera-keys

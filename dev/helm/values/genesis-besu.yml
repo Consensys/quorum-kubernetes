@@ -17,4 +17,5 @@ rawGenesisConfig:
       generate: true
       count: 4
 
+cloudSecretsStore: false
 provider: local

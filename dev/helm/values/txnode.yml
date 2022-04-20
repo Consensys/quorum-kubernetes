@@ -15,4 +15,5 @@ node:
   tessera:
     password: "test"
     
+cloudSecretsStore: false
 provider: local
