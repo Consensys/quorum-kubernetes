@@ -7,11 +7,11 @@ The following repo has example reference implementations of private networks usi
 You will need the following tools to proceed:
 
 - [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster (refer to the [playground](./playground) for manifests to deploy)
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/)
-- [Helmfile](https://github.com/roboll/helmfile)
 - [Helm Diff plugin](https://github.com/databus23/helm-diff)
 
-Verify kubectl is connected with
+Verify kubectl is connected with (please use the latest version of kubectl)
 ```bash
 $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
@@ -24,15 +24,18 @@ Please note that the documentation and steps listed use *helm3*. The API has bee
 $ helm plugin install https://github.com/databus23/helm-diff --version master
 ```
 
-The repo provides examples using multiple tools such as kubectl, helm, helmfile etc. Please select the one that meets your deployment requirements.
+The repo provides examples using multiple tools such as kubectl, helm etc. Please select the one that meets your deployment requirements.
 
 The current repo layout is:
 
 ```bash
   ├── docker
-  │   └── istanbul-tools            # helper docker images used for various tasks
+  │   └── quorum-k8s-hooks          # helper docker images used for various tasks
   ├── ingress                       # ingress rules, hidden here for brevity
-  │   ├── ...                       
+  │   └── ...                       
+  ├── static                        # static assets
+  ├── aws                           # aws specific artifacts
+  │   ├── templates                 # aws templates to deploy resources ie cluster, secrets manager, IAM etc
   ├── azure                         # azure specific artifacts
   │   ├── arm                       # azure ARM templates to deploy resources ie cluster, keyvault, identity etc
   │   └── scripts                   # azure scripts to install CSI drivers on the AKS cluster and the like
@@ -48,59 +51,58 @@ The current repo layout is:
   │       └── quorum-go             # use GoQuorum as the block chain client
   │           └── ibft
   │               └── ...
-  ├── dev                       
-  │   └── helm  
-  │       ├── charts            
-  │       │   ├── ...               # dev helm charts, hidden here for brevity
-  │       └── values            
-  │           ├── ...               # values.yml overrides for various node types
-  ├── prod                      
-  │   └── helm  
-  │       ├── charts            
-  │       │   ├── ...              # prod helm charts - these will use cloud native services where possible eg IAM for identity, keyvault for secrets etc
-  │       └── values            
-  │           ├── ...              # values.yml overrides for various node types
-  └── static                       # images and other static assets
-  
-
+  ├── helm                       
+  │   ├── charts            
+  │   │   ├── ...               # dev helm charts, hidden here for brevity
+  │   └── values            
+  │       ├── ...               # values.yml overrides for various node types
 
 ```
 
-We recommend starting with the `playground` folder and working through the example setups there and then moving to the next `dev` stage.
+We recommend starting with the `playground` folder and working through the example setups there and then moving to the next `helm` stage.
 
-The `dev` and `prod` folders are pretty identical in terms of what gets deployed, but differ in that the prod folder natively uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
+Each helm chart that you can use and you can set an `cluster` map with what features and the env you're deploying to:
+```bash
+cluster:
+  provider: local # options: local, aws or azure
+  stage: dev # options: dev or prod
+```
+where the stage value will determine what features to use. Setting it to `dev` leaves keys etc as normal secrets. Setting it to `prod` will
+be used in conjuction with the provider and uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
 
 ## Concepts:
 
 #### Providers
-If you are deploying to Azure, please refer to the ARM templates and deployment [documentation](./azure/README.md)
+If you are deploying to cloud, please refer to the [Azure deployment documentation](./azure/README.md) or the [AWS deployment documentation](./aws/README.md)
 
 If you are deploying locally you need a Kubernetes cluster like [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
 
 #### Namespaces:
-Currently we do not deploy anything in the 'default' namespace. Anything related to Besu gets spun up in a 'besu' namespace, and 'quorum' for GoQuorum; with the monitoring pieces get spun up in a 'monitoring' namespace.
+Currently we do **not** deploy anything in the `default` namespace and instead use the `quorum` namespace. You can change this to suit your requirements
+
 Namespaces are part of the setup and do not need to be created via kubectl prior to deploying. To change the namespaces:
 - In Kubectl, you need to edit every file in the deployment
 - In Helm, edit the namespace value in the values.yaml 
 
-It is recommended you follow this approach as well in your production setups and where possible use Service Accounts to secure deployments & statefulsets. We make use of these extensively.
+It is recommended you follow this approach of an override `values.yml` for your deployments and follow it through into production phase too
 
 #### Network Topology and High Availability requirements:
 Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
 
-When deploying a private network, eg: IBFT you need to ensure that the bootnodes are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
+When deploying a private network, eg: QBFT, if you use bootnodes, you need to ensure that they are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
 
-You need to ensure that the genesis file is accessible to all nodes joining the network.
+You need to ensure that the genesis file is accessible to **all** nodes joining the network.
 
 Hyperledger Besu supports [NAT mechanisms](https://besu.hyperledger.org/en/stable/Reference/CLI/CLI-Syntax/#nat-method) and the default is set to automatically handle NAT environments. If you experience issues with NAT and logs have messages that have the NATService throwing exceptions connecting to external IPs, please add this option in your Besu deployments `--nat-method = NONE`
 
 #### Data Volumes:
-Ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider.
+We use seperate data volumes to store the blockchain data, than the default of the host nodes. This is becuase host nodes can fail and we would like the chain data to persist. Ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider.
 
 #### Nodes:
-Consider the use of statefulsets instead of deployments for nodes. The term 'node' refers to bootnode, validator and network nodes.
+Consider the use of statefulsets instead of deployments for client nodes. The term 'client node' refers to bootnode, validator and member/rpc nodes.
 
-Configuration of nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation
+Configuration of client nodes can be done either via a single item inside a config map, as Environment Variables or as command line options. Please refer to the [Configuration](https://besu.hyperledger.org/en/latest/HowTo/Configure/Using-Configuration-File/) section of our documentation. With GoQuorum, we use CLI
+args only
 
 #### RBAC:
 We encourage the use of RBAC's for access to the private key of each node, ie. only a specific pod/statefulset is allowed to access a specific secret. If you need to specify a Kube config file to each pod please use the `KUBE_CONFIG_PATH` variable
@@ -121,21 +123,25 @@ If you require the use of ingress controllers for the RPC calls or the monitorin
 Please use these as a reference and develop solutions to match your network topology and requirements.
 
 #### Logging
-Node logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please follow out documentation.
+Node logs can be [configured](https://besu.hyperledger.org/en/latest/HowTo/Troubleshoot/Logging/#advanced-custom-logging) to suit your environment. For example, if you would like to log to file and then have parsed via logstash into an ELK cluster, please use the Elastic charts as well
 
 
-
-## New nodes joining the network:
-The general rule is that any new nodes joining the network need to have the following accessible:
+## New client nodes joining the network:
+The general rule is that any new client nodes joining the network need to have the following accessible:
 - genesis.json of the network
-- Bootnodes need to be accessible on the network (if using bootnodes, otherwise static-nodes.json)
-- Bootnodes enode's (public key and IP) should be passed in at boot
-- If you’re using permissioning on your network, specifically authorise the new nodes
+- Bootnodes need to be accessible on the network (if using bootnodes, otherwise static-nodes.json). Bootnodes enode's (public key and IP) should be passed in at boot
+- If you’re using permissioning on your network, specifically authorise the new client nodes
 
 If the initial setup was on Kubernetes, you have the following scenarios:
 
 #### 1. New node also being provisioned on the K8S cluster:
-In this case anything that applies to how current nodes are provisioned should be applicable and the only thing that need be done is increase the number of replicas
+In this case anything that applies to how current client nodes are provisioned should be applicable and the only thing that need be done is to deploy rpc or members as normal
+```bash
+helm install member-1 ./charts/<client>-node --namespace quorum --values ./values/txnode.yml
+
+# or for rpc only
+helm install rpc-1 ./charts/<client>-node --namespace quorum --values ./values/reader.yml
+```
 
 #### 2. New node being provisioned elsewhere
 Ensure that the host being provisioned can find and connect to the bootnode's. You may need to use `traceroute`, `telnet` or the like to ensure you have connectivity. Once connectivity has been verified, you need to pass the enode of the bootnodes and the genesis file to the node. This can be done in many ways, for example query the k8s cluster via APIs prior to joining if your environment allows for that. Alternatively put this data somewhere accessible to new nodes that may join in future as well, and pass the values in at runtime.

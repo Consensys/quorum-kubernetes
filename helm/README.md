@@ -1,22 +1,41 @@
-# Dev
+# Helm Charts
 
-The dev area has basic examples you can use to setup your network with. They use `helm` exclusively and there are various charts each with specific functionality.
+Each helm chart that you can use has the following keys and you need to set them. The `cluster.provider` is used as a key for the various cloud features enabled. Also you need only specify one cloud provider, **not** both if deploying to cloud. As at writing this doc, AWS and Azure are fully supported.
 
-The dev charts have:
+```bash
+# dict with what features and the env you're deploying to
+cluster:
+  provider: local  # choose from: local | aws | azure
+  stage: dev # choose from: dev | prod
 
-- Dynamic key & account generation
-- Agnostic of env - can be used locally and on azure. Edit the `provider: local` value in the [values overrides](./values)
-- Keys are stored as opaque secrets and not in keyvault if using Azure.
-- Use Nodeports to expose services if running
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
+
+```
+
+Setting the `cluster.stage: prod` will use:
+
+- Keys are stored in KeyVault or Secrets Manager 
+- We make use of Managed Identities or IAMs for access
+- To connect from your local machine you will need to use an ingress controller
 
 You are encouraged to pull these charts apart and experiment with options to learn how things work.
 
 ## Local Development:
-
-- [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster
-- [Helm](https://helm.sh/docs/)
-- [Helmfile](https://github.com/roboll/helmfile)
-- [Helm Diff plugin](https://github.com/databus23/helm-diff)
 
 Minikube defaults to 2 CPU's and 2GB of memory, unless configured otherwise. We recommend you starting with at least 16GB, depending on the amount of nodes you are spinning up - the recommended requirements for each besu node are 4GB
 
@@ -27,12 +46,12 @@ minikube start --memory 16384 --cpus 2 --extra-config=apiserver.Authorization.Mo
 
 # enable the ingress
 minikube addons enable ingress
-minikube dashboard &
 
+# optionally start the dashboard
+minikube dashboard &
 ```
 
-Verify kubectl is connected to Minikube with:
-
+Verify kubectl is connected to Minikube with: (please use the latest version of kubectl)
 ```bash
 $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
@@ -48,13 +67,16 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 ```bash
 helm repo add elastic https://helm.elastic.co
 helm repo update
+# if on cloud
 helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
+# if local - set the replicas to 1
+helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml --set replicas=1 --set minimumMasterNodes: 1
 helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values ./values/kibana.yml
 helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
 ```
 
 Please also deploy the ingress (below) and the ingress rules to access kibana on path `http://<INGRESS_IP>/kibana`.
-Alternatively configure the kibana ingress settings in the [values.yml](./helm/values/kibana.yml)
+Alternatively configure the kibana ingress settings in the [values.yml](./values/kibana.yml)
 
 Once you have kibana open, create a `filebeat` index pattern and logs should be available. Please configure this as
 per your requirements and policies
@@ -66,17 +88,14 @@ per your requirements and policies
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
+# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
 helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
 kubectl --namespace quorum apply -f  ./values/monitoring/
-
-# NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
 ```
 
 ### _For Besu:_
 
 ```bash
-
-cd dev/helm/
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 helm install bootnode-1 ./charts/besu-node --namespace quorum --values ./values/bootnode.yml
@@ -119,7 +138,6 @@ kubectl apply -f ../../ingress/ingress-rules-besu.yml
 ### _For GoQuorum:_
 
 ```bash
-cd dev/helm/
 helm install genesis ./charts/goquorum-genesis --namespace quorum --create-namespace --values ./values/genesis-goquorum.yml
 
 helm install validator-1 ./charts/goquorum-node --namespace quorum --values ./values/validator.yml

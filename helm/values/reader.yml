@@ -1,0 +1,16 @@
+---
+nodeFlags:
+  bootnode: false
+  generateKeys: true
+  privacy: false
+  removeKeysOnDeletion: true
+
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+  goquorum:
+    metrics:
+      serviceMonitorEnabled: true    
+      
+provider: local
