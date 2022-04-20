@@ -42,11 +42,11 @@ subjects:
 - kind: ServiceAccount
   namespace:  {{ .Release.Namespace }}
 {{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}
-    name: {{ include "besu-genesis.name" . }}-sa
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
 {{- else if and (eq .Values.provider "aws") (eq .Values.cloudSecretsStore true) }}
-    name: {{ .Values.aws.serviceAccountName }}
+  name: {{ .Values.aws.serviceAccountName }}
 {{- else }}
-    name: {{ include "besu-genesis.name" . }}-sa
+  name: {{ include "besu-node.fullname" . }}-hooks-sa
 {{- end}}
 
 
@@ -157,7 +157,7 @@ spec:
 {{- end }}
 
               echo "{{ template "besu-node.fullname" . }} hook ..."
-            {{- if .Values.nodeFlags.generateKeys }}       
+{{- if .Values.nodeFlags.generateKeys }}       
 
               echo "Nodekey generation ..."
               # /opt/besu/bin/besu public-key export --to=public.key
@@ -186,10 +186,10 @@ spec:
               update_enodes_configmap
               echo "Completed"
 
-            {{- end }}
+{{- end }}
 
 
-            {{- if .Values.nodeFlags.privacy }}
+{{- if .Values.nodeFlags.privacy }}
               FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
               if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
                 echo "" > $FOLDER_PATH/member0/passwordFile.txt
@@ -204,7 +204,7 @@ spec:
 {{- end }}
               update_tessera_peers_configmap
               echo "Tessera Completed"
-            {{- end }}
+{{- end }}
 
               echo "hook completed"
 
@@ -286,14 +286,14 @@ spec:
               delete_node_from_enodes_configmap
               delete_node_from_tessera_peers_configmap
 
-            {{- if .Values.nodeFlags.removeKeysOnDeletion }}       
+            {{- if and (.Values.nodeFlags.removeKeysOnDeletion) (eq .Values.cloudSecretsStore false) }}       
 
               echo "Deleting node secrets in k8s ..."
               kubectl delete secret {{ template "besu-node.fullname" . }}-keys --namespace {{ .Release.Namespace }}
               kubectl delete secret {{ template "besu-node.fullname" . }}-account --namespace {{ .Release.Namespace }}
               kubectl delete configmap {{ template "besu-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
 
-            {{- if .Values.nodeFlags.privacy }}
+            {{- if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore false) }}
               kubectl delete secret {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }}
 
             {{- end }}

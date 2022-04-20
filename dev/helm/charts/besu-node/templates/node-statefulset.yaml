@@ -31,8 +31,14 @@ roleRef:
   name: {{ include "besu-node.fullname" . }}-role
 subjects:
 - kind: ServiceAccount
-  name: {{ include "besu-node.fullname" . }}-sa
   namespace: {{ .Release.Namespace }}
+{{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}
+  name: {{ include "besu-node.fullname" . }}-sa
+{{- else if and (eq .Values.provider "aws") (eq .Values.cloudSecretsStore true) }}
+  name: {{ .Values.aws.serviceAccountName }}
+{{- else }}
+  name: {{ include "besu-node.fullname" . }}-sa
+{{- end}}
 
 
 {{- if eq .Values.provider "azure" }}
@@ -129,6 +135,9 @@ kind: StatefulSet
 metadata:
   name: {{ template "besu-node.fullname" . }}
   labels:
+{{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
     app: {{ template "besu-node.fullname" . }}
     chart: {{ template "besu-node.chart" . }}
     release: {{ .Release.Name }}
@@ -167,6 +176,9 @@ spec:
   template:
     metadata:
       labels:
+{{- if and (eq .Values.provider "azure") (eq .Values.provider "azure") }}        
+        aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
         app: {{ template "besu-node.fullname" . }}
         release: {{ .Release.Name }}
         component: {{ .Release.Name }}
@@ -178,7 +190,13 @@ spec:
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
+{{- if and (eq .Values.provider "azure") (eq .Values.cloudSecretsStore true) }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
+{{- else if and (eq .Values.provider "aws") (eq .Values.cloudSecretsStore true) }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- else }}
+      serviceAccountName: {{ include "besu-node.fullname" . }}-sa
+{{- end }}
       initContainers:
 
 {{- if not .Values.nodeFlags.bootnode }}
@@ -344,14 +362,18 @@ spec:
                 name: besu-node-bootnode-2-keys
                 key: enode
         volumeMounts:
-        {{- if .Values.nodeFlags.privacy }}
+        {{- if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore false) }}
           - name: tessera-keys
             mountPath: {{ .Values.node.besu.privacy.pubkeysPath }}
             readOnly: true
-        {{- end}}
           - name: besu-keys
             mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
+        {{- else if and .Values.nodeFlags.privacy (eq.Values.cloudSecretsStore true) }}
+          - name: secrets-store
+            mountPath: {{ .Values.node.besu.keysPath }}
+            readOnly: true
+        {{- end}}
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
@@ -402,9 +424,18 @@ spec:
           initialDelaySeconds: 180
           periodSeconds: 60
       volumes:
+{{- if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore false) }}
       - name: besu-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-keys
+{{- else if and .Values.nodeFlags.privacy (eq .Values.cloudSecretsStore true) }}
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: {{ include "besu-node.fullname" . }}-secret-provider
+{{- end }}
       - name: genesis
         configMap:
           name: besu-genesis
@@ -431,9 +462,11 @@ spec:
           name: {{ include "besu-node.fullname" . }}-permissions
       {{- end }}
       {{- if .Values.nodeFlags.privacy }}
+      {{- if .Values.cloudSecretsStore }}
       - name: tessera-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-tessera-keys
+      {{- end }}
       - name: tessera-peers
         configMap:
           name: tessera-peers
