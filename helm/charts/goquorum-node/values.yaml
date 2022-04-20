@@ -1,0 +1,116 @@
+---
+
+quorumFlags:
+  bootnode: false
+  generateKeys: false
+  privacy: false
+  removeKeysOnDelete: false
+
+cluster:
+  provider: local  # choose from: local | aws | azure
+  stage: dev # choose from: dev | prod
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
+
+storage:
+  sizeLimit: "20Gi"
+  pvcSizeLimit: "20Gi"
+
+node:
+  goquorum:
+    resources:
+      cpuLimit: 0.5
+      cpuRequest: 0.1
+      memLimit: "2G"
+      memRequest: "1G"
+    # privKey:
+    # pubKey:
+    dataPath: "/data/quorum"
+    keysPath: "/keys"
+    genesisFilePath: "/etc/genesis/genesis.json"
+    networkId: 10
+    replicaCount: 1
+    account: {}
+      # unlock: 0
+      # password: "/config/keys/password.txt"
+    log:
+      verbosity: 5
+    miner:
+     threads: 1
+     blockPeriod: 5
+    p2p:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 30303
+    rpc:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8545
+      corsDomain: "*"
+      vHosts: "*"
+      api: "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul"  
+      authenticationEnabled: false
+    ws:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8546
+      api: "admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum,istanbul"
+      origins: "*"
+      authenticationEnabled: false
+    graphql:
+      enabled: true
+      addr: "0.0.0.0"
+      port: 8547
+      corsDomain: "*"
+      vHosts: "*"
+    metrics:
+      enabled: true
+      pprofaddr: "0.0.0.0"
+      pprofport: 9545
+      serviceMonitorEnabled: false
+    privacy:
+      url: "http://localhost:9101"
+      pubkeysPath: "/tessera"
+      pubkeyFile: "/tessera/tm.pub"
+
+  tessera:
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "2G"
+      memRequest: "1G"
+    tmkey: ""
+    tmpub: ""
+    password: ""
+    dataPath: "/data/tessera"
+    keysPath: "/keys"
+    port: 9000
+    tpport: 9080
+    q2tport: 9101
+
+image:
+  goquorum:
+    repository: quorumengineering/quorum
+    tag: latest
+  tessera:
+    repository: quorumengineering/tessera
+    tag: latest
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: latest
+    pullPolicy: IfNotPresent

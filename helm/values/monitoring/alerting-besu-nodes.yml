@@ -8,16 +8,6 @@ metadata:
   namespace: quorum
 spec:
   groups:
-  - name: besu-excessive-dropped-tx
-    rules:
-    - alert: BesuExcessiveDroppedTx
-      annotations:
-        description: Besu RPC reporting {{ $value }} dropped Tx (more than 10 detected)
-        summary: Besu RPC reporting Excessive dropped Tx
-      expr: besu_transaction_pool_transactions_removed_total{source="local",operation="dropped"} > 10
-      for: 1m
-      labels:
-        severity: critical
   - name: besu-chain-stalled
     rules:
     - alert: BesuChainStalled

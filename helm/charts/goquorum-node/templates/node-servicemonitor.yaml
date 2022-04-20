@@ -1,0 +1,38 @@
+
+{{- if and .Values.node.goquorum.metrics.enabled .Values.node.goquorum.metrics.serviceMonitorEnabled }}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "goquorum-node.fullname" . }}-servicemonitor
+  labels:
+    release: monitoring
+    helm.sh/chart: {{ include "goquorum-node.chart" . }}
+    app: {{ template "goquorum-node.fullname" . }}
+    chart: {{ template "goquorum-node.chart" . }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ .Release.Name }}
+  endpoints:
+  - port: metrics
+    interval: 15s
+    path: /debug/metrics/prometheus
+    scheme: http
+    honorLabels: true
+{{- end }}
+

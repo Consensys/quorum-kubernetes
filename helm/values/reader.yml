@@ -1,9 +1,31 @@
 ---
-nodeFlags:
+
+quorumFlags:
   bootnode: false
   generateKeys: true
   privacy: false
-  removeKeysOnDeletion: true
+  removeKeysOnDelete: true
+
+cluster:
+  provider: local  # choose from: local | aws | azure
+  stage: dev # choose from: dev | prod
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
 
 node:
   besu:
@@ -12,5 +34,3 @@ node:
   goquorum:
     metrics:
       serviceMonitorEnabled: true    
-      
-provider: local
