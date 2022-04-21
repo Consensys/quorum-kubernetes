@@ -31,8 +31,6 @@ spec:
       app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   serviceName: {{ include "besu-node.fullname" . }}
-{{- if .Values.cluster.cloudSecretsStore }}
-{{- if (or (eq .Values.cluster.provider "aws") (eq .Values.cluster.provider "azure")) }}
   volumeClaimTemplates:
   - metadata:
       name: data
@@ -42,8 +40,6 @@ spec:
       resources:
         requests:
           storage: "{{ .Values.storage.pvcSizeLimit }}"
-{{- end }}
-{{- end }}
   template:
     metadata:
       labels:
@@ -324,11 +320,9 @@ spec:
       - name: besu-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-besu-config
-      {{- if eq .Values.cluster.provider "local"}}
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "besu-node.fullname" . }}-pvc
-      {{- end }}
       {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config
         configMap:

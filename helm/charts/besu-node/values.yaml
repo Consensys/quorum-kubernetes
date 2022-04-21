@@ -2,11 +2,11 @@
 image:
   besu:
     repository: hyperledger/besu
-    tag: latest
+    tag: 22.1.3
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
-    tag: latest
+    tag: 22.1.1
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks
@@ -57,7 +57,7 @@ node:
     # pubKey:
     dataPath: "/data/besu"
     keysPath: "/keys"
-    privateKeyPath: "/keys/private.key"
+    privateKeyPath: "/keys/nodekey"
     genesisFilePath: "/etc/genesis/genesis.json"
     logging: INFO
     p2p:
