@@ -156,7 +156,7 @@ Additionally if you’re using permissioning on your network you will also have 
 | --- |
 
 
-#### Pod Resources:
+### Pod Resources:
 The templates in this repository have been set to run locally on Minikube to get the user familiar with the setup. Hence the resources are set low, when designing your setup to run in `staging` or `production` environments, please ensure you **grant at least 4GB of memory to Besu pods and 2GB of memory to Tessera pods.** Also ensure you **select the appropriate storage class and size for your nodes.**
 
 Ensure that if you are using a cloud provider you have enough spread across AZ's to minimize risks - refer to our [HA](https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/High-Availability/) and [Load Balancing] (https://besu.hyperledger.org/en/latest/HowTo/Configure/Configure-HA/Sample-Configuration/) documentation
@@ -165,4 +165,6 @@ When deploying a private network, eg: IBFT you need to ensure that the bootnodes
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
 
+### Persistent volume claims: 
+In the template, the size of the claims has been set small. If you have a differnt storage account than the one in the charts, please set that up in the storageClass. We recommend you grow the volume claim as required (this also lowers cost)
 

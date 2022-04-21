@@ -7,7 +7,7 @@ quorumFlags:
   removeKeysOnDelete: false
 
 cluster:
-  provider: local  # choose from: local | aws | azure
+  provider: azure  # choose from: local | aws | azure
   cloudSecretsStore: false 
 
 aws:

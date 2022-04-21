@@ -50,6 +50,7 @@ spec:
             - |
               echo "Creating config ..."
 
+{{- if eq .Values.cluster.stage "prod" }}
 {{- if eq .Values.cluster.provider "azure" }}
 
               function safeWriteSecret {
@@ -82,7 +83,22 @@ spec:
               }
 
 {{- else }}
+              
+              # stage: prod 
+              # provider: local --- odd edge case
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
 
+                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+              }
+
+{{- end }}
+
+{{- else }}
+
+              # stage: dev
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -126,8 +142,13 @@ spec:
               
                   echo "Creating keys in vault for $validatorKey ..."
 
+{{- if eq .Values.cluster.stage "prod" }}
+
+
 {{- if eq .Values.cluster.provider "local" }}
                   
+                  # stage: prod
+                  # provider: local --- odd edge case
                   safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- else }}
@@ -140,6 +161,14 @@ spec:
                   safeWriteSecret goquorum-node-$validatorKey-accountPassword $FOLDER_PATH/${f}/accountPassword
                   safeWriteSecret goquorum-node-$validatorKey-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
                   safeWriteSecret goquorum-node-$validatorKey-accountAddress $FOLDER_PATH/${f}/accountAddress 
+
+{{- end }}
+
+
+{{- else }}
+
+                  # stage: dev
+                  safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}
 

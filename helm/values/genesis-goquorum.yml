@@ -22,7 +22,7 @@ rawGenesisConfig:
       count: 4
 
 cluster:
-  provider: local  # choose from: local | aws | azure
+  provider: azure  # choose from: local | aws | azure
   stage: dev # choose from: dev | prod
 
 aws:
