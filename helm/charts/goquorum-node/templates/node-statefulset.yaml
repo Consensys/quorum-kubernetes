@@ -44,7 +44,7 @@ spec:
   template:
     metadata:
       labels:
-{{- if eq .Values.provider "azure" }}
+{{- if eq .Values.cluster.provider "azure" }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
         app: {{ include "goquorum-node.fullname" . }}
@@ -58,7 +58,7 @@ spec:
         prometheus.io/port: {{ .Values.node.goquorum.metrics.pprofport | quote}}
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
-{{- if eq .Values.provider "aws" }}
+{{- if eq .Values.cluster.provider "aws" }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
@@ -89,7 +89,7 @@ spec:
             value: "-09"
 
         volumeMounts:
-{{- if eq .Values.provider "local" }}
+{{- if eq .Values.cluster.provider "local" }}
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
@@ -207,7 +207,7 @@ spec:
             value: "ignore"
         {{- end }}
         volumeMounts:
-{{- if eq .Values.provider "local" }}
+{{- if eq .Values.cluster.provider "local" }}
 {{- if .Values.quorumFlags.privacy }}
           - name: tessera-keys
             mountPath: {{ .Values.node.goquorum.privacy.pubkeysPath }}
@@ -295,7 +295,7 @@ spec:
           periodSeconds: 60          
 
       volumes:
-{{- if eq .Values.provider "local" }}
+{{- if eq .Values.cluster.provider "local" }}
       - name: quorum-keys
         secret:
           secretName: {{ include "goquorum-node.fullname" . }}-keys
@@ -311,7 +311,7 @@ spec:
               path: tesseraPeers          
 {{- end }}
 
-{{- else if eq .Values.provider "azure" }}
+{{- else }}
 
       - name: secrets-store
         csi:

@@ -132,8 +132,7 @@ spec:
             
 {{- if eq .Values.cluster.provider "local" }}
                   
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-keys $FOLDER_PATH/member0
-            safeWriteSecret {{ template "goquorum-node.fullname" . }}-account $FOLDER_PATH/member0
+            safeWriteSecret {{ template "goquorum-node.fullname" . }} $FOLDER_PATH/member0
 
 {{- else }}
 

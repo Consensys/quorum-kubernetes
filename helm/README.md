@@ -68,11 +68,11 @@ Server Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.0", GitCom
 helm repo add elastic https://helm.elastic.co
 helm repo update
 # if on cloud
-helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
+helm install elasticsearch --version 7.17.1 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml
 # if local - set the replicas to 1
-helm install elasticsearch --version 7.16.3 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml --set replicas=1 --set minimumMasterNodes: 1
-helm install kibana --version 7.16.3 elastic/kibana --namespace quorum --values ./values/kibana.yml
-helm install filebeat elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
+helm install elasticsearch --version 7.17.1 elastic/elasticsearch --namespace quorum --create-namespace --values ./values/elasticsearch.yml --set replicas=1 --set minimumMasterNodes: 1
+helm install kibana --version 7.17.1 elastic/kibana --namespace quorum --values ./values/kibana.yml
+helm install filebeat --version 7.17.1 elastic/filebeat  --namespace quorum --values ./values/filebeat.yml
 ```
 
 Please also deploy the ingress (below) and the ingress rules to access kibana on path `http://<INGRESS_IP>/kibana`.
@@ -89,7 +89,7 @@ per your requirements and policies
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 # NOTE: please refer to values/monitoring.yml to configure the alerts per your requirements ie slack, email etc
-helm install monitoring prometheus-community/kube-prometheus-stack --version 34.6.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
+helm install monitoring prometheus-community/kube-prometheus-stack --version 34.10.0 --namespace=quorum --create-namespace --values ./values/monitoring.yml --wait
 kubectl --namespace quorum apply -f  ./values/monitoring/
 ```
 
