@@ -8,7 +8,7 @@ quorumFlags:
 
 cluster:
   provider: local  # choose from: local | aws | azure
-  stage: dev # choose from: dev | prod
+  cloudSecretsStore: false 
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
@@ -33,6 +33,4 @@ node:
       serviceMonitorEnabled: true
   goquorum:
     metrics:
-      serviceMonitorEnabled: true   
-
-    
+      serviceMonitorEnabled: true

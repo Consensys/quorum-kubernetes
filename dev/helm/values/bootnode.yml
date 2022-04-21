@@ -9,7 +9,7 @@ nodeFlags:
 node:
   besu:
     metrics:
-      serviceMonitorEnabled: true  
+      serviceMonitorEnabled: false  
 
 cloudSecretsStore: false
 provider: local
