@@ -1,0 +1,153 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "besu-node.fullname" . }}-pre-install-hook
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+  labels:
+{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
+spec:
+  backoffLimit: 1
+  completions: 1
+  template:
+{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+    metadata:
+      labels:
+        aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
+    spec:
+{{- if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudSecretsStore true) }}
+      serviceAccountName: {{ .Values.aws.serviceAccountName }}
+{{- else }}
+      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+{{- end }}
+      restartPolicy: "OnFailure"
+      containers:
+        - name: {{ template "besu-node.fullname" . }}-pre-start-hook
+          image: {{ .Values.image.hooks.repository }}:{{ .Values.image.hooks.tag }}
+          imagePullPolicy: {{ .Values.image.besu.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+
+              function update_enodes_configmap {
+                kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o json
+                if [ $? -ne 0 ]; then
+                echo "[]" > /tmp/static-nodes.json.raw
+                fi
+                # update the entries
+                echo "updating besu-node-enodes..."
+                pubkey=$(cat /tmp/enode )
+                echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+                NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
+                cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
+                kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
+              }
+
+              function update_tessera_peers_configmap {
+                kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
+                # first time a tx node is deployed and there is no configmap
+                if [ $? -ne 0 ]; then
+                  echo "No tessera-peers found, creating a new one..."
+                  echo "[{ \"url\": \"http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000\" }]"  > /tmp/tessera-peers
+                  kubectl --namespace {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers
+
+                # update the entries
+                else
+                  echo "Tessera-peers found, updating existing..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
+                  NEEDLE="http://{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
+                  cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
+                  kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run=client | kubectl replace -f -
+                fi
+              }
+
+{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  az keyvault secret set --vault-name {{ .Values.azure.keyvaultName }} --name $key --file $fpath --encoding utf-8
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  az keyvault secret show --vault-name {{ .Values.azure.keyvaultName }} --name $key | jq -r '.value' > $fpath
+                fi
+              }
+
+              az login --identity --debug
+              az account set --subscription {{ .Values.azure.subscriptionId }}
+
+{{- else if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudSecretsStore true) }}
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                aws secretsmanager describe-secret --secret-id $key > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  aws secretsmanager create-secret --name $key --description $key --secret-string file://$fpath
+                else
+                  # if the key exists pull it from keyvault so that when you update the enodes configmap, you have the right value
+                  aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
+                fi
+              }
+{{- else }}
+              function safeWriteSecret {
+                key=$1
+                fpath=$2
+                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+
+                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+                
+              }
+{{- end }}
+
+              echo "{{ template "besu-node.fullname" . }} hook ..."
+{{- if .Values.quorumFlags.generateKeys }}       
+
+              echo "Nodekey generation ..."
+              # /opt/besu/bin/besu public-key export --to=public.key
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
+{{- if eq .Values.cluster.cloudSecretsStore true }}
+              echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
+              safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub
+              safeWriteSecret {{ template "besu-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub
+{{- else }}
+              safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
+{{- end}}
+              cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+              echo "Creating configmap for node address"
+              kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
+
+              update_enodes_configmap
+              echo "Completed"
+{{- end }}
+
+{{- if .Values.quorumFlags.privacy }}
+              FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
+              if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
+                echo "" > $FOLDER_PATH/member0/passwordFile.txt
+              fi
+              echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
+{{- if eq .Values.cluster.cloudSecretsStore true }}
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
+              safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
+{{- else if eq .Values.cluster.cloudSecretsStore false }}
+              kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
+{{- end }}
+              update_tessera_peers_configmap
+              echo "Tessera Completed"
+{{- end }}
+              echo "hook completed"

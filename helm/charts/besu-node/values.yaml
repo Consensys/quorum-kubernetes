@@ -35,7 +35,7 @@ aws:
   serviceAccountName: quorum-node-secrets-sa
   region: us-east-2
 
-nodeFlags:
+quorumFlags:
   bootnode: false
   generateKeys: false
   privacy: false
