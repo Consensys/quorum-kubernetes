@@ -8,7 +8,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
-reclaimPolicy: Retain
+reclaimPolicy: "{{.Values.storage.reclaimPolicy }}"
 allowVolumeExpansion: true
 mountOptions:
   - dir_mode=0755
@@ -28,7 +28,7 @@ metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: ebs.csi.aws.com
-reclaimPolicy: Retain
+reclaimPolicy: "{{.Values.storage.reclaimPolicy }}"
 allowVolumeExpansion: true
 parameters:
   type: gp3
@@ -41,7 +41,7 @@ parameters:
 #   name: {{ include "besu-node.fullname" . }}-storage
 #   namespace: {{ .Release.Namespace }}
 # provisioner: efs.csi.aws.com
-# reclaimPolicy: Retain
+# reclaimPolicy: "{{.Values.storage.reclaimPolicy }}"
 # parameters:
 #   provisioningMode: efs-ap
 #   fileSystemId: #your_file_system_id

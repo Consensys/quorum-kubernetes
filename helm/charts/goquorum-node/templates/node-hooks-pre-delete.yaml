@@ -92,24 +92,24 @@ spec:
                 fi
               }
 
-              function delete_node_from_enodes_configmap {
-                kubectl -n {{ .Release.Namespace }}  get configmap goquorum-node-enodes -o json
+              function delete_node_from_quorum_peers_configmap {
+                kubectl -n {{ .Release.Namespace }}  get configmap goquorum-peers -o json
                 # if there is no configmap, do nothing
                 if [ $? -ne 0 ]; then
                   echo "No peers found, nothing to do..."
                 # delete the one 
                 else    
-                  echo "goquorum-node-enodes found, deleting {{ template "goquorum-node.fullname" . }}..."
-                  echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+                  echo "goquorum-peers found, deleting {{ template "goquorum-node.fullname" . }}..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap goquorum-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                   cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "goquorum-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
-                  kubectl -n {{ .Release.Namespace }} create configmap goquorum-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap goquorum-peers --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
                  
                   echo "Deleting node address configmap... "
                   kubectl delete configmap {{ template "goquorum-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
                 fi
               }
 
-              delete_node_from_enodes_configmap
+              delete_node_from_quorum_peers_configmap
               delete_node_from_tessera_peers_configmap
 
 

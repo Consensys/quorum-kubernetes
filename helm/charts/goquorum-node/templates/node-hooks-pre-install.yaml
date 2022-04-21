@@ -91,18 +91,18 @@ spec:
 
 {{- end }}
 
-            function update_enodes_configmap {
-              kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes -o json
+            function update_quorum_peers_configmap {
+              kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers -o json
               if [ $? -ne 0 ]; then
                   echo "[]" > /tmp/static-nodes.json.raw
               fi
               # update the entries
-              echo "updating goquorum-node-enodes..."
+              echo "updating goquorum-peers..."
               pubkey=$(cat /tmp/enode )
-              echo $(kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+              echo $(kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
               NEEDLE="enode://$pubkey@{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
               cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
-              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
+              kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-peers --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
             }
 
             function update_tessera_peers_configmap {
@@ -119,7 +119,7 @@ spec:
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
                 NEEDLE="http://{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:9000"
                 cat /tmp/tessera-peers.raw | jq --arg NEEDLE "$NEEDLE" '. += [{"url": $NEEDLE}] | unique ' > /tmp/tessera-peers
-                kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run | kubectl replace -f -
+                kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run=client | kubectl replace -f -
               fi
             }
 
@@ -146,12 +146,12 @@ spec:
 
             echo "Creating {{ template "goquorum-node.fullname" . }} configmap address in k8s ..."
             kubectl create configmap {{ template "goquorum-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
-            
-            cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
-            update_enodes_configmap
-          
+
 {{- end }}       
-            
+
+            cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+            update_quorum_peers_configmap
+                      
             echo "Quorum Completed"
 
 {{- if .Values.quorumFlags.privacy }}
@@ -172,15 +172,13 @@ spec:
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
-
-            update_tessera_peers_configmap
           
 {{- end }}                 
-            
+
+            update_tessera_peers_configmap  
 
 {{- end }}
 
 {{- end }}
-
             echo "Tessera Completed"
 

@@ -330,7 +330,7 @@ spec:
               path: genesis.json
       - name: static-nodes
         configMap:
-          name: goquorum-node-enodes
+          name: goquorum-peers
           items:
             - key: static-nodes.json
               path: static-nodes.json

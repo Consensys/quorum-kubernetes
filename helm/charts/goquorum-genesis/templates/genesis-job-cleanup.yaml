@@ -90,8 +90,8 @@ spec:
               echo "Deleting genesis configmap in k8s ..."
               kubectl delete configmap --namespace {{ .Release.Namespace }} goquorum-genesis
 
-              echo "Deleting node-enodes configmap in k8s ..."
-              kubectl delete configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes
+              echo "Deleting node-peers configmap in k8s ..."
+              kubectl delete configmap --namespace {{ .Release.Namespace }} goquorum-peers
 
               echo "Deleting validator addresses in k8s ..."
               for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do

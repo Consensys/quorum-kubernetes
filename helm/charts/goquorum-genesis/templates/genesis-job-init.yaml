@@ -101,10 +101,10 @@ spec:
                 fi
               }
 
-              function safeWriteEnodesConfigmap {
-                kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes
+              function safeWriteQuorumPeersConfigmap {
+                kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers
                 if [ $? -ne 0 ]; then
-                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-enodes --from-file=static-nodes.json=/generated-config/static-nodes.json
+                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-peers --from-file=static-nodes.json=/generated-config/static-nodes.json
                 fi
               }
 
@@ -156,6 +156,6 @@ spec:
               echo "]" >> /generated-config/static-nodes.json
               # remove the extra comma to make it valid json
               sed -i '0,/,/s///' /generated-config/static-nodes.json
-              safeWriteEnodesConfigmap
+              safeWriteQuorumPeersConfigmap
 
               echo "Completed ..."
