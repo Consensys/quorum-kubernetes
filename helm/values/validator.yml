@@ -8,9 +8,9 @@ quorumFlags:
   bootnodeNetwork: false # whether your network has bootnodes
 
 cluster:
-  provider: azure  # choose from: local | aws | azure
-  reclaimPolicy: Delete # set to either Retain or Delete
-  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
+  provider: aws  # choose from: local | aws | azure
+  cloudNativeServices: false 
+  reclaimPolicy: Delete # set to either Retain or Delete; note that PVCs and PVs will still exist after a 'helm delete'. Setting to Retain will keep volumes even if PVCs/PVs are deleted in kubernetes. Setting to Delete will remove volumes from EC2 EBS when PVC is deleted
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name

@@ -61,7 +61,7 @@ aws eks create-addon --cluster-name CLUSTER_NAME --addon-name aws-ebs-csi-driver
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
 
-Use`quorum` (or equivalent) for `EKS_NAMESPACE` below and update `AWS_REGION` and `EKS_CLUSTER_NAME` to match your settings from step 2.
+Use `quorum` (or equivalent) for `EKS_NAMESPACE` below and update `AWS_REGION` and `EKS_CLUSTER_NAME` to match your settings from step 2.
 
 ```bash
 

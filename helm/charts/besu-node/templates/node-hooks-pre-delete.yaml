@@ -4,7 +4,7 @@ kind: Job
 metadata:
   name: {{ include "besu-node.fullname" . }}-pre-delete-hook
   labels:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudSecretsStore) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
     app.kubernetes.io/name: {{ include "besu-node.fullname" . }}-pre-install-hook
@@ -20,13 +20,13 @@ spec:
   template:
     metadata:
       labels:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudSecretsStore) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end}}      
         app.kubernetes.io/name: {{ include "besu-node.fullname" . }}-pre-install-hook
         app.kubernetes.io/instance: {{ .Release.Name }} 
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudSecretsStore) }}
+{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
@@ -44,7 +44,7 @@ spec:
 
               echo "{{ template "besu-node.fullname" . }} Pre Delete hook ..."
 
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudSecretsStore) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
 
               function deleteSecret {
                 key=$1
@@ -58,7 +58,7 @@ spec:
               az login --identity --debug
               az account set --subscription {{ .Values.azure.subscriptionId }}
 
-{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudSecretsStore) }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
 
               function deleteSecret {
                 key=$1
@@ -114,7 +114,7 @@ spec:
 
 {{- if .Values.quorumFlags.removeKeysOnDelete }}
 
-{{- if eq .Values.cluster.provider "local" }}
+{{- if (eq .Values.cluster.cloudNativeServices false) }}
                   
               deleteSecret {{ template "besu-node.fullname" . }}-keys
               deleteSecret {{ template "besu-node.fullname" . }}-account

@@ -21,7 +21,7 @@ volumePermissionsFix:
 # local / azure / aws
 cluster:
   provider: local
-  cloudSecretsStore: false
+  cloudNativeServices: false
   reclaimPolicy: Delete
 azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name

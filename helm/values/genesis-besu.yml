@@ -25,4 +25,4 @@ rawGenesisConfig:
 
 cluster:
   cloudSecretsStore: false
-  provider: azure
+  provider: aws

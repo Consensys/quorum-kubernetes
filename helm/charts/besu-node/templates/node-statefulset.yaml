@@ -4,7 +4,7 @@ kind: StatefulSet
 metadata:
   name: {{ template "besu-node.fullname" . }}
   labels:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudNativeServices true) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
     app: {{ template "besu-node.fullname" . }}
@@ -43,7 +43,7 @@ spec:
   template:
     metadata:
       labels:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}        
+{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudNativeServices true) }}        
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
         app: {{ template "besu-node.fullname" . }}
@@ -57,7 +57,7 @@ spec:
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudNativeServices true) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
@@ -110,11 +110,11 @@ spec:
           - name: TESSERA_CONFIG_TYPE
             value: "-09"
         volumeMounts:
-{{- if eq .Values.cluster.cloudSecretsStore false }}
+{{- if eq .Values.cluster.cloudNativeServices false }}
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
-{{- else if .Values.cluster.cloudSecretsStore }}
+{{- else if .Values.cluster.cloudNativeServices }}
           - name: secrets-store
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
@@ -231,16 +231,16 @@ spec:
                 key: enode
 {{- end }}
         volumeMounts:
-        {{- if eq .Values.cluster.cloudSecretsStore false }}
+        {{- if eq .Values.cluster.cloudNativeServices false }}
           - name: besu-keys
             mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
-        {{- else if eq .Values.cluster.cloudSecretsStore true }}
+        {{- else if eq .Values.cluster.cloudNativeServices true }}
           - name: secrets-store
             mountPath: {{ .Values.node.besu.keysPath }}
             readOnly: true
         {{- end }}
-        {{- if and .Values.quorumFlags.privacy (eq .Values.cluster.cloudSecretsStore false) }}
+        {{- if and .Values.quorumFlags.privacy (eq .Values.cluster.cloudNativeServices false) }}
           - name: tessera-keys
             mountPath: {{ .Values.node.besu.privacy.pubkeysPath }}
             readOnly: true
@@ -297,11 +297,11 @@ spec:
           initialDelaySeconds: 180
           periodSeconds: 60
       volumes:
-{{- if (eq .Values.cluster.cloudSecretsStore false) }}
+{{- if (eq .Values.cluster.cloudNativeServices false) }}
       - name: besu-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-keys
-{{- else if (eq .Values.cluster.cloudSecretsStore true) }}
+{{- else if (eq .Values.cluster.cloudNativeServices true) }}
       - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
@@ -324,16 +324,16 @@ spec:
       - name: besu-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-besu-config
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ include "besu-node.fullname" . }}-pvc
+      # - name: data
+      #   persistentVolumeClaim:
+      #     claimName: {{ include "besu-node.fullname" . }}-pvc
       {{- if .Values.node.besu.permissions.enabled }}
       - name: permissions-config
         configMap:
           name: {{ include "besu-node.fullname" . }}-permissions
       {{- end }}
       {{- if .Values.quorumFlags.privacy }}
-      {{- if eq .Values.cluster.cloudSecretsStore false }}
+      {{- if eq .Values.cluster.cloudNativeServices false }}
       - name: tessera-keys
         secret:
           secretName: {{ include "besu-node.fullname" . }}-tessera-keys
