@@ -83,10 +83,19 @@ spec:
             function safeWriteSecret {
               key=$1
               fpath=$2
-              kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+              kubectl get secret ${key}-keys --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+              if [ $? -ne 0 ]; then
+                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+              else
+                # if the key exists pull it from secrets so that when you update the enodes configmap, you have the right value
+                mkdir -p $fpath
+                kubectl get secrets --namespace {{ .Release.Namespace }} ${key}-keys -o json | jq '.data.enode' | tr -d '"' | base64 --decode > $fpath/nodekey.pub
+              fi
 
-              kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
-              
+              kubectl get secret ${key}-account --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+              if [ $? -ne 0 ]; then
+                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+              fi
             }
 
 {{- end }}
@@ -123,7 +132,7 @@ spec:
               fi
             }
 
-{{- if .Values.quorumFlags.generateKeys }}       
+
     
             echo "Quorum nodekey generation ..."
             FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
@@ -164,8 +173,11 @@ spec:
             
             
 {{- if eq .Values.cluster.provider "local" }}
-                  
-            kubectl create secret generic {{ template "goquorum-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
+
+            kubectl get secret ${key}-tessera-keys --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+            if [ $? -ne 0 ]; then
+              kubectl create secret generic {{ template "goquorum-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
+            fi
 
 {{- else }}
 
@@ -176,8 +188,6 @@ spec:
 {{- end }}                 
 
             update_tessera_peers_configmap  
-
-{{- end }}
 
 {{- end }}
             echo "Tessera Completed"

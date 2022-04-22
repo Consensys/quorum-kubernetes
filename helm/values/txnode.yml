@@ -2,12 +2,11 @@
 
 quorumFlags:
   bootnode: false
-  generateKeys: true
   privacy: true
   removeKeysOnDelete: true
 
 cluster:
-  provider: azure  # choose from: local | aws | azure
+  provider: local  # choose from: local | aws | azure
   stage: dev # choose from: dev | prod
 
 aws:

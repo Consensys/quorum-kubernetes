@@ -1,8 +1,6 @@
 ---
 
 quorumFlags:
-  bootnode: false
-  generateKeys: false
   privacy: false
   removeKeysOnDelete: false
 

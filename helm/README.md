@@ -108,6 +108,9 @@ helm install validator-4 ./charts/besu-node --namespace quorum --values ./values
 
 # spin up a besu and tessera node pair
 helm install member-1 ./charts/besu-node --namespace quorum --values ./values/txnode.yml
+
+# spin up a quorum rpc node
+helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/reader.yml
 ```
 
 Optionally deploy blockscout:
@@ -147,6 +150,10 @@ helm install validator-4 ./charts/goquorum-node --namespace quorum --values ./va
 
 # spin up a quorum and tessera node pair
 helm install member-1 ./charts/goquorum-node --namespace quorum --values ./values/txnode.yml
+
+# spin up a quorum rpc node
+helm install rpc-1 ./charts/goquorum-node --namespace quorum --values ./values/reader.yml
+
 ```
 
 Optionally deploy blockscout:
