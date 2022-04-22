@@ -175,7 +175,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.goquorum.metrics.pprofport | quote}}
-        prometheus.io/path: "/debug/metrics/prometheus"        
+        prometheus.io/path: "/debug/metrics/prometheus"
     spec:
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
       containers:
@@ -359,7 +359,6 @@ spec:
           - |
             exec
 
-            apk add curl
           {{- if .Values.nodeFlags.privacy }}
             until $(curl --output /dev/null --silent --head --fail http://localhost:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
             echo 'transaction manager is up';

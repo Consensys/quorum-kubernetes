@@ -122,7 +122,7 @@ spec:
       resources:
         requests:
           storage: "{{ .Values.storage.pvcSizeLimit }}"
-  {{- end }}  
+  {{- end }}
   template:
     metadata:
       labels:
@@ -137,7 +137,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9545"
-        prometheus.io/path: "/debug/metrics/prometheus"        
+        prometheus.io/path: "/debug/metrics/prometheus"
     spec:
 {{- if eq .Values.provider "azure" }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
@@ -316,7 +316,6 @@ spec:
           - |
             exec
 
-            apk add curl
           {{- if .Values.nodeFlags.privacy }}
             until $(curl --output /dev/null --silent --head --fail http://localhost:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
             echo 'transaction manager is up';

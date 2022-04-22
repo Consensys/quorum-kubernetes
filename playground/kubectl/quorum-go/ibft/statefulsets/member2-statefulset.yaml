@@ -57,7 +57,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9545"
-        prometheus.io/path: "/debug/metrics/prometheus"   
+        prometheus.io/path: "/debug/metrics/prometheus"
     spec:
       serviceAccountName: member2-sa
       initContainers:
@@ -68,9 +68,9 @@ spec:
             - -c
           args:
             - |
-              exec 
+              exec
               curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 http://quorum-rpcnode.quorum.svc.cluster.local:8545
-              sleep 30      
+              sleep 30
       containers:
         - name: member2-tessera
           image: quorumengineering/tessera:latest
@@ -92,11 +92,11 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: TESSERA_CONFIG_TYPE
-              value: "-09"              
+              value: "-09"
           volumeMounts:
             - name: keys
               mountPath: /config/keys/
-              readOnly: true   
+              readOnly: true
             - name: data
               mountPath: /data
           ports:
@@ -108,13 +108,13 @@ spec:
               protocol: TCP
             - containerPort: 9101
               name: tessera-q2t
-              protocol: TCP              
+              protocol: TCP
           command:
             - /bin/sh
             - -c
           args:
             - |
-              exec 
+              exec
               mkdir /data/tm/;
               cp /config/keys/tm.* /data/tm/ ;
 
@@ -141,7 +141,7 @@ spec:
                       "sslConfig": {
                         "tls": "OFF"
                       },
-                      "communicationType" : "REST"    
+                      "communicationType" : "REST"
                     },
                     {
                       "app":"P2P",
@@ -200,15 +200,15 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: QUORUM_NETWORK_ID
-              value: "10"              
+              value: "10"
             - name: QUORUM_CONSENSUS
-              value: istanbul                
+              value: istanbul
             - name: QUORUM_PTM_URL
-              value: http://localhost:9101 
+              value: http://localhost:9101
           volumeMounts:
             - name: keys
               mountPath: /config/keys/
-              readOnly: true   
+              readOnly: true
             - name: static-nodes-file
               mountPath: /config/static-nodes
               readOnly: true
@@ -238,18 +238,17 @@ spec:
               protocol: UDP
             - containerPort: 9545
               name: metrics
-              protocol: TCP                
+              protocol: TCP
           command:
             - /bin/sh
             - -c
           args:
             - |
               exec
-              apk add curl
-              
+
               until $(curl --output /dev/null --silent --head --fail http://127.0.0.1:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
               echo transaction manager is up;
- 
+
               mkdir -p /data/dd
               cp /config/static-nodes/static-nodes.json /data/dd/
               cp /config/permissions-nodes/*.json /data/dd/
@@ -275,7 +274,7 @@ spec:
               --unlock 0 \
               --allow-insecure-unlock \
               --metrics --pprof --pprof.addr 0.0.0.0 --pprof.port 9545 \
-              --password /config/keys/password.txt 
+              --password /config/keys/password.txt
 
       volumes:
         - name: keys
@@ -286,13 +285,13 @@ spec:
             name: goquorum-genesis-configmap
             items:
               - key: genesis.json
-                path: genesis.json                 
+                path: genesis.json
         - name: static-nodes-file
           configMap:
             name: quorum-static-nodes-configmap
             items:
               - key: static-nodes.json
-                path: static-nodes.json 
+                path: static-nodes.json
         - name: permissions-nodes-config
           configMap:
             name: quorum-permissions-nodes-configmap
@@ -300,4 +299,4 @@ spec:
           emptyDir:
             sizeLimit: "2Gi"
 
- 
+
