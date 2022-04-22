@@ -1,13 +1,16 @@
 ---
 
 quorumFlags:
-  bootnode: false
   privacy: true
-  removeKeysOnDelete: true
+  removeKeysOnDelete: false
+  # besu only
+  bootnode: false # whether this node you are now deploying is a bootnode
+  bootnodeNetwork: false # whether your network has bootnodes
 
 cluster:
-  provider: local  # choose from: local | aws | azure
-  stage: dev # choose from: dev | prod
+  provider: azure  # choose from: local | aws | azure
+  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
+  reclaimPolicy: Delete # set to either Retain or Delete
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name

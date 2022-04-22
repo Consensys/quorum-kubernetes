@@ -89,6 +89,8 @@ spec:
             value: "-09"
 
         volumeMounts:
+{{- if .Values.cluster.cloudNativeServices }}
+
 {{- if eq .Values.cluster.provider "local" }}
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
@@ -97,6 +99,13 @@ spec:
           - name: secrets-store
             mountPath: {{ .Values.node.tessera.keysPath }}
 {{- end}}   
+
+{{- else }}
+          - name: tessera-keys
+            mountPath: {{ .Values.node.tessera.keysPath }}
+            readOnly: true
+{{- end}}   
+
           - name: data
             mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
@@ -207,6 +216,9 @@ spec:
             value: "ignore"
         {{- end }}
         volumeMounts:
+
+{{- if .Values.cluster.cloudNativeServices }}
+
 {{- if eq .Values.cluster.provider "local" }}
 {{- if .Values.quorumFlags.privacy }}
           - name: tessera-keys
@@ -220,6 +232,19 @@ spec:
           - name: secrets-store
             mountPath: {{ .Values.node.goquorum.keysPath }}
 {{- end}}
+
+{{- else}}
+
+{{- if .Values.quorumFlags.privacy }}
+          - name: tessera-keys
+            mountPath: {{ .Values.node.goquorum.privacy.pubkeysPath }}
+            readOnly: true
+{{- end}}
+          - name: quorum-keys
+            mountPath: {{ .Values.node.goquorum.keysPath }}
+            readOnly: true
+{{- end}}
+
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
@@ -295,6 +320,21 @@ spec:
           periodSeconds: 60          
 
       volumes:
+      - name: genesis
+        configMap:
+          name: goquorum-genesis
+          items:
+            - key: genesis.json
+              path: genesis.json
+      - name: static-nodes
+        configMap:
+          name: goquorum-peers
+          items:
+            - key: static-nodes.json
+              path: static-nodes.json
+
+{{- if .Values.cluster.cloudNativeServices }}
+
 {{- if eq .Values.cluster.provider "local" }}
       - name: quorum-keys
         secret:
@@ -322,17 +362,22 @@ spec:
 
 {{- end }}
 
-      - name: genesis
-        configMap:
-          name: goquorum-genesis
-          items:
-            - key: genesis.json
-              path: genesis.json
-      - name: static-nodes
-        configMap:
-          name: goquorum-peers
-          items:
-            - key: static-nodes.json
-              path: static-nodes.json
+{{- else }}
 
+      - name: quorum-keys
+        secret:
+          secretName: {{ include "goquorum-node.fullname" . }}-keys
+{{- if .Values.quorumFlags.privacy }}
+      - name: tessera-keys
+        secret:
+          secretName: {{ include "goquorum-node.fullname" . }}-tessera-keys
+      - name: tessera-peers
+        configMap:
+          name: tessera-peers
+          items:
+            - key: tesseraPeers
+              path: tesseraPeers          
 
+{{- end }}
+
+{{- end }}

@@ -50,7 +50,7 @@ spec:
             - |
               echo "Creating config ..."
 
-{{- if eq .Values.cluster.stage "prod" }}
+{{- if .Values.cluster.cloudNativeServices }}
 {{- if eq .Values.cluster.provider "azure" }}
 
               function safeWriteSecret {
@@ -142,8 +142,7 @@ spec:
               
                   echo "Creating keys in vault for $validatorKey ..."
 
-{{- if eq .Values.cluster.stage "prod" }}
-
+{{- if .Values.cluster.cloudNativeServices }}
 
 {{- if eq .Values.cluster.provider "local" }}
                   

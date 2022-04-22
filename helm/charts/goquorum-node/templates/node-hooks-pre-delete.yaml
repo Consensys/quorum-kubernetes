@@ -45,6 +45,8 @@ spec:
 
               echo "{{ template "goquorum-node.fullname" . }} Pre Delete hook ..."
 
+{{- if .Values.cluster.cloudNativeServices }}
+
 {{- if eq .Values.cluster.provider "azure" }}
 
               function deleteSecret {
@@ -70,13 +72,24 @@ spec:
               }
 
 {{- else }}
-
+              # stage: prod
+              # provider: local --- odd edge case
               function deleteSecret {
                 key=$1
                 kubectl delete secret ${key} --namespace {{ .Release.Namespace }} 
               }
 
 {{- end }}
+
+{{- else }}
+              # stage: dev
+              function deleteSecret {
+                key=$1
+                kubectl delete secret ${key} --namespace {{ .Release.Namespace }} 
+              }
+
+{{- end }}
+
 
               function delete_node_from_tessera_peers_configmap {
                 kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
@@ -115,8 +128,12 @@ spec:
 
 {{- if .Values.quorumFlags.removeKeysOnDelete }}
 
+{{- if .Values.cluster.cloudNativeServices }}
+
 {{- if eq .Values.cluster.provider "local" }}
-                  
+
+              # stage: prod
+              # provider: local --- odd edge case
               deleteSecret {{ template "goquorum-node.fullname" . }}-keys
               deleteSecret {{ template "goquorum-node.fullname" . }}-account
 {{- if .Values.quorumFlags.privacy }}
@@ -124,7 +141,9 @@ spec:
 {{- end }}
 
 {{- else }}
-
+              # stage: prod
+              # provider: azure/aws --- expected case
+                  
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekey
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub
               deleteSecret {{ template "goquorum-node.fullname" . }}-enode
@@ -139,8 +158,20 @@ spec:
 {{- end }}
 
 {{- end }}
+              #.Values.quorumFlags.privacy 
 
-{{- end }}       
+{{- else }}
+              # .Values.cluster.cloudNativeServices == "false"
+              deleteSecret {{ template "goquorum-node.fullname" . }}-keys
+              deleteSecret {{ template "goquorum-node.fullname" . }}-account
+{{- if .Values.quorumFlags.privacy }}
+              deleteSecret {{ template "goquorum-node.fullname" . }}-tessera-keys
+{{- end }}
+
+{{- end }}   
+              # .Values.cluster.cloudNativeServices == "true"
+{{- end }}   
+              #.Values.quorumFlags.removeKeysOnDelete
 
               echo "Completed"
 
