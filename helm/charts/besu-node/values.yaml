@@ -1,28 +1,22 @@
 ---
-image:
-  besu:
-    repository: hyperledger/besu
-    tag: 22.1.3
-    pullPolicy: IfNotPresent
-  tessera:
-    repository: quorumengineering/tessera
-    tag: 22.1.1
-    pullPolicy: IfNotPresent
-  hooks:
-    repository: consensys/quorum-k8s-hooks
-    tag: latest
-    pullPolicy: IfNotPresent
 
-# fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
-volumePermissionsFix:
-  - local
-  - aws
+quorumFlags:
+  privacy: false
+  # this will erase keys - so be careful with this on validators
+  removeKeysOnDelete: false
+  bootnode: false
 
-# local / azure / aws
 cluster:
-  provider: local
-  cloudNativeServices: false
-  reclaimPolicy: Delete
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
+  reclaimPolicy: Delete # set to either Retain or Delete
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
 azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity
@@ -33,20 +27,17 @@ azure:
   tenantId: azure-tenantId
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
   subscriptionId: azure-subscriptionId
-aws:
-  serviceAccountName: quorum-node-secrets-sa
-  region: us-east-2
-
-quorumFlags:
-  bootnode: false
-  generateKeys: false
-  privacy: false
-  # be careful with this one
-  removeKeysOnDeletion: false
 
 storage:
   sizeLimit: "20Gi"
   pvcSizeLimit: "20Gi"
+  # NOTE: when you set this to Retain, the volume WILL persist after the chart is delete and you need to manually delete it
+  reclaimPolicy: "Delete" # choose from: Delete | Retain 
+
+# fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
+volumePermissionsFix:
+  - local
+  - aws
 
 node:
   besu:
@@ -140,8 +131,17 @@ node:
     tpport: 9080
     q2tport: 9101
 
-nodeSelector: {}
-tolerations: []
-affinity: {}
-resources: {}
+image:
+  besu:
+    repository: hyperledger/besu
+    tag: latest
+    pullPolicy: IfNotPresent
+  tessera:
+    repository: quorumengineering/tessera
+    tag: latest
+    pullPolicy: IfNotPresent
+  hooks:
+    repository: consensys/quorum-k8s-hooks
+    tag: latest
+    pullPolicy: IfNotPresent
 

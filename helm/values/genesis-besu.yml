@@ -1,8 +1,30 @@
 ---
 quorumFlags:
   removeGenesisOnDelete: true
-  removeKeysOnDelete: true
-# the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
+
+cluster:
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false 
+  
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
+
+# the raw Genesis config
+# rawGenesisConfig.blockchain.nodes set the number of validators/signers
 rawGenesisConfig:
   genesis:
     config:
@@ -22,7 +44,3 @@ rawGenesisConfig:
     bootnodes:
       generate: false
       count: 2
-
-cluster:
-  cloudSecretsStore: false
-  provider: aws

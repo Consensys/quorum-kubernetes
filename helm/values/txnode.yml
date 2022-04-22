@@ -2,13 +2,11 @@
 
 quorumFlags:
   privacy: true
-  removeKeysOnDelete: false
-  # besu only
-  bootnode: false # whether this node you are now deploying is a bootnode
-  bootnodeNetwork: false # whether your network has bootnodes
+  removeKeysOnDelete: true
+  bootnode: false  # besu only - whether this node you are now deploying is a bootnode
 
 cluster:
-  provider: azure  # choose from: local | aws | azure
+  provider: local  # choose from: local | aws | azure
   cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
   reclaimPolicy: Delete # set to either Retain or Delete
 

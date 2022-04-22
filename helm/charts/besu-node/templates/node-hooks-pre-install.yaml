@@ -9,20 +9,20 @@ metadata:
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": "hook-succeeded"
   labels:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudNativeServices true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
 spec:
   backoffLimit: 1
   completions: 1
   template:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudNativeServices true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     metadata:
       labels:
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudNativeServices true) }}
+{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
@@ -73,7 +73,7 @@ spec:
                 fi
               }
 
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudNativeServices true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -89,7 +89,7 @@ spec:
               az login --identity --debug
               az account set --subscription {{ .Values.azure.subscriptionId }}
 
-{{- else if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudNativeServices true) }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -102,13 +102,7 @@ spec:
                 fi
               }
 {{- else }}
-              # function safeWriteSecret {
-              #   key=$1
-              #   fpath=$2
-              #   kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
 
-              #   kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
-              # }
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -137,7 +131,7 @@ spec:
               FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
               cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
-{{- if eq .Values.cluster.cloudNativeServices true }}
+{{- if .Values.cluster.cloudNativeServices }}
               echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub
@@ -157,7 +151,7 @@ spec:
                 echo "" > $FOLDER_PATH/member0/passwordFile.txt
               fi
               echo "Creating {{ template "besu-node.fullname" . }}-tessera-keys secrets in k8s ..."
-{{- if eq .Values.cluster.cloudNativeServices true }}
+{{- if .Values.cluster.cloudNativeServices }}
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt

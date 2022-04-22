@@ -2,7 +2,6 @@
 
 quorumFlags:
   removeGenesisOnDelete: true
-  removeKeysOnDelete: true
 
 cluster:
   provider: local  # choose from: local | aws | azure
@@ -25,7 +24,8 @@ azure:
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
   subscriptionId: azure-subscriptionId
 
-# the number of Validators you want
+# the raw Genesis config
+# rawGenesisConfig.blockchain.nodes set the number of validators/signers
 rawGenesisConfig:
   genesis:
     config:

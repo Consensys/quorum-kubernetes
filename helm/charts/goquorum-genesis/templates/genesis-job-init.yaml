@@ -4,7 +4,7 @@ kind: Job
 metadata:
   name: {{ include "goquorum-genesis.name" . }}-init
   labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}  
     app: {{ template "goquorum-genesis.name" . }}
@@ -25,13 +25,13 @@ spec:
   template:
     metadata:
       labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end}}      
         app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-{{- if eq .Values.cluster.provider "aws" }}
+{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
@@ -50,8 +50,7 @@ spec:
             - |
               echo "Creating config ..."
 
-{{- if .Values.cluster.cloudNativeServices }}
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
 
               function safeWriteSecret {
                 key=$1
@@ -68,7 +67,7 @@ spec:
               az login --identity --debug
               az account set --subscription {{ .Values.azure.subscriptionId }}
 
-{{- else if eq .Values.cluster.provider "aws" }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
 
               function safeWriteSecret {
                 key=$1
@@ -84,21 +83,6 @@ spec:
 
 {{- else }}
               
-              # stage: prod 
-              # provider: local --- odd edge case
-              function safeWriteSecret {
-                key=$1
-                fpath=$2
-                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
-
-                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
-              }
-
-{{- end }}
-
-{{- else }}
-
-              # stage: dev
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -142,15 +126,9 @@ spec:
               
                   echo "Creating keys in vault for $validatorKey ..."
 
-{{- if .Values.cluster.cloudNativeServices }}
 
-{{- if eq .Values.cluster.provider "local" }}
-                  
-                  # stage: prod
-                  # provider: local --- odd edge case
-                  safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
 
-{{- else }}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
 
                   safeWriteSecret goquorum-node-$validatorKey-nodekey $FOLDER_PATH/${f}/nodekey
                   safeWriteSecret goquorum-node-$validatorKey-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
@@ -160,13 +138,9 @@ spec:
                   safeWriteSecret goquorum-node-$validatorKey-accountPassword $FOLDER_PATH/${f}/accountPassword
                   safeWriteSecret goquorum-node-$validatorKey-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
                   safeWriteSecret goquorum-node-$validatorKey-accountAddress $FOLDER_PATH/${f}/accountAddress 
-
-{{- end }}
-
-
+                  
 {{- else }}
 
-                  # stage: dev
                   safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}

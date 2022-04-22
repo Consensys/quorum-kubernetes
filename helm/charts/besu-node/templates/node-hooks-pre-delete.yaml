@@ -114,15 +114,7 @@ spec:
 
 {{- if .Values.quorumFlags.removeKeysOnDelete }}
 
-{{- if (eq .Values.cluster.cloudNativeServices false) }}
-                  
-              deleteSecret {{ template "besu-node.fullname" . }}-keys
-              deleteSecret {{ template "besu-node.fullname" . }}-account
-{{- if .Values.quorumFlags.privacy }}
-              deleteSecret {{ template "besu-node.fullname" . }}-tessera-keys
-{{- end }}
-
-{{- else }}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
 
               deleteSecret {{ template "besu-node.fullname" . }}-nodekey
               deleteSecret {{ template "besu-node.fullname" . }}-nodekeypub
@@ -135,6 +127,14 @@ spec:
               deleteSecret {{ template "besu-node.fullname" . }}-tmkey
               deleteSecret {{ template "besu-node.fullname" . }}-tmkeypub
               deleteSecret {{ template "besu-node.fullname" . }}-tmpassword
+{{- end }}
+
+{{- else }}
+                  
+              deleteSecret {{ template "besu-node.fullname" . }}-keys
+              deleteSecret {{ template "besu-node.fullname" . }}-account
+{{- if .Values.quorumFlags.privacy }}
+              deleteSecret {{ template "besu-node.fullname" . }}-tessera-keys
 {{- end }}
 
 {{- end }}

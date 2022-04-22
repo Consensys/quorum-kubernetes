@@ -1,14 +1,18 @@
 ---
-image:
-  repository: consensys/quorum-k8s-hooks
-  tag: latest
-  pullPolicy: IfNotPresent
 
-# local / azure / aws
+quorumFlags:
+  removeGenesisOnDelete: true
+
 cluster:
-  cloudSecretsStore: false
-  provider: local
-  
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
 azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity
@@ -19,11 +23,9 @@ azure:
   tenantId: azure-tenantId
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
   subscriptionId: azure-subscriptionId
-aws:
-  serviceAccountName: quorum-node-secrets-sa
-  region: us-east-2
 
-# the values here are from the example config file found in the the [Quickstart](https://besu.hyperledger.org/en/latest/Tutorials/Create-IBFT-Network/)
+# the raw Genesis config
+# rawGenesisConfig.blockchain.nodes set the number of validators/signers
 rawGenesisConfig:
   genesis:
     config:
@@ -40,3 +42,8 @@ rawGenesisConfig:
     nodes:
       generate: true
       count: 4
+
+image:
+  repository: consensys/quorum-k8s-hooks
+  tag: latest
+  pullPolicy: IfNotPresent

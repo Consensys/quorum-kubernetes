@@ -5,7 +5,7 @@ kind: StatefulSet
 metadata:
   name: {{ template "goquorum-node.fullname" . }}
   labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}  
     app: {{ template "goquorum-node.name" . }}
@@ -44,7 +44,7 @@ spec:
   template:
     metadata:
       labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
         app: {{ include "goquorum-node.fullname" . }}
@@ -58,14 +58,14 @@ spec:
         prometheus.io/port: {{ .Values.node.goquorum.metrics.pprofport | quote}}
         prometheus.io/path: "/debug/metrics/prometheus"        
     spec:
-{{- if eq .Values.cluster.provider "aws" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-sa
 {{- end}}    
       containers:
 
-      {{- if .Values.quorumFlags.privacy }}
+{{- if .Values.quorumFlags.privacy }}
       - name: {{ include "goquorum-node.fullname" . }}-tessera
         image: {{ .Values.image.tessera.repository }}:{{ .Values.image.tessera.tag }}
         imagePullPolicy: {{ .Values.image.tessera.imagePullPolicy }}
@@ -89,23 +89,14 @@ spec:
             value: "-09"
 
         volumeMounts:
-{{- if .Values.cluster.cloudNativeServices }}
-
-{{- if eq .Values.cluster.provider "local" }}
-          - name: tessera-keys
-            mountPath: {{ .Values.node.tessera.keysPath }}
-            readOnly: true
-{{- else }}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
           - name: secrets-store
             mountPath: {{ .Values.node.tessera.keysPath }}
-{{- end}}   
-
 {{- else }}
           - name: tessera-keys
             mountPath: {{ .Values.node.tessera.keysPath }}
             readOnly: true
 {{- end}}   
-
           - name: data
             mountPath: {{ .Values.node.tessera.dataPath }}
           - name: tessera-peers
@@ -183,7 +174,7 @@ spec:
                 cat {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
                 /tessera/bin/tessera -configfile {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
 
-      {{- end }}
+{{- end }}
 
       - name: {{ include "goquorum-node.fullname" . }}-quorum
         image: {{ .Values.image.goquorum.repository }}:{{ .Values.image.goquorum.tag }}
@@ -208,43 +199,27 @@ spec:
             value: "{{ .Values.node.goquorum.networkId }}"
           - name: QUORUM_CONSENSUS
             value: istanbul
-        {{- if .Values.quorumFlags.privacy }}
+{{- if .Values.quorumFlags.privacy }}
           - name: QUORUM_PTM_URL
             value: "http://{{ include "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.node.tessera.q2tport }}"
-        {{ else }}
+{{ else }}
           - name: PRIVATE_CONFIG
             value: "ignore"
-        {{- end }}
+{{- end }}
         volumeMounts:
-
-{{- if .Values.cluster.cloudNativeServices }}
-
-{{- if eq .Values.cluster.provider "local" }}
-{{- if .Values.quorumFlags.privacy }}
-          - name: tessera-keys
-            mountPath: {{ .Values.node.goquorum.privacy.pubkeysPath }}
-            readOnly: true
-{{- end}}
-          - name: quorum-keys
-            mountPath: {{ .Values.node.goquorum.keysPath }}
-            readOnly: true
-{{- else}}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
           - name: secrets-store
             mountPath: {{ .Values.node.goquorum.keysPath }}
-{{- end}}
-
 {{- else}}
-
+          - name: quorum-keys
+            mountPath: {{ .Values.node.goquorum.keysPath }}
+            readOnly: true
 {{- if .Values.quorumFlags.privacy }}
           - name: tessera-keys
             mountPath: {{ .Values.node.goquorum.privacy.pubkeysPath }}
             readOnly: true
+{{- end}}            
 {{- end}}
-          - name: quorum-keys
-            mountPath: {{ .Values.node.goquorum.keysPath }}
-            readOnly: true
-{{- end}}
-
           - name: genesis
             mountPath: /etc/genesis
             readOnly: true
@@ -333,37 +308,14 @@ spec:
             - key: static-nodes.json
               path: static-nodes.json
 
-{{- if .Values.cluster.cloudNativeServices }}
-
-{{- if eq .Values.cluster.provider "local" }}
-      - name: quorum-keys
-        secret:
-          secretName: {{ include "goquorum-node.fullname" . }}-keys
-{{- if .Values.quorumFlags.privacy }}
-      - name: tessera-keys
-        secret:
-          secretName: {{ include "goquorum-node.fullname" . }}-tessera-keys
-      - name: tessera-peers
-        configMap:
-          name: tessera-peers
-          items:
-            - key: tesseraPeers
-              path: tesseraPeers          
-{{- end }}
-
-{{- else }}
-
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
       - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
             secretProviderClass: {{ include "goquorum-node.fullname" . }}-azure-secret-provider
-
-{{- end }}
-
 {{- else }}
-
       - name: quorum-keys
         secret:
           secretName: {{ include "goquorum-node.fullname" . }}-keys
@@ -371,13 +323,14 @@ spec:
       - name: tessera-keys
         secret:
           secretName: {{ include "goquorum-node.fullname" . }}-tessera-keys
+{{- end }}
+{{- end }}
+{{- if .Values.quorumFlags.privacy }}
       - name: tessera-peers
         configMap:
           name: tessera-peers
           items:
             - key: tesseraPeers
-              path: tesseraPeers          
-
+              path: tesseraPeers
 {{- end }}
 
-{{- end }}

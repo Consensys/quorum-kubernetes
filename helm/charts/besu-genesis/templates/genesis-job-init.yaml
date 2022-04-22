@@ -4,7 +4,7 @@ kind: Job
 metadata:
   name: {{ include "besu-genesis.name" . }}-init
   labels:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
     app: {{ template "besu-genesis.name" . }}
@@ -25,13 +25,13 @@ spec:
   template:
     metadata:
       labels:
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
         app.kubernetes.io/name: {{ include "besu-genesis.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-genesis.name" . }}-sa
@@ -44,8 +44,6 @@ spec:
             runAsUser: 0
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
-            - name: raw-config
-              mountPath: /raw-config
             - name: generated-config
               mountPath: /generated-config
           command:
@@ -53,7 +51,7 @@ spec:
             - -c
           args:
             - |
-{{- if and (eq .Values.cluster.provider "azure") (eq .Values.cluster.cloudSecretsStore true) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -67,7 +65,9 @@ spec:
               }
               az login --identity --debug
               az account set --subscription {{ .Values.azure.subscriptionId }}
-{{- else if and (eq .Values.cluster.provider "aws") (eq .Values.cluster.cloudSecretsStore true) }}
+
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
+              
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -79,7 +79,9 @@ spec:
                   aws secretsmanager get-secret-value --secret-id $key | jq -r '.SecretString' > $fpath
                 fi
               }
+
 {{- else }}
+              
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -87,7 +89,9 @@ spec:
 
                 kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
               }
+
 {{- end }}
+
               function safeWriteEnodesConfigmap {
                 FOLDER_PATH=$1
                 kubectl get configmap --namespace {{ .Release.Namespace }} besu-node-enodes
@@ -121,11 +125,8 @@ spec:
                   echo $f
                   echo "Creating keys in vault for bootnode-${i} ..."
 
-{{- if eq .Values.cluster.provider "local" }}
-                  
-                  safeWriteSecret besu-node-bootnode-${i} "$FOLDER_PATH/${f}"
 
-{{- else }}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
 
                   safeWriteSecret besu-node-bootnode-${i}-nodekey $FOLDER_PATH/${f}/nodekey
                   safeWriteSecret besu-node-bootnode-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
@@ -135,6 +136,10 @@ spec:
                   safeWriteSecret besu-node-bootnode-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
                   safeWriteSecret besu-node-bootnode-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
                   safeWriteSecret besu-node-bootnode-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
+
+{{- else }}
+                 
+                  safeWriteSecret besu-node-bootnode-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}
 
@@ -162,11 +167,7 @@ spec:
                   echo $f
                   echo "Creating keys in vault for validator-${i} ..."
 
-{{- if (eq .Values.cluster.cloudSecretsStore false) }}
-                  
-                  safeWriteSecret besu-node-validator-${i} "$FOLDER_PATH/${f}"
-
-{{- else }}
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
 
                   safeWriteSecret besu-node-validator-${i}-nodekey $FOLDER_PATH/${f}/nodekey
                   safeWriteSecret besu-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
@@ -176,6 +177,10 @@ spec:
                   safeWriteSecret besu-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
                   safeWriteSecret besu-node-validator-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
                   safeWriteSecret besu-node-validator-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
+
+{{- else }}
+                  
+                  safeWriteSecret besu-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}
 
@@ -197,8 +202,5 @@ spec:
               echo "Completed ..."
 
       volumes:
-        - name: raw-config
-          configMap:
-            name: {{ include "besu-genesis.fullname" . }}-raw-json-config
         - name: generated-config
           emptyDir: {}

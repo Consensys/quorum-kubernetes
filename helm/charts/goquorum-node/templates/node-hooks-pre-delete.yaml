@@ -5,7 +5,7 @@ kind: Job
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-pre-delete-hook
   labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
     app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}-pre-install-hook
@@ -21,13 +21,13 @@ spec:
   template:
     metadata:
       labels:
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end}}      
         app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}-pre-install-hook
         app.kubernetes.io/instance: {{ .Release.Name }} 
     spec:
-{{- if eq .Values.cluster.provider "aws" }}
+{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "goquorum-node.fullname" . }}-hooks-sa
@@ -45,9 +45,7 @@ spec:
 
               echo "{{ template "goquorum-node.fullname" . }} Pre Delete hook ..."
 
-{{- if .Values.cluster.cloudNativeServices }}
-
-{{- if eq .Values.cluster.provider "azure" }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
 
               function deleteSecret {
                 key=$1
@@ -61,7 +59,7 @@ spec:
               az login --identity --debug
               az account set --subscription {{ .Values.azure.subscriptionId }}
 
-{{- else if eq .Values.cluster.provider "aws" }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
 
               function deleteSecret {
                 key=$1
@@ -72,24 +70,13 @@ spec:
               }
 
 {{- else }}
-              # stage: prod
-              # provider: local --- odd edge case
+              # provider: local
               function deleteSecret {
                 key=$1
                 kubectl delete secret ${key} --namespace {{ .Release.Namespace }} 
               }
 
 {{- end }}
-
-{{- else }}
-              # stage: dev
-              function deleteSecret {
-                key=$1
-                kubectl delete secret ${key} --namespace {{ .Release.Namespace }} 
-              }
-
-{{- end }}
-
 
               function delete_node_from_tessera_peers_configmap {
                 kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o json
@@ -128,21 +115,7 @@ spec:
 
 {{- if .Values.quorumFlags.removeKeysOnDelete }}
 
-{{- if .Values.cluster.cloudNativeServices }}
-
-{{- if eq .Values.cluster.provider "local" }}
-
-              # stage: prod
-              # provider: local --- odd edge case
-              deleteSecret {{ template "goquorum-node.fullname" . }}-keys
-              deleteSecret {{ template "goquorum-node.fullname" . }}-account
-{{- if .Values.quorumFlags.privacy }}
-              deleteSecret {{ template "goquorum-node.fullname" . }}-tessera-keys
-{{- end }}
-
-{{- else }}
-              # stage: prod
-              # provider: azure/aws --- expected case
+{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
                   
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekey
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub
@@ -157,19 +130,16 @@ spec:
               deleteSecret {{ template "goquorum-node.fullname" . }}-tmpassword
 {{- end }}
 
-{{- end }}
-              #.Values.quorumFlags.privacy 
-
 {{- else }}
-              # .Values.cluster.cloudNativeServices == "false"
+              # provider: local 
               deleteSecret {{ template "goquorum-node.fullname" . }}-keys
               deleteSecret {{ template "goquorum-node.fullname" . }}-account
 {{- if .Values.quorumFlags.privacy }}
               deleteSecret {{ template "goquorum-node.fullname" . }}-tessera-keys
 {{- end }}
 
-{{- end }}   
-              # .Values.cluster.cloudNativeServices == "true"
+{{- end }}
+
 {{- end }}   
               #.Values.quorumFlags.removeKeysOnDelete
 
