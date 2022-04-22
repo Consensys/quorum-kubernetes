@@ -1,13 +1,15 @@
 ---
 
 quorumFlags:
-  bootnode: false
+  bootnode: true # whether this node you are now deploying is a bootnode
+  bootnodeNetwork: false # whether your network has bootnodes
   privacy: false
   removeKeysOnDelete: false
 
 cluster:
   provider: local  # choose from: local | aws | azure
   cloudSecretsStore: false 
+  reclaimPolicy: Delete # set to either Retain or Delete
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
@@ -29,7 +31,7 @@ azure:
 node:
   besu:
     metrics:
-      serviceMonitorEnabled: true
+      serviceMonitorEnabled: false
   goquorum:
     metrics:
       serviceMonitorEnabled: true

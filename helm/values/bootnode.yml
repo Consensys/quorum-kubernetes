@@ -16,5 +16,6 @@ node:
           memRequest: "1G"
     
 cluster:
+  provider: azure
   cloudSecretsStore: false
-  provider: local
+  reclaimPolicy: Delete # set to either Retain or Delete

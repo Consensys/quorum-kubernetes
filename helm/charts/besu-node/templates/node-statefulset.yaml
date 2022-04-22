@@ -64,7 +64,7 @@ spec:
 {{- end }}
       initContainers:
 
-{{- if not .Values.quorumFlags.bootnode }}
+{{- if and (not .Values.quorumFlags.bootnode) (.Values.quorumFlags.bootnodeNetwork) }}
       - name: init-bootnode
         image: curlimages/curl:latest
         command:
@@ -218,6 +218,7 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+{{- if .Values.quorumFlags.bootnodeNetwork -}}
           - name: BOOTNODE1_PUBKEY
             valueFrom:
               secretKeyRef:
@@ -228,6 +229,7 @@ spec:
               secretKeyRef:
                 name: besu-node-bootnode-2-keys
                 key: enode
+{{- end }}
         volumeMounts:
         {{- if eq .Values.cluster.cloudSecretsStore false }}
           - name: besu-keys
@@ -284,7 +286,9 @@ spec:
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
               --min-gas-price=0 \
+{{- if .Values.quorumFlags.bootnodeNetwork}}
               --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
+{{- end }}
 
         livenessProbe:
           httpGet:

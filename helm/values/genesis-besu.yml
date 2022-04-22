@@ -19,7 +19,10 @@ rawGenesisConfig:
     nodes:
       generate: true
       count: 4
+    bootnodes:
+      generate: false
+      count: 2
 
 cluster:
   cloudSecretsStore: false
-  provider: local
+  provider: azure

@@ -41,13 +41,14 @@ spec:
             - |
 
               function update_enodes_configmap {
+                PUBKEY_LOC=$1
                 kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o json
                 if [ $? -ne 0 ]; then
                 echo "[]" > /tmp/static-nodes.json.raw
                 fi
                 # update the entries
                 echo "updating besu-node-enodes..."
-                pubkey=$(cat /tmp/enode )
+                pubkey=$(cat $PUBKEY_LOC )
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
                 cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
@@ -101,21 +102,33 @@ spec:
                 fi
               }
 {{- else }}
+              # function safeWriteSecret {
+              #   key=$1
+              #   fpath=$2
+              #   kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+
+              #   kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+              # }
               function safeWriteSecret {
                 key=$1
                 fpath=$2
-                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+                kubectl get secret ${key}-keys --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
+                else
+                  # if the key exists pull it from secrets so that when you update the enodes configmap, you have the right value
+                  kubectl get secrets ${key}-keys --namespace {{ .Release.Namespace }}  -o json | jq '.data.enode' | tr -d '"'| base64 --decode > $fpath/nodekey.pub
+                fi
 
-                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
-                
+                kubectl get secret ${key}-account --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                  kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+                fi
               }
 {{- end }}
 
               echo "{{ template "besu-node.fullname" . }} hook ..."
-{{- if .Values.quorumFlags.generateKeys }}       
-
               echo "Nodekey generation ..."
-              # /opt/besu/bin/besu public-key export --to=public.key
               FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
 {{- if eq .Values.cluster.cloudSecretsStore true }}
@@ -130,9 +143,8 @@ spec:
               echo "Creating configmap for node address"
               kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
 
-              update_enodes_configmap
+              update_enodes_configmap /tmp/enode
               echo "Completed"
-{{- end }}
 
 {{- if .Values.quorumFlags.privacy }}
               FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
@@ -145,7 +157,8 @@ spec:
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
 {{- else if eq .Values.cluster.cloudSecretsStore false }}
-              kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
+              safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
+              # kubectl create secret generic {{ template "besu-node.fullname" . }}-tessera-keys --namespace {{ .Release.Namespace }} --from-file=tm.key=$FOLDER_PATH/member0/tessera.key --from-file=tm.pub=$FOLDER_PATH/member0/tessera.pub --from-file=passwordFile.txt=$FOLDER_PATH/member0/passwordFile.txt
 {{- end }}
               update_tessera_peers_configmap
               echo "Tessera Completed"

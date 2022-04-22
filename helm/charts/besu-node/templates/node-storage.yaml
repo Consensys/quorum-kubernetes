@@ -6,7 +6,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: kubernetes.io/azure-file
-reclaimPolicy: Retain
+reclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
 allowVolumeExpansion: true
 mountOptions:
   - dir_mode=0755
@@ -25,7 +25,7 @@ metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
 provisioner: ebs.csi.aws.com
-reclaimPolicy: Retain
+reclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
 allowVolumeExpansion: true
 parameters:
   type: gp3
@@ -58,6 +58,7 @@ metadata:
   labels:
     type: local
 spec:
+  persistentVolumeReclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
   storageClassName: {{ include "besu-node.fullname" . }}-storage
   capacity:
     storage: "{{ .Values.storage.sizeLimit }}"

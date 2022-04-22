@@ -19,8 +19,10 @@ volumePermissionsFix:
   - aws
 
 # local / azure / aws
-provider: local
-cloudSecretsStore: false
+cluster:
+  provider: local
+  cloudSecretsStore: false
+  reclaimPolicy: Delete
 azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity

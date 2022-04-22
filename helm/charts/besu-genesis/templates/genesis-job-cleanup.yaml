@@ -107,22 +107,40 @@ spec:
               for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.nodes.count }}`; do
                 echo $f
 
-{{- if eq .Values.cluster.provider "local" }}
+{{- if (eq .Values.cluster.cloudSecretsStore false) }}
                   
                   deleteSecret besu-node-validator-${f}-keys
                   deleteSecret besu-node-validator-${f}-account
-
 {{- else }}
+                  deleteSecret besu-node-validator-${f}-nodekey
+                  deleteSecret besu-node-validator-${f}-nodekeypub
+                  deleteSecret besu-node-validator-${f}-enode
 
-                  deleteSecret besu-node-$validatorKey-nodekey
-                  deleteSecret besu-node-$validatorKey-nodekeypub
-                  deleteSecret besu-node-$validatorKey-enode
+                  deleteSecret besu-node-validator-${f}-accountPrivateKey
+                  deleteSecret besu-node-validator-${f}-accountPassword
+                  deleteSecret besu-node-validator-${f}-accountKeystore
+                  deleteSecret besu-node-validator-${f}-accountAddress
+{{- end }}
+              done
+              echo "Completed ..."
 
-                  deleteSecret besu-node-$validatorKey-accountPrivateKey
-                  deleteSecret besu-node-$validatorKey-accountPassword
-                  deleteSecret besu-node-$validatorKey-accountKeystore
-                  deleteSecret besu-node-$validatorKey-accountAddress
+              echo "Deleting bootnode secrets in k8s ..."
+              for f in `seq 1 {{ .Values.rawGenesisConfig.blockchain.bootnodes.count }}`; do
+                echo $f
 
+{{- if (eq .Values.cluster.cloudSecretsStore false) }}
+                  
+                  deleteSecret besu-node-bootnode-${f}-keys
+                  deleteSecret besu-node-bootnode-${f}-account
+{{- else }}
+                  deleteSecret besu-node-bootnode-${f}-nodekey
+                  deleteSecret besu-node-bootnode-${f}-nodekeypub
+                  deleteSecret besu-node-bootnode-${f}-enode
+
+                  deleteSecret besu-node-bootnode-${f}-accountPrivateKey
+                  deleteSecret besu-node-bootnode-${f}-accountPassword
+                  deleteSecret besu-node-bootnode-${f}-accountKeystore
+                  deleteSecret besu-node-bootnode-${f}-accountAddress
 {{- end }}
 
               done
