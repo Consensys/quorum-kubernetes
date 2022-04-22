@@ -6,7 +6,7 @@ Each helm chart that you can use has the following keys and you need to set them
 # dict with what features and the env you're deploying to
 cluster:
   provider: local  # choose from: local | aws | azure
-  stage: dev # choose from: dev | prod
+  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
@@ -27,11 +27,9 @@ azure:
 
 ```
 
-Setting the `cluster.stage: prod` will use:
-
+Setting the `cluster.cloudNativeServices: true` will:
 - Keys are stored in KeyVault or Secrets Manager 
 - We make use of Managed Identities or IAMs for access
-- To connect from your local machine you will need to use an ingress controller
 
 You are encouraged to pull these charts apart and experiment with options to learn how things work.
 
@@ -153,7 +151,6 @@ helm install member-1 ./charts/goquorum-node --namespace quorum --values ./value
 
 # spin up a quorum rpc node
 helm install rpc-1 ./charts/goquorum-node --namespace quorum --values ./values/reader.yml
-
 ```
 
 Optionally deploy blockscout:
@@ -191,7 +188,6 @@ http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
 
 # For GoQuorum's grafana address:
 http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
-
 ```
 
 API Calls to either client
