@@ -6,7 +6,7 @@ quorumFlags:
   bootnode: false  # besu only - whether this node you are now deploying is a bootnode
 
 cluster:
-  provider: local  # choose from: local | aws | azure
+  provider: azure  # choose from: local | aws | azure
   cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
   reclaimPolicy: Delete # set to either Retain or Delete
 

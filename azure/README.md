@@ -80,6 +80,9 @@ Use `besu` or `quorum` for AKS_NAMESPACE depending on which blockchain client yo
 
 ```bash
 ./scripts/bootstrap.sh "AKS_RESOURCE_GROUP" "AKS_CLUSTER_NAME" "AKS_MANAGED_IDENTITY" "AKS_NAMESPACE"
+
+./scripts/bootstrap.sh "2204test" "goq-dev-wnyhtoud-cluster" "goq-dev-wnyhtoud-ops-identity" "quorum"
+
 ```
 
 3. Deploy the charts as per the `helm` [readme](../helm/README.md) files

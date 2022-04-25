@@ -53,9 +53,9 @@ The current repo layout is:
   │               └── ...
   ├── helm                       
   │   ├── charts            
-  │   │   ├── ...               # dev helm charts, hidden here for brevity
+  │   │   ├── ...                   # helm charts, hidden here for brevity
   │   └── values            
-  │       ├── ...               # values.yml overrides for various node types
+  │       ├── ...                   # values.yml overrides for various node types
 
 ```
 
@@ -64,16 +64,18 @@ We recommend starting with the `playground` folder and working through the examp
 Each helm chart that you can use and you can set an `cluster` map with what features and the env you're deploying to:
 ```bash
 cluster:
-  provider: local # options: local, aws or azure
-  stage: dev # options: dev or prod
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
+
 ```
-where the stage value will determine what features to use. Setting it to `dev` leaves keys etc as normal secrets. Setting it to `prod` will
-be used in conjuction with the provider and uses best practices to manage identity (Managed Identities in Azure and IAM in AWS) and vaults (Keyvault in Azure and KMS in AWS) along with CSI drivers
+Setting the `cluster.cloudNativeServices: true` will:
+- Keys are stored in KeyVault or Secrets Manager 
+- We make use of Managed Identities or IAMs for access
 
 ## Concepts:
 
 #### Providers
-If you are deploying to cloud, please refer to the [Azure deployment documentation](./azure/README.md) or the [AWS deployment documentation](./aws/README.md)
+If you are deploying to cloud, we support AWS and Azure at present. Please refer to the [Azure deployment documentation](./azure/README.md) or the [AWS deployment documentation](./aws/README.md)
 
 If you are deploying locally you need a Kubernetes cluster like [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
 
@@ -96,7 +98,9 @@ You need to ensure that the genesis file is accessible to **all** nodes joining 
 Hyperledger Besu supports [NAT mechanisms](https://besu.hyperledger.org/en/stable/Reference/CLI/CLI-Syntax/#nat-method) and the default is set to automatically handle NAT environments. If you experience issues with NAT and logs have messages that have the NATService throwing exceptions connecting to external IPs, please add this option in your Besu deployments `--nat-method = NONE`
 
 #### Data Volumes:
-We use seperate data volumes to store the blockchain data, than the default of the host nodes. This is becuase host nodes can fail and we would like the chain data to persist. Ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider.
+We use seperate data volumes to store the blockchain data, over the default of the host nodes. This is similar to using seperate volumes to store data when using docker containers natively or via docker-compose. This is done for a couple of reasons; firstly, containers are mortal and we don't want to store data on them, secondly, host nodes can fail and we would like the chain data to persist.  
+
+Please ensure that you provide enough capacity for data storage for all nodes that are going to be on the cluster. Select the appropriate [type](https://kubernetes.io/docs/concepts/storage/volumes/) of persitent volume based on your cloud provider. In the templates, the size of the claims has been set small. If you have a differnt storage account than the one in the charts, please set that up in the storageClass. We recommend you grow the volume claim as required (this also lowers cost)
 
 #### Nodes:
 Consider the use of statefulsets instead of deployments for client nodes. The term 'client node' refers to bootnode, validator and member/rpc nodes.
@@ -164,7 +168,4 @@ Ensure that if you are using a cloud provider you have enough spread across AZ's
 When deploying a private network, eg: IBFT you need to ensure that the bootnodes are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
-
-### Persistent volume claims: 
-In the template, the size of the claims has been set small. If you have a differnt storage account than the one in the charts, please set that up in the storageClass. We recommend you grow the volume claim as required (this also lowers cost)
 

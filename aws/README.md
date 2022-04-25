@@ -89,6 +89,6 @@ eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace quorum
 | ⚠️ **Note**: The above command creates a service account called `quorum-node-secrets-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-4. Deploy the charts as per the `dev` or `prod` folder readme files
+4. Deploy the charts as per the `helm` folder readme files
 
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in development or production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.

@@ -6,7 +6,7 @@ quorumFlags:
   bootnode: false  # besu only - whether this node you are now deploying is a bootnode
 
 cluster:
-  provider: local  # choose from: local | aws | azure
+  provider: azure  # choose from: local | aws | azure
   cloudNativeServices: false 
   reclaimPolicy: Delete # set to either Retain or Delete; note that PVCs and PVs will still exist after a 'helm delete'. Setting to Retain will keep volumes even if PVCs/PVs are deleted in kubernetes. Setting to Delete will remove volumes from EC2 EBS when PVC is deleted
 

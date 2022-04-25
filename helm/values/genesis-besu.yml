@@ -3,7 +3,7 @@ quorumFlags:
   removeGenesisOnDelete: true
 
 cluster:
-  provider: local  # choose from: local | aws | azure
+  provider: azure  # choose from: local | aws | azure
   cloudNativeServices: false 
   
 aws:
