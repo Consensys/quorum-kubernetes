@@ -1,14 +1,15 @@
 ---
 
 quorumFlags:
-  bootnode: true
   privacy: false
   removeKeysOnDeletion: false
+  isBootnode: true
+  useBootnodes: false # besu only - does the network have existing bootnodes to connect to
 
 cluster:
-  provider: aws
-  cloudNativeServices: true 
-  reclaimPolicy: Delete # set to either Retain or Delete
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false 
+  reclaimPolicy: Delete # set to either Retain or Delete; note that PVCs and PVs will still exist after a 'helm delete'. Setting to Retain will keep volumes even if PVCs/PVs are deleted in kubernetes. Setting to Delete will remove volumes from EC2 EBS when PVC is deleted
 
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
@@ -20,12 +21,12 @@ azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity
   # the clientId of the user assigned managed identity created in the template
-  identityClientId: 4c391caa-27b0-4532-9223-785629cee480
-  keyvaultName: besu-dev-qc6cl62z-vault
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
   # the tenant ID of the key vault
-  tenantId: 17255fb0-373b-4a1a-bd47-d211ab86df81
+  tenantId: azure-tenantId
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
-  subscriptionId: 629a4564-dea9-4e19-a01a-0d997c5cef65
+  subscriptionId: azure-subscriptionId
 
 node:
   besu:

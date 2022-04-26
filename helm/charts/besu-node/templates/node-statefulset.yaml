@@ -64,14 +64,14 @@ spec:
 {{- end }}
       initContainers:
 
-# {{- if (not .Values.quorumFlags.bootnode) }}
-#       - name: init-bootnode
-#         image: curlimages/curl:latest
-#         command:
-#           - /bin/sh
-#           - -c
-#           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
-# {{- end}}
+{{- if (not .Values.quorumFlags.useBootnodes) }}
+      - name: init-bootnode
+        image: curlimages/curl:latest
+        command:
+          - /bin/sh
+          - -c
+          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
+{{- end}}
 
 
 {{- if has .Values.cluster.provider .Values.volumePermissionsFix }}
@@ -269,8 +269,6 @@ spec:
         args:
           - |
             exec
-            export BOOTNODE_ENODE1="enode://${BOOTNODE1_PUBKEY}@besu-node-bootnode-1-0.besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
-            export BOOTNODE_ENODE2="enode://${BOOTNODE2_PUBKEY}@besu-node-bootnode-2-0.besu-node-bootnode-2.{{ .Release.Namespace }}.svc.cluster.local:30303" ;
             /opt/besu/bin/besu \
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
