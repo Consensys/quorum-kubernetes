@@ -123,6 +123,8 @@ spec:
               deleteSecret {{ template "besu-node.fullname" . }}-accountPassword
               deleteSecret {{ template "besu-node.fullname" . }}-accountKeystore
               deleteSecret {{ template "besu-node.fullname" . }}-accountAddress
+              deleteSecret {{ template "besu-node.fullname" . }}-address
+
 {{- if .Values.quorumFlags.privacy }}
               deleteSecret {{ template "besu-node.fullname" . }}-tmkey
               deleteSecret {{ template "besu-node.fullname" . }}-tmkeypub

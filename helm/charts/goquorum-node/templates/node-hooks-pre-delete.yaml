@@ -120,6 +120,7 @@ spec:
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekey
               deleteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub
               deleteSecret {{ template "goquorum-node.fullname" . }}-enode
+              deleteSecret {{ template "goquorum-node.fullname" . }}-address
               deleteSecret {{ template "goquorum-node.fullname" . }}-accountPrivateKey
               deleteSecret {{ template "goquorum-node.fullname" . }}-accountPassword
               deleteSecret {{ template "goquorum-node.fullname" . }}-accountKeystore

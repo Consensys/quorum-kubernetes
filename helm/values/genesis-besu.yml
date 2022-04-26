@@ -16,12 +16,12 @@ azure:
   # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
   identityName: quorum-pod-identity
   # the clientId of the user assigned managed identity created in the template
-  identityClientId: azure-clientId
-  keyvaultName: azure-keyvault
+  identityClientId: 4c391caa-27b0-4532-9223-785629cee480
+  keyvaultName: besu-dev-qc6cl62z-vault
   # the tenant ID of the key vault
-  tenantId: azure-tenantId
+  tenantId: 17255fb0-373b-4a1a-bd47-d211ab86df81
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
-  subscriptionId: azure-subscriptionId
+  subscriptionId: 629a4564-dea9-4e19-a01a-0d997c5cef65
 
 # the raw Genesis config
 # rawGenesisConfig.blockchain.nodes set the number of validators/signers

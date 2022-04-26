@@ -153,6 +153,9 @@ spec:
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub 
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub 
+            safeWriteSecret {{ template "goquorum-node.fullname" . }}-address $FOLDER_PATH/member0/address
+            echo "Creating {{ template "goquorum-node.fullname" . }} configmap address in k8s ..."
+            kubectl create configmap {{ template "goquorum-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/member0/address
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-accountPrivateKey $FOLDER_PATH/member0/accountPrivateKey
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-accountPassword $FOLDER_PATH/member0/accountPassword 
             safeWriteSecret {{ template "goquorum-node.fullname" . }}-accountKeystore $FOLDER_PATH/member0/accountKeystore 
@@ -166,9 +169,6 @@ spec:
             safeWriteSecret {{ template "goquorum-node.fullname" . }} $FOLDER_PATH/member0
 
 {{- end }}
-
-            echo "Creating {{ template "goquorum-node.fullname" . }} configmap address in k8s ..."
-            kubectl create configmap {{ template "goquorum-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/member0/address
 
             cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
             update_quorum_peers_configmap
