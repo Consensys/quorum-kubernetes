@@ -134,7 +134,6 @@ spec:
 {{- else }}
               # provider: local 
               deleteSecret {{ template "goquorum-node.fullname" . }}-keys
-              deleteSecret {{ template "goquorum-node.fullname" . }}-account
 {{- if .Values.quorumFlags.privacy }}
               deleteSecret {{ template "goquorum-node.fullname" . }}-tessera-keys
 {{- end }}

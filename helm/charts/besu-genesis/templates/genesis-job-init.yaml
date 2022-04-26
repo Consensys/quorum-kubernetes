@@ -85,18 +85,16 @@ spec:
               function safeWriteSecret {
                 key=$1
                 fpath=$2
-                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub
-
-                kubectl create secret generic ${key}-account --namespace {{ .Release.Namespace }} --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
               }
 
 {{- end }}
 
-              function safeWriteEnodesConfigmap {
+              function safeWriteBesuPeersConfigmap {
                 FOLDER_PATH=$1
-                kubectl get configmap --namespace {{ .Release.Namespace }} besu-node-enodes
+                kubectl get configmap --namespace {{ .Release.Namespace }} besu-peers
                 if [ $? -ne 0 ]; then
-                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-enodes  --from-file=static-nodes.json=$FOLDER_PATH/static-nodes.json
+                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-peers --from-file=static-nodes.json=$FOLDER_PATH/static-nodes.json
                 fi
               }
 
@@ -190,7 +188,7 @@ spec:
               echo "]" >> $FOLDER_PATH/static-nodes.json
               # remove the extra comma to make it valid json
               sed -i '0,/,/s///' $FOLDER_PATH/static-nodes.json
-              safeWriteEnodesConfigmap $FOLDER_PATH
+              safeWriteBesuPeersConfigmap $FOLDER_PATH
 
               echo "Completed ..."
 

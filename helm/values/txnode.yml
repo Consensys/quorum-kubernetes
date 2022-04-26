@@ -3,8 +3,6 @@
 quorumFlags:
   privacy: true
   removeKeysOnDelete: true
-  isBootnode: false  # besu only - whether this node you are now deploying is a bootnode
-  useBootnodes: false # besu only - does the network have existing bootnodes to connect to
 
 cluster:
   provider: local  # choose from: local | aws | azure

@@ -57,6 +57,6 @@ spec:
               kubectl delete configmap --namespace {{ .Release.Namespace }} besu-genesis
 
               echo "Deleting node-enodes configmap in k8s ..."
-              kubectl delete configmap --namespace {{ .Release.Namespace }} besu-node-enodes
+              kubectl delete configmap --namespace {{ .Release.Namespace }} besu-peers
 
 {{- end}} 

@@ -18,13 +18,83 @@ spec:
   rules:
   - http:
       paths:
-      - path: /rpc
+      - path: /rpcnode
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-rpcnode-1
+            port:
+              number: 8545
+      - path: /validator-1
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-validator-1
+            port:
+              number: 8545
+      - path: /validator-2
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-validator-2
+            port:
+              number: 8545
+      - path: /validator-3
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-validator-3
+            port:
+              number: 8545
+      - path: /validator-4
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-validator-4
+            port:
+              number: 8545
+      - path: /member-1
         pathType: Prefix
         backend:
           service:
             name: goquorum-node-member-1
             port:
               number: 8545
+      - path: /tessera-1
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-member-1
+            port:
+              number: 9080
+      - path: /member-2
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-member-2
+            port:
+              number: 8545
+      - path: /tessera-2
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-member-2
+            port:
+              number: 9080
+      - path: /member-3
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-member-3
+            port:
+              number: 8545
+      - path: /tessera-3
+        pathType: Prefix
+        backend:
+          service:
+            name: goquorum-node-member-3
+            port:
+              number: 9080
       - path: /kibana
         pathType: Prefix
         backend:

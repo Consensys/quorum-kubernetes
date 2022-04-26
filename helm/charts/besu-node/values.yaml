@@ -4,7 +4,6 @@ quorumFlags:
   privacy: false
   # this will erase keys - so be careful with this on validators
   removeKeysOnDelete: false
-  bootnode: false
 
 cluster:
   provider: local  # choose from: local | aws | azure
