@@ -43,21 +43,25 @@ You will need to install [eksctl](https://docs.aws.amazon.com/eks/latest/usergui
 eksctl create cluster -f ./templates/cluster.yml
 ```
 
-3. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)
+3. Your `.kube/config` should be connected to your cluster automatically, but if not, please run the following:
+```bash
+aws sts get-caller-identity
+aws eks --region AWS_REGION update-kubeconfig --name CLUSTER_NAME
+```
 
-4. Provision EBS CSI Driver
+3. Provision EBS CSI Driver
 
 While it is possible to use the in-tree `aws-ebs` driver natively supported by Kubernetes, it is no longer being updated and does not support newer EBS features such as the cheaper and better gp3 volumes [see here](https://stackoverflow.com/questions/68359043/whats-the-difference-between-ebs-csi-aws-com-vs-kubernetes-io-aws-ebs-for-provi).
 
-The `cluster.yml` file that is included in this folder will automatically deploy the cluster with the EBS and EFS IAM policies.
-
-To install the EBS CSI drivers, you can do it through the [AWS Management Console](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html#adding-ebs-csi-eks-add-on) for simplicity.
+The `cluster.yml` file that is included in this folder will automatically deploy the cluster with the EBS and EFS IAM policies, but you still need to install the EBS CSI drivers. This can be done through the [AWS Management Console](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html#adding-ebs-csi-eks-add-on) for simplicity or via a CLI command as below
 
 ```bash
-aws eks create-addon --cluster-name CLUSTER_NAME --addon-name aws-ebs-csi-driver --region AWS_REGION --service-account-role-arn arn:aws:iam::ACCOUNT_NUMBER:role/AmazonEKS_EBS_CSI_DriverRole
+eksctl create iamserviceaccount --name ebs-csi-controller-sa --namespace kube-system --cluster CLUSTER_NAME --region AWS_REGION --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy --approve --role-only --role-name AmazonEKS_EBS_CSI_DriverRole
+
+aws eks create-addon --cluster CLUSTER_NAME --region AWS_REGION  --addon-name aws-ebs-csi-driver --service-account-role-arn arn:aws:iam::AWS_ACCOUNT_NUMBER:role/AmazonEKS_EBS_CSI_DriverRole 
 ```
 
-5. Provision Secrets Drivers
+4. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
 
@@ -65,9 +69,9 @@ Use `quorum` (or equivalent) for `EKS_NAMESPACE` below and update `AWS_REGION` a
 
 ```bash
 
-helm repo add secrets-store-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/charts
-helm install --namespace quorum --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
-kubectl apply --namespace quorum -f templates/secrets-manager/aws-provider-installer.yml
+helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+helm install --namespace kube-system --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
+kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml 
 
 POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create-policy --policy-name quorum-node-secrets-mgr-policy --policy-document '{
     "Version": "2012-10-17",
@@ -78,8 +82,9 @@ POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create
     } ]
 }')
 
+
 If you have deployed the above policy before, you can acquire its ARN:
-POLICY_ARN=$(aws iam list-policies --scope Local --region ap-southeast-2 \
+POLICY_ARN=$(aws iam list-policies --scope Local --region AWS_REGION \
 --query 'Policies[?PolicyName==`quorum-node-secrets-mgr-policy`].Arn' \
 --output text)
 
@@ -89,6 +94,9 @@ eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace quorum
 | ⚠️ **Note**: The above command creates a service account called `quorum-node-secrets-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-4. Deploy the charts as per the `helm` folder readme files
 
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in development or production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
+3. Deploy the charts as per the `helm` folder readme files
+
+The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes). As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
+
+4. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)

@@ -3,8 +3,8 @@ quorumFlags:
   removeGenesisOnDelete: true
 
 cluster:
-  provider: azure  # choose from: local | aws | azure
-  cloudNativeServices: false 
+  provider: aws  # choose from: local | aws | azure
+  cloudNativeServices: true 
   
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
