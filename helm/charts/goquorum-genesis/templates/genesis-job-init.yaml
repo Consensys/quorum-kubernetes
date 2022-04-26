@@ -108,7 +108,7 @@ spec:
                 fi
               }
 
-              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} {{ if .Values.rawGenesisConfig.blockchain.accountPassword }} --accountPassword {{ .Values.rawGenesisConfig.blockchain.accountPassword }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
 
               echo $FOLDER_PATH
               echo "Creating genesis configmap in k8s ..."
@@ -121,29 +121,30 @@ spec:
               echo "Creating validator keys ..."
               i=1
               for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
+                echo $f
+               
                 if [ -d $FOLDER_PATH/${f} ]; then
-                  echo $f
-              
-                  echo "Creating keys in vault for $validatorKey ..."
 
-
+                  echo "Creating keys for $f ..."
 
 {{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
 
-                  safeWriteSecret goquorum-node-$validatorKey-nodekey $FOLDER_PATH/${f}/nodekey
-                  safeWriteSecret goquorum-node-$validatorKey-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
-                  safeWriteSecret goquorum-node-$validatorKey-enode $FOLDER_PATH/${f}/nodekey.pub 
-                  safeWriteSecret goquorum-node-$validatorKey-address $FOLDER_PATH/${f}/address
+                  echo "Using cloud native services"
+                  safeWriteSecret goquorum-node-validator-${i}-nodekey $FOLDER_PATH/${f}/nodekey
+                  safeWriteSecret goquorum-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret goquorum-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret goquorum-node-validator-${i}-address $FOLDER_PATH/${f}/address
                   kubectl create configmap goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
 
-                  safeWriteSecret goquorum-node-$validatorKey-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
-                  safeWriteSecret goquorum-node-$validatorKey-accountPassword $FOLDER_PATH/${f}/accountPassword
-                  safeWriteSecret goquorum-node-$validatorKey-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
-                  safeWriteSecret goquorum-node-$validatorKey-accountAddress $FOLDER_PATH/${f}/accountAddress 
+                  safeWriteSecret goquorum-node-validator-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
+                  safeWriteSecret goquorum-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
+                  safeWriteSecret goquorum-node-validator-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
+                  safeWriteSecret goquorum-node-validator-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
                   
 {{- else }}
 
+                  echo "Using k8s secrets"
                   safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}

@@ -49,7 +49,7 @@ aws sts get-caller-identity
 aws eks --region AWS_REGION update-kubeconfig --name CLUSTER_NAME
 ```
 
-3. Provision EBS CSI Driver
+4. Provision EBS CSI Driver
 
 While it is possible to use the in-tree `aws-ebs` driver natively supported by Kubernetes, it is no longer being updated and does not support newer EBS features such as the cheaper and better gp3 volumes [see here](https://stackoverflow.com/questions/68359043/whats-the-difference-between-ebs-csi-aws-com-vs-kubernetes-io-aws-ebs-for-provi).
 
@@ -58,14 +58,14 @@ The `cluster.yml` file that is included in this folder will automatically deploy
 ```bash
 eksctl create iamserviceaccount --name ebs-csi-controller-sa --namespace kube-system --cluster CLUSTER_NAME --region AWS_REGION --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy --approve --role-only --role-name AmazonEKS_EBS_CSI_DriverRole
 
-aws eks create-addon --cluster CLUSTER_NAME --region AWS_REGION  --addon-name aws-ebs-csi-driver --service-account-role-arn arn:aws:iam::AWS_ACCOUNT_NUMBER:role/AmazonEKS_EBS_CSI_DriverRole 
+eksctl create addon --name aws-ebs-csi-driver --cluster CLUSTER_NAME --region AWS_REGION --service-account-role-arn arn:aws:iam::AWS_ACCOUNT:role/AmazonEKS_EBS_CSI_DriverRole --force
 ```
 
-4. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
+5. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
 
-Use `quorum` (or equivalent) for `EKS_NAMESPACE` below and update `AWS_REGION` and `EKS_CLUSTER_NAME` to match your settings from step 2.
+Use `quorum` (or equivalent) for `NAMESPACE` below and update `AWS_REGION` and `CLUSTER_NAME` to match your settings from step 2.
 
 ```bash
 
@@ -84,11 +84,11 @@ POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create
 
 
 If you have deployed the above policy before, you can acquire its ARN:
-POLICY_ARN=$(aws iam list-policies --scope Local --region AWS_REGION \
+POLICY_ARN=$(aws iam list-policies --scope Local \
 --query 'Policies[?PolicyName==`quorum-node-secrets-mgr-policy`].Arn' \
 --output text)
 
-eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace quorum --region=AWS_REGION --cluster EKS_CLUSTER_NAME --attach-policy-arn "$POLICY_ARN" --approve --override-existing-serviceaccounts
+eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace NAMESPACE --region=AWS_REGION --cluster CLUSTER_NAME --attach-policy-arn "$POLICY_ARN" --approve --override-existing-serviceaccounts
 ```
 
 | ⚠️ **Note**: The above command creates a service account called `quorum-node-secrets-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |

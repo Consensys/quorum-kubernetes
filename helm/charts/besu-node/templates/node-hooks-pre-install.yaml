@@ -128,7 +128,7 @@ spec:
 
               echo "{{ template "besu-node.fullname" . }} hook ..."
               echo "Nodekey generation ..."
-              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 {{ if .Values.node.besu.account.password }} --accountPassword {{ .Values.node.besu.account.password }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
               
 {{- if .Values.cluster.cloudNativeServices }}
@@ -161,7 +161,7 @@ spec:
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkey $FOLDER_PATH/member0/tessera.key
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmkeypub $FOLDER_PATH/member0/tessera.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-tmpassword $FOLDER_PATH/member0/passwordFile.txt
-{{- else if eq .Values.cluster.cloudNativeServices false }}
+{{- else }}
               safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
 {{- end }}
               update_tessera_peers_configmap

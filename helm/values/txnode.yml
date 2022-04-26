@@ -30,10 +30,14 @@ azure:
 node:
   besu:
     metrics:
-      serviceMonitorEnabled: false
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'
   goquorum:
     metrics:
-      serviceMonitorEnabled: true      
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'
   tessera:
-    password: "test"
+    password: 'password'
     

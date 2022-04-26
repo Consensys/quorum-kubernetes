@@ -44,3 +44,4 @@ rawGenesisConfig:
     bootnodes:
       generate: false
       count: 2
+    accountPassword: 'password'

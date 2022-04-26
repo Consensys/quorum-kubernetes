@@ -53,6 +53,9 @@ node:
     privateKeyPath: "/keys/nodekey"
     genesisFilePath: "/etc/genesis/genesis.json"
     logging: INFO
+    account:
+      password: 'password'
+      passwordPath: "/keys/accountPassword"    
     p2p:
       enabled: true
       host: "0.0.0.0"
@@ -98,7 +101,7 @@ node:
     privacy:
       url: "http://localhost:9101"
       pubkeysPath: "/tessera"
-      pubkeyFile: "/tessera/tm.pub"
+      pubkeyFile: "/keys/tm.pub"
       onchainGroupsEnabled: false
     permissions:
       enabled: true
@@ -124,7 +127,8 @@ node:
       memRequest: "1G"
     tmkey: ""
     tmpub: ""
-    password: ""
+    password: "password"
+    passwordPath: "/keys/tm.password"
     dataPath: "/data/tessera"
     keysPath: "/keys"
     port: 9000

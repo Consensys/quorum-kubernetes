@@ -158,7 +158,7 @@ spec:
                   "peer": $$(cat /config/tessera-peers/tesseraPeers),
                   "keys": {
                   {{ if .Values.node.tessera.password }}
-                    "passwordFile": "/keys/passwordFile.txt",
+                    "passwordFile": "{{ .Values.node.tessera.passwordPath }}",
                   {{ end }}
                     "keyData": [
                       {
@@ -263,6 +263,8 @@ spec:
             geth --datadir={{ .Values.node.goquorum.dataPath }} init {{ .Values.node.goquorum.genesisFilePath }}
             cp {{ .Values.node.goquorum.keysPath }}/nodekey {{ .Values.node.goquorum.dataPath }}/geth/nodekey
             cp /config/static/static-nodes.json {{ .Values.node.goquorum.dataPath }}/geth/static-nodes.json
+            mkdir -p {{ .Values.node.goquorum.dataPath }}/keystore/
+            cp {{ .Values.node.goquorum.keysPath }}/accountKeystore {{ .Values.node.goquorum.dataPath }}/keystore/key;
 
             geth \
             --datadir {{ .Values.node.goquorum.dataPath }} \
@@ -281,7 +283,7 @@ spec:
             --ws --ws.addr {{ .Values.node.goquorum.ws.addr }} --ws.port {{ .Values.node.goquorum.ws.port }} --ws.origins {{ .Values.node.goquorum.ws.origins | quote }} --ws.api {{ .Values.node.goquorum.ws.api | quote }} \
           {{- end }}
           {{- if hasKey .Values.node.goquorum.account "unlock" }}
-             --unlock {{ .Values.node.goquorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.goquorum.account.password }} \
+             --unlock {{ .Values.node.goquorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.goquorum.account.passwordPath }} \
           {{- end }}
 
         livenessProbe:

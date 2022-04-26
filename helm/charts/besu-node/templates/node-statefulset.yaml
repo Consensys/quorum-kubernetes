@@ -181,7 +181,7 @@ spec:
                   "peer": $$(cat /config/tessera-peers/tesseraPeers),
                   "keys": {
                   {{ if .Values.node.tessera.password }}
-                    "passwordFile": "/keys/passwordFile.txt",
+                    "passwordFile": "{{ .Values.node.tessera.passwordPath }}",
                   {{ end }}
                     "keyData": [
                       {
@@ -219,16 +219,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          # - name: BOOTNODE1_PUBKEY
-          #   valueFrom:
-          #     secretKeyRef:
-          #       name: besu-node-bootnode-1-keys
-          #       key: enode
-          # - name: BOOTNODE2_PUBKEY
-          #   valueFrom:
-          #     secretKeyRef:
-          #       name: besu-node-bootnode-2-keys
-          #       key: enode
         volumeMounts:
 {{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
           - name: secrets-store
@@ -285,7 +275,6 @@ spec:
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
               --min-gas-price=0 
-              # --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
 
         livenessProbe:
           httpGet:

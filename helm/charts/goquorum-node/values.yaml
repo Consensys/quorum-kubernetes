@@ -46,9 +46,10 @@ node:
     genesisFilePath: "/etc/genesis/genesis.json"
     networkId: 10
     replicaCount: 1
-    account: {}
-      # unlock: 0
-      # password: "/config/keys/password.txt"
+    account:
+      unlock: 0
+      password: 'password'
+      passwordPath: "/keys/accountPassword"
     log:
       verbosity: 5
     miner:
@@ -97,7 +98,8 @@ node:
       memRequest: "1G"
     tmkey: ""
     tmpub: ""
-    password: ""
+    password: "password"
+    passwordPath: "/keys/tm.password"
     dataPath: "/data/tessera"
     keysPath: "/keys"
     port: 9000

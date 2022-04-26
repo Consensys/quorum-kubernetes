@@ -30,7 +30,7 @@ azure:
 node:
   besu:
     metrics:
-      serviceMonitorEnabled: false
+      serviceMonitorEnabled: true
   goquorum:
     metrics:
       serviceMonitorEnabled: true

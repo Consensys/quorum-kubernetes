@@ -31,6 +31,10 @@ node:
   besu:
     metrics:
       serviceMonitorEnabled: true
+    account:
+      password: 'password'
   goquorum:
     metrics:
-      serviceMonitorEnabled: true    
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'

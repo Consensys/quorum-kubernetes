@@ -5,18 +5,8 @@ quorumFlags:
   privacy: false
   removeKeysOnDeletion: false
 
-node:
-  besu:
-    metrics:
-      serviceMonitorEnabled: false
-    resources:
-          cpuLimit: 1
-          cpuRequest: 0.5
-          memLimit: "2G"
-          memRequest: "1G"
-    
 cluster:
-  provider: azure
+  provider: aws
   cloudNativeServices: true 
   reclaimPolicy: Delete # set to either Retain or Delete
 
@@ -36,3 +26,10 @@ azure:
   tenantId: 17255fb0-373b-4a1a-bd47-d211ab86df81
   # the subscription ID to use - this needs to be set explictly when using multi tenancy
   subscriptionId: 629a4564-dea9-4e19-a01a-0d997c5cef65
+
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'
