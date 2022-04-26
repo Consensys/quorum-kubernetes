@@ -64,14 +64,14 @@ spec:
 {{- end }}
       initContainers:
 
-{{- if and (not .Values.quorumFlags.bootnode) (.Values.quorumFlags.networkHasBootnodes) }}
-      - name: init-bootnode
-        image: curlimages/curl:latest
-        command:
-          - /bin/sh
-          - -c
-          - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
-{{- end}}
+# {{- if (not .Values.quorumFlags.bootnode) }}
+#       - name: init-bootnode
+#         image: curlimages/curl:latest
+#         command:
+#           - /bin/sh
+#           - -c
+#           - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 besu-node-bootnode-1.{{ .Release.Namespace }}.svc.cluster.local:8545/liveness"
+# {{- end}}
 
 
 {{- if has .Values.cluster.provider .Values.volumePermissionsFix }}
@@ -219,6 +219,16 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+          # - name: BOOTNODE1_PUBKEY
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: besu-node-bootnode-1-keys
+          #       key: enode
+          # - name: BOOTNODE2_PUBKEY
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: besu-node-bootnode-2-keys
+          #       key: enode
         volumeMounts:
 {{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
           - name: secrets-store
@@ -274,10 +284,8 @@ spec:
             /opt/besu/bin/besu \
               --config-file=/etc/besu/config.toml \
               --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name={{ include "besu-node.fullname" . }} \
-              --min-gas-price=0 \
-{{- if .Values.quorumFlags.networkHasBootnodes}}
-              --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
-{{- end }}
+              --min-gas-price=0 
+              # --bootnodes=${BOOTNODE_ENODE1},${BOOTNODE_ENODE2}
 
         livenessProbe:
           httpGet:

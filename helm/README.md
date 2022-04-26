@@ -28,7 +28,8 @@ azure:
 ```
 
 Setting the `cluster.cloudNativeServices: true` will:
-- Keys are stored in KeyVault or Secrets Manager 
+
+- Keys are stored in KeyVault or Secrets Manager
 - We make use of Managed Identities or IAMs for access
 
 You are encouraged to pull these charts apart and experiment with options to learn how things work.
@@ -50,6 +51,7 @@ minikube dashboard &
 ```
 
 Verify kubectl is connected to Minikube with: (please use the latest version of kubectl)
+
 ```bash
 $ kubectl version
 Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.1", GitCommit:"4485c6f18cee9a5d3c3b4e523bd27972b1b53892", GitTreeState:"clean", BuildDate:"2019-07-18T09:18:22Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}

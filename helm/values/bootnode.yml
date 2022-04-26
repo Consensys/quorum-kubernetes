@@ -17,5 +17,22 @@ node:
     
 cluster:
   provider: azure
-  cloudSecretsStore: false
+  cloudNativeServices: true 
   reclaimPolicy: Delete # set to either Retain or Delete
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: 4c391caa-27b0-4532-9223-785629cee480
+  keyvaultName: besu-dev-qc6cl62z-vault
+  # the tenant ID of the key vault
+  tenantId: 17255fb0-373b-4a1a-bd47-d211ab86df81
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: 629a4564-dea9-4e19-a01a-0d997c5cef65

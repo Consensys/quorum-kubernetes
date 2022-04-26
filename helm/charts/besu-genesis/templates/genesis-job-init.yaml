@@ -130,7 +130,9 @@ spec:
 
                   safeWriteSecret besu-node-bootnode-${i}-nodekey $FOLDER_PATH/${f}/nodekey
                   safeWriteSecret besu-node-bootnode-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
-                  safeWriteSecret besu-node-bootnode-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret besu-node-bootnode-${i}-enode $FOLDER_PATH/${f}/nodekey.pub
+                  safeWriteSecret besu-node-bootnode-${i}-address $FOLDER_PATH/${f}/address
+                  kubectl create configmap besu-node-bootnode-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   safeWriteSecret besu-node-bootnode-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
                   safeWriteSecret besu-node-bootnode-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
@@ -138,13 +140,9 @@ spec:
                   safeWriteSecret besu-node-bootnode-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
 
 {{- else }}
-                 
                   safeWriteSecret besu-node-bootnode-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}
-
-                  kubectl create configmap besu-node-bootnode-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
-
                   # add to the static-nodes
                   pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
                   echo ",\"enode://$pubkey@besu-node-bootnode-$i-0.besu-node-bootnode-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json
@@ -152,11 +150,6 @@ spec:
                   i=$((i+1))
                 fi
               done
-
-              # echo "]" >> /generated-config/static-nodes.json
-              # # remove the extra comma to make it valid json
-              # sed -i '0,/,/s///' /generated-config/static-nodes.json
-              # safeWriteEnodesConfigmap
 
               echo "Completed ..."
 
@@ -172,6 +165,9 @@ spec:
                   safeWriteSecret besu-node-validator-${i}-nodekey $FOLDER_PATH/${f}/nodekey
                   safeWriteSecret besu-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
                   safeWriteSecret besu-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret besu-node-validator-${i}-address $FOLDER_PATH/${f}/address
+                  kubectl create configmap besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
+
 
                   safeWriteSecret besu-node-validator-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
                   safeWriteSecret besu-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
@@ -183,9 +179,6 @@ spec:
                   safeWriteSecret besu-node-validator-${i} "$FOLDER_PATH/${f}"
 
 {{- end }}
-
-                  kubectl create configmap besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
-
                   # add to the static-nodes
                   pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
                   echo ",\"enode://$pubkey@besu-node-validator-$i-0.besu-node-validator-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json

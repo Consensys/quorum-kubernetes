@@ -130,15 +130,21 @@ spec:
               echo "Nodekey generation ..."
               FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
-              cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+              
 {{- if .Values.cluster.cloudNativeServices }}
               echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekeypub $FOLDER_PATH/member0/nodekey.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub
+              safeWriteSecret {{ template "besu-node.fullname" . }}-address $FOLDER_PATH/member0/address
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountPrivateKey $FOLDER_PATH/member0/accountPrivateKey
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountPassword $FOLDER_PATH/member0/accountPassword 
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountKeystore $FOLDER_PATH/member0/accountKeystore 
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountAddress $FOLDER_PATH/member0/accountAddress 
 {{- else }}
               safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
-{{- end}}
+{{- end }}
+              cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
               echo "Creating configmap for node address"
               kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
 
