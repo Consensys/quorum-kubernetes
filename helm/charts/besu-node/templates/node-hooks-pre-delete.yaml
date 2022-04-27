@@ -92,16 +92,16 @@ spec:
               }
 
               function delete_node_from_enodes_configmap {
-                kubectl -n {{ .Release.Namespace }}  get configmap besu-node-enodes -o json
+                kubectl -n {{ .Release.Namespace }}  get configmap besu-peers -o json
                 # if there is no configmap, do nothing
                 if [ $? -ne 0 ]; then
                   echo "No peers found, nothing to do..."
                 # delete the one 
                 else    
-                  echo "besu-node-enodes found, deleting {{ template "besu-node.fullname" . }}..."
-                  echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-node-enodes -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
+                  echo "besu-peers found, deleting {{ template "besu-node.fullname" . }}..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                   cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
-                  kubectl -n {{ .Release.Namespace }} create configmap besu-node-enodes --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
+                  kubectl -n {{ .Release.Namespace }} create configmap besu-peers --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
 
                   echo "Deleting node address configmap... "
                   kubectl delete configmap {{ template "besu-node.fullname" . }}-address --namespace {{ .Release.Namespace }}
