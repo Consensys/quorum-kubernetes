@@ -5,7 +5,7 @@ quorumFlags:
 cluster:
   provider: local  # choose from: local | aws | azure
   cloudNativeServices: false 
-  
+
 aws:
   # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
   serviceAccountName: quorum-node-secrets-sa
