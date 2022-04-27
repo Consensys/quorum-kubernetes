@@ -164,8 +164,7 @@ spec:
                   safeWriteSecret besu-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
                   safeWriteSecret besu-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
                   safeWriteSecret besu-node-validator-${i}-address $FOLDER_PATH/${f}/address
-                  kubectl create configmap besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
-
+                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   safeWriteSecret besu-node-validator-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
                   safeWriteSecret besu-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
@@ -175,6 +174,7 @@ spec:
 {{- else }}
                   
                   safeWriteSecret besu-node-validator-${i} "$FOLDER_PATH/${f}"
+                  kubectl create configmap --namespace {{ .Release.Namespace }} besu-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
 {{- end }}
                   # add to the static-nodes

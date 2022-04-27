@@ -132,7 +132,7 @@ helm install besu-ingress ingress-nginx/ingress-nginx \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
-kubectl apply -f ../../ingress/ingress-rules-besu.yml
+kubectl apply -f ../ingress/ingress-rules-besu.yml
 ```
 
 ### _For GoQuorum:_
@@ -174,7 +174,7 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
-kubectl apply -f ../../ingress/ingress-rules-quorum.yml
+kubectl apply -f ../ingress/ingress-rules-quorum.yml
 ```
 
 ### Once deployed, services are available as follows on the IP/ of the ingress controllers:

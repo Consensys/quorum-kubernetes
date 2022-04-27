@@ -132,8 +132,7 @@ spec:
                   safeWriteSecret goquorum-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
                   safeWriteSecret goquorum-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
                   safeWriteSecret goquorum-node-validator-${i}-address $FOLDER_PATH/${f}/address
-                  kubectl create configmap goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
-
+                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   safeWriteSecret goquorum-node-validator-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
                   safeWriteSecret goquorum-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
@@ -144,6 +143,7 @@ spec:
 
                   echo "Using k8s secrets"
                   safeWriteSecret goquorum-node-validator-${i} "$FOLDER_PATH/${f}"
+                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
 {{- end }}
 
