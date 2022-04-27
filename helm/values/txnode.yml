@@ -29,7 +29,7 @@ azure:
 node:
   besu:
     metrics:
-      serviceMonitorEnabled: true
+      serviceMonitorEnabled: false
     account:
       password: 'password'
   goquorum:

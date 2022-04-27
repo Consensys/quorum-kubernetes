@@ -91,7 +91,11 @@ data:
     # Privacy
     privacy-enabled={{ .Values.quorumFlags.privacy }}
     privacy-url={{ .Values.node.besu.privacy.url | quote }}
-    privacy-public-key-file={{ .Values.node.besu.privacy.pubkeyFile | quote }}
+    {{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
+    privacy-public-key-file="{{ .Values.node.besu.keysPath }}/{{ .Values.node.besu.privacy.pubkeyFile }}"
+    {{ else }}
+    privacy-public-key-file="{{ .Values.node.besu.privacy.pubkeysPath }}/{{ .Values.node.besu.privacy.pubkeyFile }}"
+    {{ end }}
     privacy-onchain-groups-enabled={{ .Values.node.besu.privacy.onchainGroupsEnabled }}
     {{ end }}
 

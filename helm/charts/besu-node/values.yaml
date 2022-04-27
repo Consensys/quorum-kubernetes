@@ -100,7 +100,7 @@ node:
     privacy:
       url: "http://localhost:9101"
       pubkeysPath: "/tessera"
-      pubkeyFile: "/keys/tm.pub"
+      pubkeyFile: "tm.pub"
       onchainGroupsEnabled: false
     permissions:
       enabled: true
