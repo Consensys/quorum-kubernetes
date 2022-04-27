@@ -69,8 +69,8 @@ cluster:
 
 ```
 Setting the `cluster.cloudNativeServices: true` will:
-- Keys are stored in KeyVault or Secrets Manager 
-- We make use of Managed Identities or IAMs for access
+- store keys in KeyVault or Secrets Manager 
+- make use of Managed Identities or IAMs for access
 
 ## Concepts:
 

@@ -95,8 +95,8 @@ eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace NAMESP
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 
-3. Deploy the charts as per the `helm` folder readme files
+6. Deploy the charts as per the `helm` folder readme files
 
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes). As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
-4. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)
+7. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)

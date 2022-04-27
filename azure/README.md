@@ -81,20 +81,7 @@ Use `besu` or `quorum` for AKS_NAMESPACE depending on which blockchain client yo
 ```bash
 ./scripts/bootstrap.sh "AKS_RESOURCE_GROUP" "AKS_CLUSTER_NAME" "AKS_MANAGED_IDENTITY" "AKS_NAMESPACE"
 
-./scripts/bootstrap.sh "2204test" "goq-dev-wnyhtoud-cluster" "goq-dev-wnyhtoud-ops-identity" "quorum"
-
 ```
 
 3. Deploy the charts as per the `helm` [readme](../helm/README.md) files
 
-
-## Customizing for production
-
-Once you are familiar with the `playground`, please adjust the configuration ie num of nodes, topology etc to suit your requirements.
-
-Some things are already setup and mereley need your config eg:
-- Alerting has been setup via an Action group but requires either an email address or slack webhook to send the alerts to. There are also basic alerts created for you which will utilize the action group. The list is not exhaustive and you should add alerts based on log queries in Azure Monitor to suit your requirements. Please refer to the [Azure Docs](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/action-groups-create-resource-manager-template) for more information
-
-- Monitoring via Prometheus and Grafana with the Besu and GoQuorum dashboards is enabled, but for production use please configure Grafana with your choice of auth mechanism eg OAuth.
-
-- To extend your nodes and allow other nodes (in a different cluster or outside Azure), you will need to peer your VNet with the other one and ensure that the CIDR blocks don't conflict. Once done the external nodes should be able to communicate with your nodes in AKS
