@@ -1,0 +1,71 @@
+{{- if eq .Values.cluster.provider "azure" }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: kubernetes.io/azure-file
+reclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
+allowVolumeExpansion: true
+mountOptions:
+  - dir_mode=0755
+  - file_mode=0755
+  - uid=1000
+  - gid=1000
+  - mfsymlinks
+parameters:
+  skuName: Standard_LRS
+
+{{- else if eq .Values.cluster.provider "aws" }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+provisioner: ebs.csi.aws.com
+reclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
+allowVolumeExpansion: true
+parameters:
+  type: gp3
+  fsType: ext4
+
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: {{ include "besu-node.fullname" . }}-storage
+#   namespace: {{ .Release.Namespace }}
+# provisioner: efs.csi.aws.com
+# reclaimPolicy: Retain
+# parameters:
+#   provisioningMode: efs-ap
+#   fileSystemId: #your_file_system_id
+#   directoryPerms: "700"
+#   gidRangeStart: "1000" # optional
+#   gidRangeEnd: "2000" # optional
+#   basePath: "/dynamic_provisioning" # optional
+
+{{- else }}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "besu-node.fullname" . }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    type: local
+spec:
+  persistentVolumeReclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
+  storageClassName: {{ include "besu-node.fullname" . }}-storage
+  capacity:
+    storage: "{{ .Values.storage.sizeLimit }}"
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/{{ include "besu-node.fullname" . }}"
+
+{{- end }}
+

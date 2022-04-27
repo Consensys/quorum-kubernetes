@@ -3,9 +3,9 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: cluster-quorum
-  region: us-east-2
-  version: "1.21"
+  name: quorum-cluster
+  region: ap-southeast-2
+  version: "1.22"
 
 # It is recommended that you let eksctl deploy a new VPC for your cluster, it will automatically tag the subnets with the appropriate tags. You may use an existing VPC if you wish but take note of the necessary subnet tags: https://github.com/weaveworks/eksctl/blob/main/examples/04-existing-vpc.yaml https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html
 vpc:
@@ -56,6 +56,12 @@ cloudWatch:
 
 iam:
   withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: "quorum-ebs-efs-csi-drivers"
+      wellKnownPolicies:
+        ebsCSIController: true
+        efsCSIController: true
 
 addons:
   - name: vpc-cni

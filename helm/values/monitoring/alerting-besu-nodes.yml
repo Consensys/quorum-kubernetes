@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app: besu
+  name: besu-alerts
+  namespace: quorum
+spec:
+  groups:
+  - name: besu-chain-stalled
+    rules:
+    - alert: BesuChainStalled
+      annotations:
+        description: Besu Chain behind more than 1 minute ({{ $value }} seconds)
+        summary: Besu Chain behind more than 1 minute
+      expr: time() - max (besu_blockchain_chain_head_timestamp) by (value) > 60
+      for: 1m
+      labels:
+        severity: critical

@@ -1,0 +1,42 @@
+---
+
+quorumFlags:
+  privacy: true
+  removeKeysOnDelete: true
+
+cluster:
+  provider: local  # choose from: local | aws | azure
+  cloudNativeServices: false 
+  reclaimPolicy: Delete # set to either Retain or Delete; note that PVCs and PVs will still exist after a 'helm delete'. Setting to Retain will keep volumes even if PVCs/PVs are deleted in kubernetes. Setting to Delete will remove volumes from EC2 EBS when PVC is deleted
+
+aws:
+  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
+  serviceAccountName: quorum-node-secrets-sa
+  # the region you are deploying to
+  region: ap-southeast-2
+
+azure:
+  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
+  identityName: quorum-pod-identity
+  # the clientId of the user assigned managed identity created in the template
+  identityClientId: azure-clientId
+  keyvaultName: azure-keyvault
+  # the tenant ID of the key vault
+  tenantId: azure-tenantId
+  # the subscription ID to use - this needs to be set explictly when using multi tenancy
+  subscriptionId: azure-subscriptionId
+
+node:
+  besu:
+    metrics:
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'
+  goquorum:
+    metrics:
+      serviceMonitorEnabled: true
+    account:
+      password: 'password'
+  tessera:
+    password: 'password'
+    
