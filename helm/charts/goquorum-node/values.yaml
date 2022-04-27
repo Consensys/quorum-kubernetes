@@ -109,11 +109,11 @@ node:
 image:
   goquorum:
     repository: quorumengineering/quorum
-    tag: latest
+    tag: 22.4.0
   tessera:
     repository: quorumengineering/tessera
-    tag: latest
+    tag: 22.1.1
   hooks:
     repository: consensys/quorum-k8s-hooks
-    tag: latest
+    tag: qgt
     pullPolicy: IfNotPresent

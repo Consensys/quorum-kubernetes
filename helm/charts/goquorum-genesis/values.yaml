@@ -47,5 +47,5 @@ rawGenesisConfig:
 
 image:
   repository: consensys/quorum-k8s-hooks
-  tag: latest
+  tag: qgt
   pullPolicy: IfNotPresent
