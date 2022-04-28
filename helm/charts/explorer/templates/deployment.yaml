@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quorum-explorer.fullname" . }}
+  labels:
+    app: {{ template "quorum-explorer.fullname" . }}
+    chart: {{ template "quorum-explorer.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ include "quorum-explorer.fullname" . }}
+    helm.sh/chart: {{ include "quorum-explorer.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - image: {{ .Values.image.explorer.repository }}:{{ .Values.image.explorer.tag }}
+          imagePullPolicy: {{ .Values.image.explorer.pullPolicy }}
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.containerPort }}
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+            initialDelaySeconds: 60
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.containerPort }}
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+            initialDelaySeconds: 30
+          name: {{ .Release.Name }}
+          env:
+            - name: "REACT_APP_ENVIRONMENT"
+              value: "PROD"
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - name: config-volume
+            mountPath: /app/config.json
+            subPath: config.json
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ include "quorum-explorer.fullname" . }}-config
+      dnsPolicy: ClusterFirst

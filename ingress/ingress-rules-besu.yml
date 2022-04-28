@@ -18,6 +18,13 @@ spec:
   rules:
   - http:
       paths:
+      - path: /explorer
+        pathType: Prefix
+        backend:
+          service:
+            name: quorum-explorer
+            port:
+              number: 80
       - path: /rpcnode
         pathType: Prefix
         backend:

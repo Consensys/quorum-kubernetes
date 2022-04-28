@@ -1,0 +1,11 @@
+image:
+  explorer:
+    repository: consensys/quorum-explorer
+    tag: a642c14
+    pullPolicy: IfNotPresent
+
+containerPort: 25000
+resources:
+  requests:
+    cpu: 1000m
+    memory: 1G
