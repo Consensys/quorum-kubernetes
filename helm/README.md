@@ -187,7 +187,7 @@ kubectl apply -f ../ingress/ingress-rules-quorum.yml
 
 You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Quorum Explorer is **not** recommended for use in production and is intended for demonstration/dev purposes only. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
 
-**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs).
+**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer.yaml` to see some examples (you can uncomment the Besu `explorerConfig`) and how to extend the configuration yourself.
 
 To deploy:
 

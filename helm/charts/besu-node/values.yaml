@@ -122,7 +122,7 @@ node:
 
   tessera:
     resources:
-      cpuLimit: 0.7
+      cpuLimit: 1
       cpuRequest: 0.5
       memLimit: "2G"
       memRequest: "1G"

@@ -32,10 +32,22 @@ node:
   besu:
     metrics:
       serviceMonitorEnabled: true
+    resources:
+      cpuLimit: 0.7
+      cpuRequest: 0.5
+      memLimit: "2G"
+      memRequest: "1G"
     account:
       password: 'password'
   goquorum:
     metrics:
       serviceMonitorEnabled: true
+    resources:
+      cpuLimit: 1
+      cpuRequest: 0.1
+      memLimit: "2G"
+      memRequest: "1G"
     account:
       password: 'password'
+  tessera:
+    password: 'password'
