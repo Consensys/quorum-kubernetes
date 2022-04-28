@@ -254,7 +254,6 @@ spec:
           - |
             exec
 
-            apk add curl
           {{- if .Values.quorumFlags.privacy }}
             until $(curl --output /dev/null --silent --head --fail http://localhost:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
             echo 'transaction manager is up';

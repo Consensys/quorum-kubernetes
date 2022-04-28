@@ -246,7 +246,6 @@ spec:
           args:
             - |
               exec
-              apk add curl
               
               until $(curl --output /dev/null --silent --head --fail http://127.0.0.1:9000/upcheck); do echo 'waiting for transaction manager to start...'; sleep 5; done;
               echo transaction manager is up;
