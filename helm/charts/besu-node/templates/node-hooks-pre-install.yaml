@@ -44,12 +44,13 @@ spec:
                 PUBKEY_LOC=$1
                 kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o json
                 if [ $? -ne 0 ]; then
-                echo "[]" > /tmp/static-nodes.json.raw
+                  echo "[]" > /tmp/static-nodes.json.raw
+                else 
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 fi
                 # update the entries
                 echo "updating besu-peers..."
                 pubkey=$(cat $PUBKEY_LOC )
-                echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
                 cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
                 kubectl -n {{ .Release.Namespace }} create configmap besu-peers --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
@@ -72,6 +73,24 @@ spec:
                   kubectl -n {{ .Release.Namespace }} create configmap tessera-peers --from-file=tesseraPeers=/tmp/tessera-peers -o yaml --dry-run=client | kubectl replace -f -
                 fi
               }
+
+              function update_bootnodes_configmap {
+                PUBKEY_LOC=$1
+                kubectl -n {{ .Release.Namespace }} get configmap besu-bootnodes -o json
+                if [ $? -ne 0 ]; then
+                  echo "[]" > /tmp/besu-bootnodes-json.raw
+                  kubectl -n {{ .Release.Namespace }} create configmap besu-bootnodes --from-file=bootnodes-json=/tmp/besu-bootnodes-json.raw --from-literal=bootnodes-string=""
+                fi
+                
+                echo "updating besu-bootnodes..."
+                echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-bootnodes -o jsonpath='{.data.bootnodes-json}' ) > /tmp/besu-bootnodes-json.raw
+                pubkey=$(cat $PUBKEY_LOC )
+                NEEDLE="enode://$pubkey@{{ template "besu-node.fullname" . }}-0.{{ template "besu-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303"
+                cat /tmp/besu-bootnodes-json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/besu-bootnodes-json
+                cat /tmp/besu-bootnodes-json | jq -r -c '. | join(",")' | tr -d '\n' > /tmp/besu-bootnodes-string
+                kubectl -n {{ .Release.Namespace }} create configmap besu-bootnodes --from-file=bootnodes-json=/tmp/besu-bootnodes-json --from-file=bootnodes-string=/tmp/besu-bootnodes-string -o yaml --dry-run=client | kubectl replace -f -
+              }
+
 
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
               function safeWriteSecret {
@@ -144,6 +163,9 @@ spec:
               kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
 
               update_peers_configmap /tmp/enode
+{{- if .Values.quorumFlags.isBootnode }}
+              update_bootnodes_configmap /tmp/enode
+{{- end }}              
               echo "Completed"
 
 {{- if .Values.quorumFlags.privacy }}

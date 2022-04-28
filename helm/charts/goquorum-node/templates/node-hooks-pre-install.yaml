@@ -100,11 +100,13 @@ spec:
               kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers -o json
               if [ $? -ne 0 ]; then
                   echo "[]" > /tmp/static-nodes.json.raw
+              else
+                echo $(kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
               fi
+
               # update the entries
               echo "updating goquorum-peers..."
               pubkey=$(cat /tmp/enode )
-              echo $(kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
               NEEDLE="enode://$pubkey@{{ template "goquorum-node.fullname" . }}-0.{{ template "goquorum-node.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0"
               cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "$NEEDLE" '. += [ $NEEDLE ] | unique ' > /tmp/static-nodes.json
               kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-peers --from-file=static-nodes.json=/tmp/static-nodes.json -o yaml --dry-run=client | kubectl replace -f -
