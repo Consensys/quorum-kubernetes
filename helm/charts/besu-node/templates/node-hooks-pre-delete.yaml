@@ -108,9 +108,25 @@ spec:
                 fi
               }
 
-              delete_node_from_enodes_configmap
-              delete_node_from_tessera_peers_configmap
 
+              function delete_node_from_besu_bootnodes_configmap {
+                kubectl -n {{ .Release.Namespace }}  get configmap besu-bootnodes -o json
+                # if there is no configmap, do nothing
+                if [ $? -ne 0 ]; then
+                  echo "No bootnodes found, nothing to do..."
+                # delete the one 
+                else    
+                  echo "besu-bootnodes found, deleting {{ template "besu-node.fullname" . }}..."
+                  echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-bootnodes -o jsonpath='{.data.bootnodes-json}' ) > /tmp/besu-bootnodes-json.raw
+                  cat /tmp/besu-bootnodes-json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/besu-bootnodes-json
+                  cat /tmp/besu-bootnodes-json | jq -r -c '. | join(",")' | tr -d '\n' > /tmp/besu-bootnodes-string
+                  kubectl -n {{ .Release.Namespace }} create configmap besu-bootnodes --from-file=bootnodes-json=/tmp/besu-bootnodes-json --from-file=bootnodes-string=/tmp/besu-bootnodes-string -o yaml --dry-run=client | kubectl replace -f -
+                fi
+              }
+
+              delete_node_from_enodes_configmap
+              delete_node_from_besu_bootnodes_configmap
+              delete_node_from_tessera_peers_configmap
 
 {{- if .Values.quorumFlags.removeKeysOnDelete }}
 

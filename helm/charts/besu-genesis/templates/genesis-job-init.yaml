@@ -107,7 +107,11 @@ spec:
               }
 
               echo "Creating config ..."
-              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 {{ if .Values.rawGenesisConfig.blockchain.bootnodes.generate }} --bootnodes {{ .Values.rawGenesisConfig.blockchain.bootnodes.count }} {{ else }} --bootnodes 0 {{ end }} --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} {{ if .Values.rawGenesisConfig.blockchain.accountPassword }} --accountPassword {{ .Values.rawGenesisConfig.blockchain.accountPassword }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} {{ if .Values.rawGenesisConfig.blockchain.accountPassword }} --accountPassword {{ .Values.rawGenesisConfig.blockchain.accountPassword }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+
+              echo "Creating bootnodes configmap in k8s ..."
+              echo "[]" > /tmp/besu-bootnodes
+              kubectl create configmap --namespace {{ .Release.Namespace }} besu-bootnodes --from-file=bootnodes=/tmp/besu-bootnodes
 
               echo $FOLDER_PATH
               echo "Creating genesis configmap in k8s ..."
@@ -115,42 +119,6 @@ spec:
 
               # create the static-nodes with proper dns names for the quorum nodes
               echo "[" > $FOLDER_PATH/static-nodes.json
-
-              echo "Creating bootnode keys ..."
-              i=1
-              for f in $(find $FOLDER_PATH -type d -iname "bootnode*" -exec basename {} \;); do
-                if [ -d $FOLDER_PATH/${f} ]; then
-                  echo $f
-                  echo "Creating keys in vault for bootnode-${i} ..."
-
-
-{{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
-
-                  safeWriteSecret besu-node-bootnode-${i}-nodekey $FOLDER_PATH/${f}/nodekey
-                  safeWriteSecret besu-node-bootnode-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
-                  safeWriteSecret besu-node-bootnode-${i}-enode $FOLDER_PATH/${f}/nodekey.pub
-                  safeWriteSecret besu-node-bootnode-${i}-address $FOLDER_PATH/${f}/address
-                  kubectl create configmap besu-node-bootnode-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
-
-                  safeWriteSecret besu-node-bootnode-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
-                  safeWriteSecret besu-node-bootnode-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
-                  safeWriteSecret besu-node-bootnode-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
-                  safeWriteSecret besu-node-bootnode-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
-
-{{- else }}
-                  safeWriteSecret besu-node-bootnode-${i} "$FOLDER_PATH/${f}"
-
-{{- end }}
-                  # add to the static-nodes
-                  pubkey=$(cat $FOLDER_PATH/${f}/nodekey.pub )
-                  echo ",\"enode://$pubkey@besu-node-bootnode-$i-0.besu-node-bootnode-$i.{{ .Release.Namespace }}.svc.cluster.local:30303?discport=0\"" >> $FOLDER_PATH/static-nodes.json
-
-                  i=$((i+1))
-                fi
-              done
-
-              echo "Completed ..."
-
               echo "Creating validator secrets in k8s ..."
               i=1
               for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do

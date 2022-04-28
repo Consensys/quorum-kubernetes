@@ -209,6 +209,13 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+{{- if .Values.quorumFlags.usesBootnodes }}
+          - name: BESU_BOOTNODES
+            valueFrom:
+              configMapKeyRef:
+                name: besu-bootnodes
+                key: bootnodes-string
+{{- end }}
         volumeMounts:
 {{- if and (ne .Values.cluster.provider "local") (.Values.cluster.cloudNativeServices) }}
           - name: secrets-store

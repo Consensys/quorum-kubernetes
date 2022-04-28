@@ -4,6 +4,8 @@ quorumFlags:
   privacy: false
   # this will erase keys - so be careful with this on validators
   removeKeysOnDelete: false
+  isBootnode: true    # set this to true if this node is a bootnode
+  usesBootnodes: true # set this to true if the network you are connecting to use a bootnode/s that are deployed in the cluster 
 
 cluster:
   provider: local  # choose from: local | aws | azure
