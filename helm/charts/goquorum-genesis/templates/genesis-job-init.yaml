@@ -95,7 +95,9 @@ spec:
                 FOLDER_PATH=$1
                 kubectl get configmap --namespace {{ .Release.Namespace }} goquorum-genesis
                 if [ $? -ne 0 ]; then
-                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=$FOLDER_PATH/goQuorum/genesis.json
+                  # delete hardcoded test accounts until they became optional in quorum-genesis-tool
+                  cat $FOLDER_PATH/goQuorum/genesis.json | jq 'del(.alloc."fe3b557e8fb62b89f4916b721be55ceb828dbd73", .alloc."f17f52151EbEF6C7334FAD080c5704D77216b732", .alloc."627306090abaB3A6e1400e9345bC60c78a8BEf57")' > $FOLDER_PATH/genesis.json
+                  kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-genesis --from-file=genesis.json=$FOLDER_PATH/genesis.json
                 fi
               }
 
