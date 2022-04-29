@@ -6,7 +6,7 @@ metadata:
   labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
-{{- end }}  
+{{- end }}
     app: {{ template "goquorum-genesis.name" . }}
     chart: {{ template "goquorum-genesis.chart" . }}
     release: {{ .Release.Name }}
@@ -27,7 +27,7 @@ spec:
       labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
-{{- end}}      
+{{- end}}
         app.kubernetes.io/name: {{ include "goquorum-genesis.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
@@ -35,7 +35,7 @@ spec:
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "goquorum-genesis.name" . }}-sa
-{{- end }}    
+{{- end }}
       restartPolicy: "Never"
       containers:
         - name: generate-genesis
@@ -82,7 +82,7 @@ spec:
               }
 
 {{- else }}
-              
+
               function safeWriteSecret {
                 key=$1
                 fpath=$2
@@ -108,13 +108,13 @@ spec:
                 fi
               }
 
-              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} {{ if .Values.rawGenesisConfig.blockchain.accountPassword }} --accountPassword {{ .Values.rawGenesisConfig.blockchain.accountPassword }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool --consensus {{ .Values.rawGenesisConfig.genesis.config.algorithm.consensus }} {{ if .Values.rawGenesisConfig.blockchain.nodes.generate }} --validators {{ .Values.rawGenesisConfig.blockchain.nodes.count }} {{ else }} --validators 0 {{ end }} --members 0 --bootnodes 0 --chainID {{ .Values.rawGenesisConfig.genesis.config.chainId }} --blockperiod {{ .Values.rawGenesisConfig.genesis.config.algorithm.blockperiodseconds }} --epochLength {{ .Values.rawGenesisConfig.genesis.config.algorithm.epochlength }} --requestTimeout {{ .Values.rawGenesisConfig.genesis.config.algorithm.requesttimeoutseconds }} --difficulty {{ .Values.rawGenesisConfig.genesis.difficulty }} --gasLimit {{ .Values.rawGenesisConfig.genesis.gasLimit }} --coinbase {{ .Values.rawGenesisConfig.genesis.coinbase }} {{ if .Values.rawGenesisConfig.blockchain.accountPassword }} --accountPassword {{ .Values.rawGenesisConfig.blockchain.accountPassword }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
 
               echo $FOLDER_PATH
               echo "Creating genesis configmap in k8s ..."
               safeWriteGenesisConfigmap $FOLDER_PATH
 
-              # create the static-nodes with proper dns names for the quorum nodes  
+              # create the static-nodes with proper dns names for the quorum nodes
               echo "[" > /generated-config/static-nodes.json
 
               # 0 index so setting this to the num of validators
@@ -122,7 +122,7 @@ spec:
               i=1
               for f in $(find $FOLDER_PATH -type d -iname "validator*" -exec basename {} \;); do
                 echo $f
-               
+
                 if [ -d $FOLDER_PATH/${f} ]; then
 
                   echo "Creating keys for $f ..."
@@ -131,16 +131,16 @@ spec:
 
                   echo "Using cloud native services"
                   safeWriteSecret goquorum-node-validator-${i}-nodekey $FOLDER_PATH/${f}/nodekey
-                  safeWriteSecret goquorum-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub 
-                  safeWriteSecret goquorum-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub 
+                  safeWriteSecret goquorum-node-validator-${i}-nodekeypub $FOLDER_PATH/${f}/nodekey.pub
+                  safeWriteSecret goquorum-node-validator-${i}-enode $FOLDER_PATH/${f}/nodekey.pub
                   safeWriteSecret goquorum-node-validator-${i}-address $FOLDER_PATH/${f}/address
                   kubectl create configmap --namespace {{ .Release.Namespace }} goquorum-node-validator-${i}-address --from-file=address=$FOLDER_PATH/${f}/address
 
                   safeWriteSecret goquorum-node-validator-${i}-accountPrivateKey $FOLDER_PATH/${f}/accountPrivateKey
                   safeWriteSecret goquorum-node-validator-${i}-accountPassword $FOLDER_PATH/${f}/accountPassword
-                  safeWriteSecret goquorum-node-validator-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore 
-                  safeWriteSecret goquorum-node-validator-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress 
-                  
+                  safeWriteSecret goquorum-node-validator-${i}-accountKeystore $FOLDER_PATH/${f}/accountKeystore
+                  safeWriteSecret goquorum-node-validator-${i}-accountAddress $FOLDER_PATH/${f}/accountAddress
+
 {{- else }}
 
                   echo "Using k8s secrets"
