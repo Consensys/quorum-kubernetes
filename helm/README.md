@@ -180,7 +180,7 @@ helm install quorum-ingress ingress-nginx/ingress-nginx \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
-kubectl apply -f ../ingress/ingress-rules-quorum.yml
+kubectl apply -f ../ingress/ingress-rules-goquorum.yml
 ```
 
 ### _Quorum Explorer:_
@@ -211,6 +211,11 @@ http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
 
 # For GoQuorum's grafana address:
 http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
+```
+
+Quorum Explorer (if deployed)
+```bash
+http://<INGRESS_IP>/explorer
 ```
 
 API Calls to either client
