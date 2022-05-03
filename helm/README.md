@@ -189,10 +189,15 @@ You may optionally deploy our lightweight Quorum Explorer, which is compatible f
 
 **Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer.yaml` to see some examples (you can uncomment the Besu `explorerConfig`) and how to extend the configuration yourself.
 
-To deploy:
+To deploy for Besu:
 
 ```bash
-helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer.yaml
+helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer-besu.yaml
+```
+
+To deploy for GoQuorum:
+```bash
+helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer-goquorum.yaml
 ```
 
 After modifying configmap with node details, you will need to restart the pod to get the config changes. Deleting the existing pod will force the deployment to recreate it:
