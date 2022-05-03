@@ -76,11 +76,10 @@ az deployment create \
 
 Once the deployment has completed, please run the [bootstrap](../scripts/bootstrap.sh) to provision the AAD pod identity and the CSI drivers ([jq](https://stedolan.github.io/jq/) JSON processor is required)
 
-Use `besu` or `quorum` for AKS_NAMESPACE depending on which blockchain client you are using
+Use `quorum` for NAMESPACE and replace AKS_RESOURCE_GROUP, AKS_CLUSTER_NAME and AKS_MANAGED_IDENTITY with that of your deployment
 
 ```bash
-./scripts/bootstrap.sh "AKS_RESOURCE_GROUP" "AKS_CLUSTER_NAME" "AKS_MANAGED_IDENTITY" "AKS_NAMESPACE"
-
+./scripts/bootstrap.sh "AKS_RESOURCE_GROUP" "AKS_CLUSTER_NAME" "AKS_MANAGED_IDENTITY" "NAMESPACE"
 ```
 
 3. Deploy the charts as per the `helm` [readme](../helm/README.md) files
