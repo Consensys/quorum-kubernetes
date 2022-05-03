@@ -12,7 +12,7 @@ metadata:
       rewrite (?i)/kibana/(.*) /$1 break;
       rewrite (?i)/kibana$ / break;
       rewrite (?i)/kibana$ /$1 break; 
-    # nginx.ingress.kubernetes.io/rewrite-target: /explorer
+    # nginx.ingress.kubernetes.io/rewrite-target: /
     #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
 
 spec:
