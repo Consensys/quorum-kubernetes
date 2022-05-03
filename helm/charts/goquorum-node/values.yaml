@@ -35,7 +35,7 @@ storage:
 node:
   goquorum:
     resources:
-      cpuLimit: 0.5
+      cpuLimit: 1
       cpuRequest: 0.1
       memLimit: "2G"
       memRequest: "1G"
@@ -53,8 +53,8 @@ node:
     log:
       verbosity: 5
     miner:
-     threads: 1
-     blockPeriod: 5
+      threads: 1
+      blockPeriod: 5
     p2p:
       enabled: true
       addr: "0.0.0.0"

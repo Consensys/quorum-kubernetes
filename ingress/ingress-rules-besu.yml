@@ -11,13 +11,21 @@ metadata:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite (?i)/kibana/(.*) /$1 break;
       rewrite (?i)/kibana$ / break;
-    nginx.ingress.kubernetes.io/rewrite-target: /
+      rewrite (?i)/kibana$ /$1 break; 
+    # nginx.ingress.kubernetes.io/rewrite-target: /explorer
     #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
 
 spec:
   rules:
   - http:
       paths:
+      - path: /explorer
+        pathType: Prefix
+        backend:
+          service:
+            name: quorum-explorer
+            port:
+              number: 80
       - path: /rpcnode
         pathType: Prefix
         backend:
