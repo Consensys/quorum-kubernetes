@@ -1,0 +1,51 @@
+---
+# ingress-nginx IngressClass
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: external-nginx
+  namespace: quorum
+spec:
+  controller: k8s.io/external-ingress-nginx
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: besu-ingress-external-routes
+  namespace: quorum
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite (?i)/kibana/(.*) /$1 break;
+      rewrite (?i)/kibana$ / break;
+      rewrite (?i)/kibana$ /$1 break; 
+    #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
+
+spec:
+  ingressClassName: external-nginx
+  rules:
+  - http:
+      paths:
+      - path: /explorer
+        pathType: Prefix
+        backend:
+          service:
+            name: quorum-explorer
+            port:
+              number: 80
+      - path: /kibana
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana-kibana
+            port:
+              number: 5601
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-grafana
+            port:
+              number: 3000

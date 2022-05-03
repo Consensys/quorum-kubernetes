@@ -130,8 +130,10 @@ NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
-helm install besu-ingress ingress-nginx/ingress-nginx \
+helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
+    --set controller.ingressClassResource.name="network-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
@@ -172,8 +174,10 @@ NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
-helm install quorum-ingress ingress-nginx/ingress-nginx \
+helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
+    --set controller.ingressClassResource.name="network-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
@@ -188,6 +192,23 @@ kubectl apply -f ../ingress/ingress-rules-goquorum.yml
 You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Quorum Explorer is **not** recommended for use in production and is intended for demonstration/dev purposes only. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
 
 **Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer.yaml` to see some examples (you can uncomment the Besu `explorerConfig`) and how to extend the configuration yourself.
+
+Firstly, you will need to deploy a separate ingress which will serve external facing services like the explorer.
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install quorum-external-ingress ingress-nginx/ingress-nginx \
+    --namespace quorum \
+    --set controller.ingressClassResource.name="external-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/external-ingress-nginx" \
+    --set controller.replicaCount=1 \
+    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.service.externalTrafficPolicy=Local
+
+kubectl apply -f ../ingress/ingress-rules-external.yml
+```
 
 To deploy for Besu:
 
