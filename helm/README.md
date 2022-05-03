@@ -198,7 +198,6 @@ helm install quorum-explorer ./charts/explorer --namespace quorum --create-names
 To deploy for GoQuorum:
 ```bash
 helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer-goquorum.yaml
-```
 
 After modifying configmap with node details, you will need to restart the pod to get the config changes. Deleting the existing pod will force the deployment to recreate it:
 
