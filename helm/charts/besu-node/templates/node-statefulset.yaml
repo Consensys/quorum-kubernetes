@@ -135,6 +135,7 @@ spec:
 
                 cat <<EOF > {{ .Values.node.tessera.dataPath }}/tessera-config-09.json
                 {
+                  "mode": "orion",
                   "useWhiteList": false,
                   "jdbc": {
                     "username": "sa",

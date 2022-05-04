@@ -1,31 +1,34 @@
 ---
+# ingress-nginx IngressClass
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: network-nginx
+  namespace: quorum
+spec:
+  controller: k8s.io/network-ingress-nginx
+
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: besu-ingress-routes
   namespace: quorum
   annotations:
-    kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
       rewrite (?i)/kibana/(.*) /$1 break;
       rewrite (?i)/kibana$ / break;
       rewrite (?i)/kibana$ /$1 break; 
-    # nginx.ingress.kubernetes.io/rewrite-target: /explorer
+    nginx.ingress.kubernetes.io/rewrite-target: /
     #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
 
 spec:
+  ingressClassName: network-nginx
   rules:
   - http:
       paths:
-      - path: /explorer
-        pathType: Prefix
-        backend:
-          service:
-            name: quorum-explorer
-            port:
-              number: 80
       - path: /rpcnode
         pathType: Prefix
         backend:

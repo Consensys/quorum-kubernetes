@@ -282,6 +282,9 @@ spec:
           {{- if .Values.node.goquorum.ws.enabled }}
             --ws --ws.addr {{ .Values.node.goquorum.ws.addr }} --ws.port {{ .Values.node.goquorum.ws.port }} --ws.origins {{ .Values.node.goquorum.ws.origins | quote }} --ws.api {{ .Values.node.goquorum.ws.api | quote }} \
           {{- end }}
+          {{- if .Values.quorumFlags.privacy }}
+            --ptm.timeout 5 --ptm.url {{ .Values.node.goquorum.privacy.url }} --ptm.http.writebuffersize 4096 --ptm.http.readbuffersize 4096 --ptm.tls.mode off \
+          {{- end }}          
           {{- if hasKey .Values.node.goquorum.account "unlock" }}
              --unlock {{ .Values.node.goquorum.account.unlock }} --allow-insecure-unlock --password {{ .Values.node.goquorum.account.passwordPath }} \
           {{- end }}

@@ -142,7 +142,7 @@ spec:
 
               echo "{{ template "besu-node.fullname" . }} hook ..."
               echo "Nodekey generation ..."
-              FOLDER_PATH=$(npx --yes --quiet quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 {{ if .Values.node.besu.account.password }} --accountPassword {{ .Values.node.besu.account.password }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(quorum-genesis-tool --validators 0 --members 1 --bootnodes 0 {{ if .Values.node.besu.account.password }} --accountPassword {{ .Values.node.besu.account.password }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
               
 {{- if .Values.cluster.cloudNativeServices }}
@@ -169,7 +169,7 @@ spec:
               echo "Completed"
 
 {{- if .Values.quorumFlags.privacy }}
-              FOLDER_PATH=$(npx --yes quorum-genesis-tool@latest --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
+              FOLDER_PATH=$(quorum-genesis-tool --validators 0 --members 1 --bootnodes 0 --tesseraEnabled true --tesseraPassword {{ .Values.node.tessera.password }} --outputPath /tmp/tessera | tail -1 | sed -e "s/^Artifacts in folder: //")
               if [ ! -f "$FOLDER_PATH/member0/passwordFile.txt" ]; then
                 echo "" > $FOLDER_PATH/member0/passwordFile.txt
               fi

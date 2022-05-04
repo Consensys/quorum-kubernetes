@@ -93,6 +93,84 @@ helm install monitoring prometheus-community/kube-prometheus-stack --version 34.
 kubectl --namespace quorum apply -f  ./values/monitoring/
 ```
 
+Assitionally, you will need to deploy a separate ingress which will serve external facing services like the explorer and monitoring endpoints
+
+```bash
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+helm install quorum-monitoring-ingress ingress-nginx/ingress-nginx \
+    --namespace quorum \
+    --set controller.ingressClassResource.name="monitoring-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/monitoring-ingress-nginx" \
+    --set controller.replicaCount=1 \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.service.externalTrafficPolicy=Local
+
+kubectl apply -f ../ingress/ingress-rules-monitoring.yml
+```
+
+Once complete, view the IP address listed under the `Ingress` section if you're using the Kubernetes Dashboard
+or on the command line `kubectl -n quorum get services quorum-monitoring-ingress-ingress-nginx-controller`.
+
+You can then access Grafana on 
+```bash
+# For Besu's grafana address:
+http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
+
+# For GoQuorum's grafana address:
+http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
+```
+
+You can access Kibana on:
+```bash
+http://<INGRESS_IP>/kibana
+```
+
+### Blockchain Explorer
+
+#### Blockscout
+
+```bash
+helm dependency update ./charts/blockscout
+
+# For GoQuorum
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-goquorum.yml
+
+# For Besu
+helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yml
+```
+
+#### Quorum Explorer
+
+You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Quorum Explorer is **not** recommended for use in production and is intended for demonstration/dev purposes only. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
+
+**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer-besu.yaml` or `values/explorer-goquorum.yaml` to see some examples.
+
+```
+To deploy for Besu:
+
+```bash
+helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer-besu.yaml
+```
+
+To deploy for GoQuorum:
+```bash
+helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer-goquorum.yaml
+
+After modifying configmap with node details, you will need to restart the pod to get the config changes. Deleting the existing pod will force the deployment to recreate it:
+
+```bash
+kubectl delete pod <quorum-explorer-pod-name>
+```
+
+If you've deployed the Ingress from the previous step, you can access the Quorum Explorer on
+
+```bash
+http://<INGRESS_IP>/explorer
+```
+
 ### _For Besu:_
 
 ```bash
@@ -116,26 +194,21 @@ helm install member-1 ./charts/besu-node --namespace quorum --values ./values/tx
 helm install rpc-1 ./charts/besu-node --namespace quorum --values ./values/reader.yml
 ```
 
-Optionally deploy blockscout:
-
-```bash
-helm dependency update ./charts/blockscout
-helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yml
-```
-
-Optionally deploy the ingress controller like so:
+Optionally deploy the ingress controller for the network and nodes like so:
 
 NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node from section 3 above. Please update this as required to suit your requirements
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
-helm install besu-ingress ingress-nginx/ingress-nginx \
+helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
+    --set controller.ingressClassResource.name="network-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
-    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../ingress/ingress-rules-besu.yml
@@ -158,65 +231,25 @@ helm install member-1 ./charts/goquorum-node --namespace quorum --values ./value
 helm install rpc-1 ./charts/goquorum-node --namespace quorum --values ./values/reader.yml
 ```
 
-Optionally deploy blockscout:
-
-```bash
-helm dependency update ./charts/blockscout
-helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-goquorum.yml
-```
-
-Optionally deploy the ingress controller like so:
-
-NOTE: Deploying the ingress rules, assumes you are connecting to the `tx-1` node from section 3 above. Please update this as required to suit your requirements
+Optionally deploy the ingress controller for the network and nodes like so:
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
-helm install quorum-ingress ingress-nginx/ingress-nginx \
+helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
+    --set controller.ingressClassResource.name="network-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
-    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../ingress/ingress-rules-goquorum.yml
 ```
 
-### _Quorum Explorer:_
-
-You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Quorum Explorer is **not** recommended for use in production and is intended for demonstration/dev purposes only. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
-
-**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer.yaml` to see some examples (you can uncomment the Besu `explorerConfig`) and how to extend the configuration yourself.
-
-To deploy:
-
-```bash
-helm install quorum-explorer ./charts/explorer --namespace quorum --create-namespace --values ./values/explorer.yaml
-```
-
-After modifying configmap with node details, you will need to restart the pod to get the config changes. Deleting the existing pod will force the deployment to recreate it:
-
-```bash
-kubectl delete pod <quorum-explorer-pod-name>
-```
-
 ### Once deployed, services are available as follows on the IP/ of the ingress controllers:
-
-Monitoring (if deployed)
-
-```bash
-# For Besu's grafana address:
-http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
-
-# For GoQuorum's grafana address:
-http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
-```
-
-Quorum Explorer (if deployed)
-```bash
-http://<INGRESS_IP>/explorer
-```
 
 API Calls to either client
 
