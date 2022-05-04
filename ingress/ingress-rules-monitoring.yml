@@ -3,16 +3,16 @@
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
 metadata:
-  name: external-nginx
+  name: monitoring-nginx
   namespace: quorum
 spec:
-  controller: k8s.io/external-ingress-nginx
+  controller: k8s.io/monitoring-ingress-nginx
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: besu-ingress-external-routes
+  name: besu-ingress-monitoring-routes
   namespace: quorum
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
@@ -24,7 +24,7 @@ metadata:
     #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
 
 spec:
-  ingressClassName: external-nginx
+  ingressClassName: monitoring-nginx
   rules:
   - http:
       paths:

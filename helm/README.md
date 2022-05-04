@@ -98,17 +98,17 @@ Assitionally, you will need to deploy a separate ingress which will serve extern
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
-helm install quorum-external-ingress ingress-nginx/ingress-nginx \
+helm install quorum-monitoring-ingress ingress-nginx/ingress-nginx \
     --namespace quorum \
-    --set controller.ingressClassResource.name="external-nginx" \
-    --set controller.ingressClassResource.controllerValue="k8s.io/external-ingress-nginx" \
+    --set controller.ingressClassResource.name="monitoring-nginx" \
+    --set controller.ingressClassResource.controllerValue="k8s.io/monitoring-ingress-nginx" \
     --set controller.replicaCount=1 \
     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
-kubectl apply -f ../ingress/ingress-rules-external.yml
+kubectl apply -f ../ingress/ingress-rules-monitoring.yml
 ```
 
 
