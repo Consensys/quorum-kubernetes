@@ -103,15 +103,30 @@ helm install quorum-monitoring-ingress ingress-nginx/ingress-nginx \
     --set controller.ingressClassResource.name="monitoring-nginx" \
     --set controller.ingressClassResource.controllerValue="k8s.io/monitoring-ingress-nginx" \
     --set controller.replicaCount=1 \
-    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../ingress/ingress-rules-monitoring.yml
 ```
 
+Once complete, view the IP address listed under the `Ingress` section if you're using the Kubernetes Dashboard
+or on the command line `kubectl -n quorum get services quorum-monitoring-ingress-ingress-nginx-controller`.
 
+You can then access Grafana on 
+```bash
+# For Besu's grafana address:
+http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
+
+# For GoQuorum's grafana address:
+http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
+```
+
+You can access Kibana on:
+```bash
+http://<INGRESS_IP>/kibana
+```
 
 ### Blockchain Explorer
 
@@ -150,6 +165,12 @@ After modifying configmap with node details, you will need to restart the pod to
 kubectl delete pod <quorum-explorer-pod-name>
 ```
 
+If you've deployed the Ingress from the previous step, you can access the Quorum Explorer on
+
+```bash
+http://<INGRESS_IP>/explorer
+```
+
 ### _For Besu:_
 
 ```bash
@@ -185,9 +206,9 @@ helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --set controller.ingressClassResource.name="network-nginx" \
     --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
-    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../ingress/ingress-rules-besu.yml
@@ -220,30 +241,15 @@ helm install quorum-network-ingress ingress-nginx/ingress-nginx \
     --set controller.ingressClassResource.name="network-nginx" \
     --set controller.ingressClassResource.controllerValue="k8s.io/network-ingress-nginx" \
     --set controller.replicaCount=1 \
-    --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux \
-    --set controller.admissionWebhooks.patch.nodeSelector."beta\.kubernetes\.io/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux \
+    --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
     --set controller.service.externalTrafficPolicy=Local
 
 kubectl apply -f ../ingress/ingress-rules-goquorum.yml
 ```
 
 ### Once deployed, services are available as follows on the IP/ of the ingress controllers:
-
-Monitoring (if deployed)
-
-```bash
-# For Besu's grafana address:
-http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
-
-# For GoQuorum's grafana address:
-http://<INGRESS_IP>/d/a1lVy7ycin9Yv/goquorum-overview?orgId=1&refresh=10s
-```
-
-Quorum Explorer (if deployed)
-```bash
-http://<INGRESS_IP>/explorer
-```
 
 API Calls to either client
 
