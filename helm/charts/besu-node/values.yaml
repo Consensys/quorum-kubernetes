@@ -42,6 +42,7 @@ volumePermissionsFix:
 
 node:
   besu:
+    envBesuOpts: ""
     resources:
       cpuLimit: 0.7
       cpuRequest: 0.5

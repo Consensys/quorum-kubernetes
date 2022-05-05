@@ -210,6 +210,10 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
+{{- if .Values.node.besu.envBesuOpts }}
+          - name: BESU_OPTS
+            value: "{{ .Values.node.besu.envBesuOpts }}"
+{{- end }}    
 {{- if .Values.quorumFlags.usesBootnodes }}
           - name: BESU_BOOTNODES
             valueFrom:
