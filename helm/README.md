@@ -144,9 +144,15 @@ helm install blockscout ./charts/blockscout --namespace quorum --values ./values
 
 #### Quorum Explorer
 
-You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Quorum Explorer is **not** recommended for use in production and is intended for demonstration/dev purposes only. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
+You may optionally deploy our lightweight Quorum Explorer, which is compatible for both Besu and GoQuorum. The Explorer can give an overview over the whole network, such as querying each node on the network for block information, voting or removing validators from the network, demonstrating a SimpleStorage smart contract with privacy enabled, and sending transactions between wallets in one interface.
 
-**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer-besu.yaml` or `values/explorer-goquorum.yaml` to see some examples.
+**Note:** It will be necessary to update the `quorum-explorer-config` configmap after deployment (if you do not choose to modify the `explorer-besu.yaml` or `explorer-goquorum.yaml` files before deploying) to provide the application endpoints to the nodes on the network. You may choose to either use internal k8s DNS or through ingress (your preference and needs). Please see the `values/explorer-besu.yaml` or `values/explorer-goquorum.yaml` to see some examples.
+
+**Going into Production**
+
+If you would like to use the Quorum Explorer in a production environment, it is highly recommended to enable OAuth or, at the minimum, local username and password authenticaiton which is natively supported by the Explorer. The `explorerEnvConfig` section of the `explorer-besu.yaml` and `explorer-goquorum.yaml` files contain the variables that you may change. By default `DISABE_AUTH` is set to `true`, which means authentication is disabled. Change this to `false` if you would like to enable authentication. If this is set to `false`, you must also provide at least one authentication OAuth method by filling the variables below (supports all of those listed in the file).
+
+You may find out more about the variables [here](https://github.com/ConsenSys/quorum-explorer#going-into-production).
 
 ```
 To deploy for Besu:

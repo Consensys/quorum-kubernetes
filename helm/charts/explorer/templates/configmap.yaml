@@ -16,3 +16,4 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   config.json: {{ .Values.explorerConfig | toJson }}
+  .env.production: {{ .Values.explorerEnvConfig | toJson }}

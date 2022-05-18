@@ -66,6 +66,9 @@ spec:
           - name: config-volume
             mountPath: /app/config.json
             subPath: config.json
+          - name: config-volume
+            mountPath: /app/.env.production
+            subPath: .env.production
       volumes:
       - name: config-volume
         configMap:
