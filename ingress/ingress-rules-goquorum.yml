@@ -28,11 +28,11 @@ spec:
   rules:
   - http:
       paths:
-      - path: /rpcnode
+      - path: /rpc
         pathType: Prefix
         backend:
           service:
-            name: goquorum-node-rpcnode-1
+            name: goquorum-node-rpc-1
             port:
               number: 8545
       - path: /validator-1
