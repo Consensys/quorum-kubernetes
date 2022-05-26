@@ -29,11 +29,11 @@ spec:
   rules:
   - http:
       paths:
-      - path: /rpcnode
+      - path: /rpc
         pathType: Prefix
         backend:
           service:
-            name: besu-node-rpcnode-1
+            name: besu-node-rpc-1
             port:
               number: 8545
       - path: /validator-1
