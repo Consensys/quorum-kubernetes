@@ -1,7 +1,7 @@
 image:
   explorer:
     repository: consensys/quorum-explorer
-    tag: d9812be
+    tag: e175e0b
     pullPolicy: Always #IfNotPresent
 
 resources:
