@@ -18,9 +18,10 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite (?i)/tessera-[0-9]?/(.*) /$1 break;
+      rewrite (?i)/tessera-[0-9]?$ / break;    
       rewrite (?i)/kibana/(.*) /$1 break;
       rewrite (?i)/kibana$ / break;
-      rewrite (?i)/kibana$ /$1 break; 
     nginx.ingress.kubernetes.io/rewrite-target: /
     #nginx.ingress.kubernetes.io/whitelist-source-range: w.x.y.z/32,a.b.c.d/32
 
