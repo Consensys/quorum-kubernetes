@@ -1,6 +1,6 @@
 # Helm Charts
 
-Each helm chart that you can use has the following keys and you need to set them. The `cluster.provider` is used as a key for the various cloud features enabled. Also you need only specify one cloud provider, **not** both if deploying to cloud. As at writing this doc, AWS and Azure are fully supported.
+Each helm chart that you can use has the following keys and you need to set them. The `cluster.provider` is used as a key for the various cloud features enabled. Also you only need to specify one cloud provider, **not** both if deploying to cloud. As of writing this doc, AWS and Azure are fully supported.
 
 ```bash
 # dict with what features and the env you're deploying to
@@ -93,7 +93,7 @@ helm install monitoring prometheus-community/kube-prometheus-stack --version 34.
 kubectl --namespace quorum apply -f  ./values/monitoring/
 ```
 
-Assitionally, you will need to deploy a separate ingress which will serve external facing services like the explorer and monitoring endpoints
+Additionally, you will need to deploy a separate ingress which will serve external facing services like the explorer and monitoring endpoints
 
 ```bash
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -150,7 +150,7 @@ You may optionally deploy our lightweight Quorum Explorer, which is compatible f
 
 **Going into Production**
 
-If you would like to use the Quorum Explorer in a production environment, it is highly recommended to enable OAuth or, at the minimum, local username and password authenticaiton which is natively supported by the Explorer. The `explorerEnvConfig` section of the `explorer-besu.yaml` and `explorer-goquorum.yaml` files contain the variables that you may change. By default `DISABE_AUTH` is set to `true`, which means authentication is disabled. Change this to `false` if you would like to enable authentication. If this is set to `false`, you must also provide at least one authentication OAuth method by filling the variables below (supports all of those listed in the file).
+If you would like to use the Quorum Explorer in a production environment, it is highly recommended to enable OAuth or, at the minimum, local username and password authentication which is natively supported by the Explorer. The `explorerEnvConfig` section of the `explorer-besu.yaml` and `explorer-goquorum.yaml` files contain the variables that you may change. By default `DISABE_AUTH` is set to `true`, which means authentication is disabled. Change this to `false` if you would like to enable authentication. If this is set to `false`, you must also provide at least one authentication OAuth method by filling the variables below (supports all of those listed in the file).
 
 You may find out more about the variables [here](https://github.com/ConsenSys/quorum-explorer#going-into-production).
 
