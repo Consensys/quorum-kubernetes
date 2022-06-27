@@ -114,7 +114,7 @@ kubectl apply -f ../ingress/ingress-rules-monitoring.yml
 Once complete, view the IP address listed under the `Ingress` section if you're using the Kubernetes Dashboard
 or on the command line `kubectl -n quorum get services quorum-monitoring-ingress-ingress-nginx-controller`.
 
-You can then access Grafana on 
+You can then access Grafana on: 
 ```bash
 # For Besu's grafana address:
 http://<INGRESS_IP>/d/XE4V0WGZz/besu-overview?orgId=1&refresh=10s
@@ -140,6 +140,11 @@ helm install blockscout ./charts/blockscout --namespace quorum --values ./values
 
 # For Besu
 helm install blockscout ./charts/blockscout --namespace quorum --values ./values/blockscout-besu.yml
+```
+If you've deployed the Ingress from the previous step, you can access Blockscout on:
+
+```bash
+http://<INGRESS_IP>/blockscout
 ```
 
 #### Quorum Explorer
@@ -171,7 +176,7 @@ After modifying configmap with node details, you will need to restart the pod to
 kubectl delete pod <quorum-explorer-pod-name>
 ```
 
-If you've deployed the Ingress from the previous step, you can access the Quorum Explorer on
+If you've deployed the Ingress from the previous step, you can access the Quorum Explorer on:
 
 ```bash
 http://<INGRESS_IP>/explorer

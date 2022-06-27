@@ -27,6 +27,13 @@ spec:
   rules:
   - http:
       paths:
+      - path: /blockscout
+        pathType: Prefix
+        backend:
+          service:
+            name: blockscout
+            port:
+              number: 4000
       - path: /explorer
         pathType: Prefix
         backend:
