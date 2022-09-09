@@ -1,12 +1,12 @@
 FROM debian:stable
 
-ARG QGT_VERSION=0.1.7
+ARG QGT_VERSION=0.2.3
 
 RUN mkdir -p /root/.kube/ && \
     echo "fd97de6b91a121428112c52e5fe04a15" > /etc/machine-id && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    pkg-config ca-certificates apt-transport-https gnupg gnupg2 lsb-release software-properties-common jq libc6-dev make curl wget vim unzip libsodium-dev && \
+    pkg-config ca-certificates apt-transport-https gnupg gnupg2 lsb-release software-properties-common jq libc6-dev make curl wget vim dnsutils unzip libsodium-dev && \
     curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g npm@latest
