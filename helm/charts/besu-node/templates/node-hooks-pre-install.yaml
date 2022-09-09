@@ -12,15 +12,23 @@ metadata:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
+    app.kubernetes.io/name: pre-install-hook
+    app.kubernetes.io/component: job
+    app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
 spec:
   backoffLimit: 1
   completions: 1
   template:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     metadata:
-      labels:
+      labels:  
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
+        app.kubernetes.io/name: pre-install-hook
+        app.kubernetes.io/instance: {{ .Release.Name }} 
     spec:
 {{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}

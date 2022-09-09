@@ -7,16 +7,12 @@ metadata:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
-    app: {{ template "besu-node.fullname" . }}
-    chart: {{ template "besu-node.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    component: {{ .Release.Name }}
-    app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
-    helm.sh/chart: {{ include "besu-node.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: besu-statefulset
+    app.kubernetes.io/component: besu
+    app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -25,11 +21,12 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: {{ template "besu-node.fullname" . }}
-      release: {{ .Release.Name }}
-      component: {{ .Release.Name }}
-      app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: besu-statefulset
+      app.kubernetes.io/component: besu
+      app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+      app.kubernetes.io/namespace: {{ .Release.Namespace }}
+      app.kubernetes.io/release: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: helm
   serviceName: {{ include "besu-node.fullname" . }}
   volumeClaimTemplates:
   - metadata:
@@ -46,12 +43,12 @@ spec:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}        
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
-        app: {{ template "besu-node.fullname" . }}
-        release: {{ .Release.Name }}
-        component: {{ .Release.Name }}
-        app.kubernetes.io/name: {{ include "besu-node.fullname" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: {{ .Release.Name }}
+        app.kubernetes.io/name: besu-statefulset
+        app.kubernetes.io/component: besu
+        app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+        app.kubernetes.io/namespace: {{ .Release.Namespace }}
+        app.kubernetes.io/release: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: helm
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}

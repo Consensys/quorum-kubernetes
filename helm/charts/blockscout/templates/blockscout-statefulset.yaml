@@ -18,6 +18,7 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "list"]
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -39,16 +40,12 @@ kind: StatefulSet
 metadata:
   name: {{ template "blockscout.fullname" . }}
   labels:
-    app: {{ template "blockscout.fullname" . }}
-    chart: {{ template "blockscout.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    component: {{ .Release.Name }}
-    app.kubernetes.io/name: {{ include "blockscout.fullname" . }}
-    helm.sh/chart: {{ include "blockscout.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: blockscout
+    app.kubernetes.io/component: statefulset
+    app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -64,11 +61,12 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "blockscout.fullname" . }}
-        release: {{ .Release.Name }}
-        component: {{ .Release.Name }}
-        app.kubernetes.io/name: {{ include "blockscout.fullname" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: blockscout
+        app.kubernetes.io/component: statefulset
+        app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
+        app.kubernetes.io/namespace: {{ .Release.Namespace }}
+        app.kubernetes.io/release: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: helm
     spec:
       serviceAccountName: {{ include "blockscout.fullname" . }}-sa
       containers:

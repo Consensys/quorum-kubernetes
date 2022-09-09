@@ -3,16 +3,11 @@ kind: Service
 metadata:
   name: {{ include "quorum-explorer.fullname" . }}
   labels:
-    app: {{ template "quorum-explorer.fullname" . }}
-    chart: {{ template "quorum-explorer.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "quorum-explorer.fullname" . }}
-    helm.sh/chart: {{ include "quorum-explorer.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: quorum-explorer-service
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   ports:
@@ -20,6 +15,7 @@ spec:
       protocol: TCP
       targetPort: 25000
   selector:
-    app: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
   sessionAffinity: None
   type: NodePort

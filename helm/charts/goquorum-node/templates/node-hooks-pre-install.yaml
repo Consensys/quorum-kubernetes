@@ -4,17 +4,21 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-pre-install-hook
-  labels:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
-{{- end }}
-    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}-pre-install-hook
-    app.kubernetes.io/instance: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": "hook-succeeded"
+  labels:
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
+    app.kubernetes.io/name: pre-install-hook
+    app.kubernetes.io/component: job
+    app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm    
 spec:
   backoffLimit: 1
   completions: 1
@@ -24,8 +28,8 @@ spec:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end}}      
-        app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}-pre-install-hook
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/name: pre-install-hook
+        app.kubernetes.io/release: {{ .Release.Name }}
     spec:
 {{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}

@@ -3,17 +3,21 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "besu-node.fullname" . }}-pre-delete-hook
-  labels:
-{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
-{{- end }}
-    app.kubernetes.io/name: {{ include "besu-node.fullname" . }}-pre-install-hook
-    app.kubernetes.io/instance: {{ .Release.Name }}  
   namespace: {{ .Release.Namespace }}
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-weight: "0"
     helm.sh/hook-delete-policy: "hook-succeeded"
+  labels:
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
+    aadpodidbinding: "{{ .Values.azure.identityName }}"
+{{- end }}
+    app.kubernetes.io/name: pre-delete-hook
+    app.kubernetes.io/component: job
+    app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
 spec:
   backoffLimit: 3
   completions: 1
@@ -23,7 +27,7 @@ spec:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end}}      
-        app.kubernetes.io/name: {{ include "besu-node.fullname" . }}-pre-install-hook
+        app.kubernetes.io/name: pre-delete-hook
         app.kubernetes.io/instance: {{ .Release.Name }} 
     spec:
 {{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}

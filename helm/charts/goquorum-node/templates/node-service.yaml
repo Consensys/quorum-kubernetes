@@ -5,25 +5,19 @@ kind: Service
 metadata:
   name: {{ include "goquorum-node.fullname" . }}
   labels:
-    app: {{ template "goquorum-node.fullname" . }}
-    chart: {{ template "goquorum-node.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    helm.sh/chart: {{ include "goquorum-node.chart" . }}
     app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm    
   namespace: {{ .Release.Namespace }}
 spec:
   type: ClusterIP
   selector:
-    app: {{ template "goquorum-node.fullname" . }}
-    release: {{ .Release.Name }}
-    component: {{ .Release.Name }}
-    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ include "teku.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
   ports:
     - name: json-rpc
       port: {{ .Values.node.goquorum.rpc.port }}

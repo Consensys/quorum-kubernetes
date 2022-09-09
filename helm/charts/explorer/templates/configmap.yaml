@@ -4,15 +4,11 @@ kind: ConfigMap
 metadata:
   name: {{ include "quorum-explorer.fullname" . }}-config
   labels:
-    app: {{ template "quorum-explorer.name" . }}
-    chart: {{ template "quorum-explorer.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "quorum-explorer.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "quorum-explorer.chart" . }}
+    app.kubernetes.io/name: quorum-explorer-cleanup
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 data:
   config.json: {{ .Values.explorerConfig | toJson }}

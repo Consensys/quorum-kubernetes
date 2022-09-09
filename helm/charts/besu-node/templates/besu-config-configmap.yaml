@@ -4,15 +4,12 @@ kind: ConfigMap
 metadata:
   name: {{ include "besu-node.fullname" . }}-besu-config
   labels:
-    app: {{ template "besu-node.name" . }}
-    chart: {{ template "besu-node.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "besu-node.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "besu-node.chart" . }}
+    app.kubernetes.io/name: besu-config
+    app.kubernetes.io/component: besu
+    app.kubernetes.io/part-of: {{ include "besu-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 data:
   config.toml: |-
