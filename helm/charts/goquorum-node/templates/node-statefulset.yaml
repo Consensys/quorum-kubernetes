@@ -8,16 +8,12 @@ metadata:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
     aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}  
-    app: {{ template "goquorum-node.name" . }}
-    chart: {{ template "goquorum-node.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    component: {{ .Release.Name }}
-    app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-    helm.sh/chart: {{ include "goquorum-node.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: goquorum-statefulset
+    app.kubernetes.io/component: goquorum
+    app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -26,11 +22,12 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: {{ template "goquorum-node.fullname" . }}
-      release: {{ .Release.Name }}
-      component: {{ .Release.Name }}
-      app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: goquorum-statefulset
+      app.kubernetes.io/component: goquorum
+      app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+      app.kubernetes.io/namespace: {{ .Release.Namespace }}
+      app.kubernetes.io/release: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: helm
   serviceName: {{ include "goquorum-node.fullname" . }}
   volumeClaimTemplates:
   - metadata:
@@ -47,12 +44,12 @@ spec:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
         aadpodidbinding: "{{ .Values.azure.identityName }}"
 {{- end }}
-        app: {{ include "goquorum-node.fullname" . }}
-        release: {{ .Release.Name }}
-        component: {{ .Release.Name }}
-        app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        app.kubernetes.io/component: {{ .Release.Name }}
+        app.kubernetes.io/name: goquorum-statefulset
+        app.kubernetes.io/component: goquorum
+        app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+        app.kubernetes.io/namespace: {{ .Release.Namespace }}
+        app.kubernetes.io/release: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: helm
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.node.goquorum.metrics.pprofport | quote}}

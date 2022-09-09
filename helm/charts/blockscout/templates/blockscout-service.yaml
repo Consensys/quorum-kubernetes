@@ -4,24 +4,18 @@ kind: Service
 metadata:
   name: {{ include "blockscout.fullname" . }}
   labels:
-    app: {{ template "blockscout.fullname" . }}
-    chart: {{ template "blockscout.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "blockscout.fullname" . }}
-    helm.sh/chart: {{ include "blockscout.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: blockscout
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   type: ClusterIP
   selector:
-    app: {{ template "blockscout.fullname" . }}
-    release: {{ .Release.Name }}
-    component: {{ .Release.Name }}
-    app.kubernetes.io/name: {{ include "blockscout.fullname" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
   ports:
     - name: http
       port: 4000

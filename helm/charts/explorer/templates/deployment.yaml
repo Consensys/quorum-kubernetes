@@ -3,28 +3,31 @@ kind: Deployment
 metadata:
   name: {{ include "quorum-explorer.fullname" . }}
   labels:
-    app: {{ template "quorum-explorer.fullname" . }}
-    chart: {{ template "quorum-explorer.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    namespace: {{ .Release.Namespace }}
-    app.kubernetes.io/name: {{ include "quorum-explorer.fullname" . }}
-    helm.sh/chart: {{ include "quorum-explorer.chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: quorum-explorer-deployment
+    app.kubernetes.io/component: deployment
+    app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+    app.kubernetes.io/namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app.kubernetes.io/name: quorum-explorer-deployment
+      app.kubernetes.io/component: deployment
+      app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+      app.kubernetes.io/namespace: {{ .Release.Namespace }}
+      app.kubernetes.io/managed-by: helm
   strategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app.kubernetes.io/name: quorum-explorer-deployment
+        app.kubernetes.io/component: deployment
+        app.kubernetes.io/part-of: {{ include "quorum-explorer.fullname" . }}
+        app.kubernetes.io/namespace: {{ .Release.Namespace }}
+        app.kubernetes.io/managed-by: helm
     spec:
       containers:
         - image: {{ .Values.image.explorer.repository }}:{{ .Values.image.explorer.tag }}
