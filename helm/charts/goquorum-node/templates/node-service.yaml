@@ -15,7 +15,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/part-of: {{ include "teku.fullname" . }}
+    app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
     app.kubernetes.io/namespace: {{ .Release.Namespace }}
     app.kubernetes.io/release: {{ .Release.Name }}
   ports:
