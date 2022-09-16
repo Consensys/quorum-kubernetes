@@ -61,12 +61,11 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: blockscout
-        app.kubernetes.io/component: statefulset
-        app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
-        app.kubernetes.io/namespace: {{ .Release.Namespace }}
-        app.kubernetes.io/release: {{ .Release.Name }}
-        app.kubernetes.io/managed-by: helm
+        app: {{ template "blockscout.fullname" . }}
+        release: {{ .Release.Name }}
+        component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "blockscout.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "blockscout.fullname" . }}-sa
       containers:
