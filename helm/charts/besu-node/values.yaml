@@ -118,7 +118,7 @@ node:
         enabled: false
         address: "0x0000000000000000000000000000000000009999"
       accountsContract:
-        enabled: true
+        enabled: false
         address: "0x0000000000000000000000000000000000008888"  
 
   tessera:
