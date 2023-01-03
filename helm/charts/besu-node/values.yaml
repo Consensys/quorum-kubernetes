@@ -106,7 +106,7 @@ node:
       pubkeyFile: "tm.pub"
       onchainGroupsEnabled: false
     permissions:
-      enabled: true
+      enabled: false
       filePath: ""
       nodes:
         enabled: false
