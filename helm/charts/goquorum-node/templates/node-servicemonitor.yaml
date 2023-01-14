@@ -20,8 +20,9 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "goquorum-node.fullname" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: {{ .Release.Name }}
+      app.kubernetes.io/part-of: {{ include "goquorum-node.fullname" . }}
+      app.kubernetes.io/namespace: {{ .Release.Namespace }}
+      app.kubernetes.io/release: {{ .Release.Name }}
   endpoints:
   - port: metrics
     interval: 15s
