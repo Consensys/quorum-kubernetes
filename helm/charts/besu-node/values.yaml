@@ -72,6 +72,8 @@ node:
       api: '["DEBUG","ETH", "ADMIN", "WEB3", "IBFT", "NET", "TRACE", "EEA", "PRIV", "QBFT", "PERM", "TXPOOL"]'
       corsOrigins: '["all"]'
       authenticationEnabled: false
+      # Number of allowed active RPC connections for Besu node
+      maxActiveConnections: 80
     ws:
       enabled: false
       host: "0.0.0.0"
