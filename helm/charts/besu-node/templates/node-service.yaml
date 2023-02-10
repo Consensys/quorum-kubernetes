@@ -35,7 +35,7 @@ spec:
       targetPort: rlpx
       protocol: TCP
     - name: discovery
-      port: {{ .Values.node.besu.p2p.port }}
+      port: {{ .Values.node.besu.p2p.discoveryPort }}
       targetPort: discovery
       protocol: UDP
     - name: metrics
