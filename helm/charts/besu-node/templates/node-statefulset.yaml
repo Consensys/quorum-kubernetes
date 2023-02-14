@@ -257,7 +257,7 @@ spec:
             containerPort: {{ .Values.node.besu.p2p.port }}
             protocol: TCP
           - name: discovery
-            containerPort: {{ .Values.node.besu.p2p.port }}
+            containerPort: {{ .Values.node.besu.p2p.discoveryPort }}
             protocol: UDP
           - name: metrics
             containerPort: {{ .Values.node.besu.metrics.port }}
