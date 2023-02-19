@@ -49,17 +49,9 @@ aws sts get-caller-identity
 aws eks --region AWS_REGION update-kubeconfig --name CLUSTER_NAME
 ```
 
-4. Provision EBS CSI Driver
+4. Provision EFS CSI Driver (optional)
 
-While it is possible to use the in-tree `aws-ebs` driver natively supported by Kubernetes, it is no longer being updated and does not support newer EBS features such as the cheaper and better gp3 volumes [see here](https://stackoverflow.com/questions/68359043/whats-the-difference-between-ebs-csi-aws-com-vs-kubernetes-io-aws-ebs-for-provi).
-
-The `cluster.yml` file that is included in this folder will automatically deploy the cluster with the EBS and EFS IAM policies, but you still need to install the EBS CSI drivers. This can be done through the [AWS Management Console](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html#adding-ebs-csi-eks-add-on) for simplicity or via a CLI command as below
-
-```bash
-eksctl create iamserviceaccount --name ebs-csi-controller-sa --namespace kube-system --cluster CLUSTER_NAME --region AWS_REGION --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy --approve --role-only --role-name AmazonEKS_EBS_CSI_DriverRole
-
-eksctl create addon --name aws-ebs-csi-driver --cluster CLUSTER_NAME --region AWS_REGION --service-account-role-arn arn:aws:iam::AWS_ACCOUNT:role/AmazonEKS_EBS_CSI_DriverRole --force
-```
+The `cluster.yml` file that is included in this folder uses the EBS drivers but also deploys the EFS IAM policies ie you still need to install the EFS CSI drivers. This can be done following the [AWS Docs ](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html)
 
 5. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
 

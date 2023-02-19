@@ -58,10 +58,24 @@ iam:
   withOIDC: true
   serviceAccounts:
     - metadata:
-        name: "quorum-ebs-efs-csi-drivers"
+        name: quorum-ebs-efs-csi-drivers
+        namespace: kube-system
       wellKnownPolicies:
         ebsCSIController: true
         efsCSIController: true
+      roleName: quorum-ebs-efs-csi-drivers
+    - metadata:
+        name: ebs-csi-controller-sa
+        namespace: kube-system
+      wellKnownPolicies:
+        ebsCSIController: true
+      roleName: quorum-ebs-csi-drivers
+    - metadata:
+        name: efs-csi-controller-sa
+        namespace: kube-system
+      wellKnownPolicies:
+        efsCSIController: true
+      roleName: quorum-efs-csi-drivers
 
 addons:
   - name: vpc-cni
@@ -71,4 +85,6 @@ addons:
   - name: coredns
     version: latest
   - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
     version: latest
