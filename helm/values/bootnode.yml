@@ -40,4 +40,6 @@ node:
       memRequest: "1G"
     account:
       password: 'password'
+    customLabels:
+      nodeType: bootnode
 
