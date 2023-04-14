@@ -34,6 +34,11 @@ storage:
   pvcSizeLimit: "20Gi"
   # NOTE: when you set this to Retain, the volume WILL persist after the chart is delete and you need to manually delete it
   reclaimPolicy: "Delete" # choose from: Delete | Retain 
+  aws:
+    provisioner: kubernetes.io/aws-ebs
+    parameters:
+      type: gp3
+      fsType: ext4
 
 # fixes permissions of volumes becuase besu runs as user `besu` and volumes prefer `root`
 volumePermissionsFix:
@@ -58,7 +63,7 @@ node:
     customLabels: {}
     account:
       password: 'password'
-      passwordPath: "/keys/accountPassword"    
+      passwordPath: "/keys/accountPassword"
     p2p:
       enabled: true
       host: "0.0.0.0"
