@@ -26,11 +26,29 @@ pipeline {
         timeout(activity: true, time: 10)
     }
     stages {
+        stage('Check Helm Changes') {
+            steps {
+                script {
+                    def charts = sh(returnStdout: true, script: "ls -d ${env.HELM_CHART_REPO}/*/").trim().split("\n")
+                    def newCharts = ""
+                        charts.eachWithIndex { chart, i ->
+                            if (i == 0) {
+                                newCharts = "'$chart':true"
+                            }
+                            else {
+                                newCharts = "$newCharts, '$chart':true"
+                            }
+                        }
+                    echo "Charts configMap created: [${newCharts}]"
+                    env.charts_repos = "[$newCharts]"
+                }
+            }
+        }
         stage('Build Helm chart dependencies') {
             steps {
                 script {
-                    def helmCharts = evaluate("helm/charts")
-                    helmCharts.each { helm ->
+                    def helmCharts = evaluate(env.charts_repos)
+                    helmCharts.each { helm, status ->
                         sh "helm dependency build $helm"
                     }
                 }
@@ -39,8 +57,8 @@ pipeline {
         stage('Publish Helm Chart') {
             steps {
                 script {
-                    def helmCharts = evaluate("helm/charts")
-                    helmCharts.each { helm ->
+                    def helmCharts = evaluate(env.charts_repos)
+                    helmCharts.each { helm, status ->
                         def helmVersion = sh(returnStdout: true, script: "yq '.version' $helm/Chart.yaml").trim()
                         helmPublisher(helm, helmVersion)
                         renderWidget("Published Corda helm chart $helm with version: $helmVersion")
