@@ -46,7 +46,7 @@
     "apiVersionRoleAssignments": "2018-09-01-preview",
     "apiVersionKeyVault": "2018-02-14",
     "apiVersionLogAnalytics": "2020-03-01-preview",
-    "kubernetesVersion": "1.24.0",
+    "kubernetesVersion": "1.26.6",
     "uniqueStr": "[toLower(substring(uniqueString(resourceGroup().id, deployment().name), 0, 8))]",
     "namePrefix": "[concat(parameters('bcClient'), '-', parameters('env'), '-', variables('uniqueStr') )]",
     "vnetName": "[concat(variables('namePrefix'), '-vnet')]",
