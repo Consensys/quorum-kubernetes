@@ -11,7 +11,7 @@ metadata:
     helm.sh/hook-delete-policy: "hook-succeeded"
   labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
+    azure.workload.identity/use: "true"
 {{- end }}
     app.kubernetes.io/name: pre-delete-hook
     app.kubernetes.io/component: job
@@ -26,7 +26,7 @@ spec:
     metadata:
       labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-        aadpodidbinding: "{{ .Values.azure.identityName }}"
+        azure.workload.identity/use: "true"
 {{- end}}      
         app.kubernetes.io/name: pre-delete-hook
         app.kubernetes.io/release: {{ .Release.Name }}
@@ -34,7 +34,7 @@ spec:
 {{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
-      serviceAccountName: {{ include "goquorum-node.fullname" . }}-hooks-sa
+      serviceAccountName: {{ .Values.azure.serviceAccountName}}
 {{- end }}    
       restartPolicy: "OnFailure"
       containers:

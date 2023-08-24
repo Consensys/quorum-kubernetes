@@ -14,8 +14,7 @@ aws:
   region: ap-southeast-2
 
 azure:
-  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
-  identityName: quorum-pod-identity
+  serviceAccountName: quorum
   # the clientId of the user assigned managed identity created in the template
   identityClientId: azure-clientId
   keyvaultName: azure-keyvault

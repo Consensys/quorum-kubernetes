@@ -13,6 +13,7 @@ AKS_CLUSTER_NAME=${2:-cluster}
 AKS_MANAGED_IDENTITY=${3:-identity}
 # quourum
 AKS_NAMESPACE=${4:-quorum}
+SA_NAME=${5:-quorum}
 
 echo "az get-credentials ..."
 # if running this on a VM/Function/etc use a managed identity
@@ -20,19 +21,58 @@ echo "az get-credentials ..."
 # if running locally
 az login
 
-# The pod identity cant be done via an ARM template and can only be done via CLI, hence
-# https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity
-echo "Update the cluster to use pod identity ... "
-az aks update --name "$AKS_CLUSTER_NAME"  --resource-group "$AKS_RESOURCE_GROUP" --enable-pod-identity
+# https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer
+echo "Update the cluster to use oidc issuer and workload identity ... "
+az aks update -g myResourceGroup -n myAKSCluster --enable-oidc-issuer --enable-workload-identity
 
 echo "Provisioning AAD pod-identity... "
 AKS_MANAGED_IDENTITY_RESOURCE_ID=$(az identity show --name "$AKS_MANAGED_IDENTITY"  --resource-group "$AKS_RESOURCE_GROUP" | jq -r '.id')
-az aks pod-identity add \
-    --resource-group "$AKS_RESOURCE_GROUP" \
-    --cluster-name "$AKS_CLUSTER_NAME" \
-    --identity-resource-id "$AKS_MANAGED_IDENTITY_RESOURCE_ID" \
-    --namespace "$AKS_NAMESPACE" \
-    --name quorum-pod-identity >/dev/null
+AKS_OIDC_ISSUER=$(az aks show --name "$AKS_MANAGED_IDENTITY" --resource-group "$AKS_RESOURCE_GROUP"     --query "oidcIssuerProfile.issuerUrl" -otsv)
+
+# https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: "${AKS_MANAGED_IDENTITY_RESOURCE_ID}"
+  name: "${SA_NAME}"
+  namespace: "${AKS_NAMESPACE}"
+EOF
+
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: "${AKS_NAMESPACE}"
+  name: "${SA_NAME}"
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["create", "get", "list", "update", "delete", "patch"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+EOF  
+
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "${SA_NAME}"
+  namespace: "${AKS_NAMESPACE}"
+subjects:
+- kind: ServiceAccount
+  name: "${SA_NAME}"
+  namespace: "${AKS_NAMESPACE}"
+roleRef:
+  kind: Role
+  name: "${SA_NAME}"
+  apiGroup: rbac.authorization.k8s.io
+EOF   
+
+az identity federated-credential create --name aks-federated-credential --identity-name "${AKS_MANAGED_IDENTITY}" --resource-group "${RESOURCE_GROUP}" --issuer "${AKS_OIDC_ISSUER}" --subject system:serviceaccount:"${AKS_NAMESPACE}":"${SA_NAME}" --audience api://AzureADTokenExchange
+
 
 
 echo "Provisioning CSI drivers... "
