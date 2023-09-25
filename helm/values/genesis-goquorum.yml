@@ -7,13 +7,13 @@ cluster:
   cloudNativeServices: false 
   
 aws:
-  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
-  serviceAccountName: quorum-node-secrets-sa
+  # the aws cli commands uses the name 'quorum-sa' so only change this if you altered the name
+  serviceAccountName: quorum-sa
   # the region you are deploying to
   region: ap-southeast-2
 
 azure:
-  serviceAccountName: quorum
+  serviceAccountName: quorum-sa
   # the clientId of the user assigned managed identity created in the template
   identityClientId: azure-clientId
   keyvaultName: azure-keyvault

@@ -9,8 +9,8 @@ cluster:
   cloudNativeServices: false # set to true to use Cloud Native Services (SecretsManager and IAM for AWS; KeyVault & Managed Identities for Azure)
 
 aws:
-  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
-  serviceAccountName: quorum-node-secrets-sa
+  # the aws cli commands uses the name 'quorum-sa' so only change this if you altered the name
+  serviceAccountName: quorum-sa
   # the region you are deploying to
   region: ap-southeast-2
 
