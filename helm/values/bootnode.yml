@@ -12,13 +12,13 @@ cluster:
   reclaimPolicy: Delete # set to either Retain or Delete; note that PVCs and PVs will still exist after a 'helm delete'. Setting to Retain will keep volumes even if PVCs/PVs are deleted in kubernetes. Setting to Delete will remove volumes from EC2 EBS when PVC is deleted
 
 aws:
-  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
-  serviceAccountName: quorum-node-secrets-sa
+  # the aws cli commands uses the name 'quorum-sa' so only change this if you altered the name
+  serviceAccountName: quorum-sa
   # the region you are deploying to
   region: ap-southeast-2
 
 azure:
-  serviceAccountName: quorum
+  serviceAccountName: quorum-sa
   # the clientId of the user assigned managed identity created in the template
   identityClientId: azure-clientId
   keyvaultName: azure-keyvault

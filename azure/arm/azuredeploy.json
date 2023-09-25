@@ -41,7 +41,7 @@
   "variables": {
     "apiVersionVirtualNetworks": "2020-05-01",
     "apiVersionNetworkSecurityGroups": "2018-11-01",
-    "apiVersionManangedClusters": "2020-09-01",
+    "apiVersionManangedClusters": "2023-06-01",
     "apiVersionUserManangedIdentity": "2018-11-30",
     "apiVersionRoleAssignments": "2018-09-01-preview",
     "apiVersionKeyVault": "2018-02-14",
@@ -73,9 +73,7 @@
     "monitoringMetricsPublisherRoleId": "3913510d-42f4-4e42-8a64-420c390055eb",
     "readerRoleId": "acdd72a7-3385-48ef-bd42-f606fba81ae7",
     "aksClusterAdminRoleId": "0ab0b1a8-8aac-4efd-b8c2-3ee1fb270be8",
-    "networkContributorRoleId": "4d97b98b-1d4f-4787-a291-c67834d212e7",
-    "serviceBusReceiverRoleId": "4f6d3b9b-027b-4f4c-9142-0e5a2a2247e0",
-    "serviceBusSenderRoleId": "69a216fc-b8fb-44d8-bc22-1f3c2cd27a39"
+    "networkContributorRoleId": "4d97b98b-1d4f-4787-a291-c67834d212e7"
   },
   "resources": [
     {
@@ -225,34 +223,6 @@
     {
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "[variables('apiVersionRoleAssignments')]",
-      "name": "[guid(resourceGroup().id, deployment().name, variables('opsManagedIdentity'), '-sb-receiver-ra')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('opsManagedIdentity'))]"
-      ],
-      "properties": {
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('serviceBusReceiverRoleId'))]",
-        "principalId": "[reference(variables('opsManagedIdentity')).principalId]",
-        "scope": "[resourceGroup().id]",
-        "principalType": "ServicePrincipal"
-      }
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "[variables('apiVersionRoleAssignments')]",
-      "name": "[guid(resourceGroup().id, deployment().name, variables('opsManagedIdentity'), '-sb-sender-ra')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('opsManagedIdentity'))]"
-      ],
-      "properties": {
-        "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('serviceBusSenderRoleId'))]",
-        "principalId": "[reference(variables('opsManagedIdentity')).principalId]",
-        "scope": "[resourceGroup().id]",
-        "principalType": "ServicePrincipal"
-      }
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "[variables('apiVersionRoleAssignments')]",
       "name": "[guid(resourceGroup().id, deployment().name, variables('opsManagedIdentity'), '-aks-nc-ra')]",
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('opsManagedIdentity'))]",
@@ -360,19 +330,13 @@
         "servicePrincipalProfile": {
           "clientId": "msi"
         },
-        "podIdentityProfile": {
-          "enabled": true,
-          "userAssignedIdentities": [
-            {
-              "name": "quorum-pod-identity",
-              "namespace": "default",
-              "identity": {
-                "resourceId": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('opsManagedIdentity'))]",
-                "clientId": "[reference(variables('opsManagedIdentity')).clientId]",
-                "objectId": "[reference(variables('opsManagedIdentity')).principalId]"
-              }
-            }
-          ]
+        "oidcIssuerProfile": {
+          "enabled": true
+        },
+        "securityProfile": {
+          "workloadIdentity": {
+            "enabled": true
+          }
         },
         "networkProfile": {
           "networkPlugin": "azure",
