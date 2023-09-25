@@ -68,7 +68,7 @@ spec:
             - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: validator2
-          image: hyperledger/besu:latest
+          image: hyperledger/besu:23.7.0
           imagePullPolicy: IfNotPresent
           resources:
             requests:

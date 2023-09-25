@@ -16,8 +16,8 @@ Repeat this process for as many bootnodes as you would like to provision i.e key
 
 ```bash
 mkdir -p ./generated_config/bootnode1 ./generated_config/bootnode2
-docker run --rm --volume $PWD/generated_config/bootnode1:/opt/besu/data hyperledger/besu:latest --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
-docker run --rm --volume $PWD/generated_config/bootnode2:/opt/besu/data hyperledger/besu:latest --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
+docker run --rm --volume $PWD/generated_config/bootnode1:/opt/besu/data hyperledger/besu:23.7.0 --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
+docker run --rm --volume $PWD/generated_config/bootnode2:/opt/besu/data hyperledger/besu:23.7.0 --data-path /opt/besu/data public-key export --to /opt/besu/data/key.pub
 ```
 
 Update the secrets/bootnode-key-secret.yaml with the private keys. The private keys are put into secrets and the public keys go into a configmap that other nodes use to create the enode address

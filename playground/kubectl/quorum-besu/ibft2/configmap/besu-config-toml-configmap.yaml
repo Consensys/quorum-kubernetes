@@ -35,7 +35,6 @@ data:
     #p2p-host="0.0.0.0"
     p2p-port=30303
     max-peers=25
-
     host-allowlist=["*"]
 
     # JSON-RPC
