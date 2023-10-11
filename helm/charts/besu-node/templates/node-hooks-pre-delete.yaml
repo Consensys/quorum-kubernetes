@@ -10,7 +10,7 @@ metadata:
     helm.sh/hook-delete-policy: "hook-succeeded"
   labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
+    azure.workload.identity/use: "true"
 {{- end }}
     app.kubernetes.io/name: pre-delete-hook
     app.kubernetes.io/component: job
@@ -25,16 +25,18 @@ spec:
     metadata:
       labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-        aadpodidbinding: "{{ .Values.azure.identityName }}"
-{{- end}}      
+        azure.workload.identity/use: "true"
+{{- end}}
         app.kubernetes.io/name: pre-delete-hook
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
+      serviceAccountName: {{ .Values.azure.serviceAccountName }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
-      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
-{{- end }}    
+      serviceAccountName: {{ include "besu-node.fullname" . }}-sa
+{{- end }}
       restartPolicy: "OnFailure"
       containers:
         - name: {{ template "besu-node.fullname" . }}-node-pre-delete-hook
@@ -76,7 +78,7 @@ spec:
 
               function deleteSecret {
                 key=$1
-                kubectl delete secret ${key} --namespace {{ .Release.Namespace }} 
+                kubectl delete secret ${key} --namespace {{ .Release.Namespace }}
               }
 
 {{- end }}
@@ -86,7 +88,7 @@ spec:
                 # if there is no configmap, do nothing
                 if [ $? -ne 0 ]; then
                   echo "No tessera-peers found, nothing to do..."
-                # delete the one 
+                # delete the one
                 else
                   echo "tessera-peers found, deleting {{ template "besu-node.fullname" . }}..."
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap tessera-peers -o jsonpath='{.data.tesseraPeers}' ) > /tmp/tessera-peers.raw
@@ -100,8 +102,8 @@ spec:
                 # if there is no configmap, do nothing
                 if [ $? -ne 0 ]; then
                   echo "No peers found, nothing to do..."
-                # delete the one 
-                else    
+                # delete the one
+                else
                   echo "besu-peers found, deleting {{ template "besu-node.fullname" . }}..."
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                   cat /tmp/static-nodes.json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/static-nodes.json
@@ -118,8 +120,8 @@ spec:
                 # if there is no configmap, do nothing
                 if [ $? -ne 0 ]; then
                   echo "No bootnodes found, nothing to do..."
-                # delete the one 
-                else    
+                # delete the one
+                else
                   echo "besu-bootnodes found, deleting {{ template "besu-node.fullname" . }}..."
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-bootnodes -o jsonpath='{.data.bootnodes-json}' ) > /tmp/besu-bootnodes-json.raw
                   cat /tmp/besu-bootnodes-json.raw | jq --arg NEEDLE "{{ template "besu-node.fullname" . }}" 'del(.[] | select( . | contains($NEEDLE) ))' > /tmp/besu-bootnodes-json
@@ -152,7 +154,6 @@ spec:
 {{- end }}
 
 {{- else }}
-                  
               deleteSecret {{ template "besu-node.fullname" . }}-keys
               deleteSecret {{ template "besu-node.fullname" . }}-account
 {{- if .Values.quorumFlags.privacy }}
@@ -161,7 +162,6 @@ spec:
 
 {{- end }}
 
-{{- end }}       
+{{- end }}
 
               echo "Completed"
-

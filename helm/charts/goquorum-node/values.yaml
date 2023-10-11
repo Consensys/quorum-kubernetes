@@ -10,14 +10,13 @@ cluster:
   reclaimPolicy: Delete # set to either Retain or Delete
 
 aws:
-  # the aws cli commands uses the name 'quorum-node-secrets-sa' so only change this if you altered the name
-  serviceAccountName: quorum-node-secrets-sa
+  # the aws cli commands uses the name 'quorum-sa' so only change this if you altered the name
+  serviceAccountName: quorum-sa
   # the region you are deploying to
   region: ap-southeast-2
 
 azure:
-  # the script/bootstrap.sh uses the name 'quorum-pod-identity' so only change this if you altered the name
-  identityName: quorum-pod-identity
+  serviceAccountName: quorum-sa
   # the clientId of the user assigned managed identity created in the template
   identityClientId: azure-clientId
   keyvaultName: azure-keyvault
@@ -121,5 +120,5 @@ image:
     tag: 22.1.7
   hooks:
     repository: consensys/quorum-k8s-hooks
-    tag: qgt-0.2.3
+    tag: qgt-0.2.12
     pullPolicy: IfNotPresent

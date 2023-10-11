@@ -5,7 +5,7 @@ metadata:
   name: {{ template "besu-node.fullname" . }}
   labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
+    azure.workload.identity/use: "true"
 {{- end }}
     app.kubernetes.io/name: besu-statefulset
     app.kubernetes.io/component: besu
@@ -44,7 +44,7 @@ spec:
     metadata:
       labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}        
-        aadpodidbinding: "{{ .Values.azure.identityName }}"
+        azure.workload.identity/use: "true"
 {{- end }}
         app.kubernetes.io/name: besu-statefulset
         app.kubernetes.io/component: besu
@@ -57,6 +57,8 @@ spec:
         prometheus.io/port: {{ .Values.node.besu.metrics.port | quote}}
         prometheus.io/path: "/metrics"
     spec:
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
+      serviceAccountName: {{ .Values.azure.serviceAccountName }}
 {{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}

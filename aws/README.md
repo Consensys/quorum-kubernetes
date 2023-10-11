@@ -49,43 +49,20 @@ aws sts get-caller-identity
 aws eks --region AWS_REGION update-kubeconfig --name CLUSTER_NAME
 ```
 
-4. Provision EFS CSI Driver (optional)
-
-The `cluster.yml` file that is included in this folder uses the EBS drivers but also deploys the EFS IAM policies ie you still need to install the EFS CSI drivers. This can be done following the [AWS Docs ](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html)
-
-5. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
+4. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
 
 Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
 
-Use `quorum` (or equivalent) for `NAMESPACE` below and update `AWS_REGION` and `CLUSTER_NAME` to match your settings from step 2.
-
 ```bash
-
-helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
-helm install --namespace kube-system --create-namespace csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver
-kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml 
-
-POLICY_ARN=$(aws --region AWS_REGION --query Policy.Arn --output text iam create-policy --policy-name quorum-node-secrets-mgr-policy --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [ {
-        "Effect": "Allow",
-        "Action": ["secretsmanager:CreateSecret","secretsmanager:UpdateSecret","secretsmanager:DescribeSecret","secretsmanager:GetSecretValue","secretsmanager:PutSecretValue","secretsmanager:ReplicateSecretToRegions","secretsmanager:TagResource"],
-        "Resource": ["arn:aws:secretsmanager:AWS_REGION:AWS_ACCOUNT:secret:goquorum-node-*", "arn:aws:secretsmanager:AWS_REGION:AWS_ACCOUNT:secret:besu-node-*"]
-    } ]
-}')
-
-
-If you have deployed the above policy before, you can acquire its ARN:
-POLICY_ARN=$(aws iam list-policies --scope Local \
---query 'Policies[?PolicyName==`quorum-node-secrets-mgr-policy`].Arn' \
---output text)
-
-eksctl create iamserviceaccount --name quorum-node-secrets-sa --namespace NAMESPACE --region=AWS_REGION --cluster CLUSTER_NAME --attach-policy-arn "$POLICY_ARN" --approve --override-existing-serviceaccounts
+./scripts/bootstrap.sh  "AWS_REGION" "AWS_ACCOUNT" "CLUSTER_NAME" "AKS_NAMESPACE"
 ```
 
-| ⚠️ **Note**: The above command creates a service account called `quorum-node-secrets-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |
+| ⚠️ **Note**: The above command creates a service account called `quorum-sa`. Please use the same in the values.yml files under the `aws` map. If you would like to change the name of the service account, please remember to do it in both places |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
+5. Provision EFS CSI Driver (optional)
+
+The `cluster.yml` file that is included in this folder uses the EBS drivers but also deploys the EFS IAM policies ie you still need to install the EFS CSI drivers. This can be done following the [AWS Docs ](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html)
 
 6. Deploy the charts as per the `helm` folder readme files
 

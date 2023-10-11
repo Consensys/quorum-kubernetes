@@ -10,7 +10,7 @@ metadata:
     "helm.sh/hook-delete-policy": "hook-succeeded"
   labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-    aadpodidbinding: "{{ .Values.azure.identityName }}"
+    azure.workload.identity/use: "true"
 {{- end }}
     app.kubernetes.io/name: pre-install-hook
     app.kubernetes.io/component: job
@@ -23,17 +23,19 @@ spec:
   completions: 1
   template:
     metadata:
-      labels:  
+      labels:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
-        aadpodidbinding: "{{ .Values.azure.identityName }}"
+        azure.workload.identity/use: "true"
 {{- end }}
         app.kubernetes.io/name: pre-install-hook
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
+{{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
+      serviceAccountName: {{ .Values.azure.serviceAccountName }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
-      serviceAccountName: {{ include "besu-node.fullname" . }}-hooks-sa
+      serviceAccountName: {{ include "besu-node.fullname" . }}-sa
 {{- end }}
       restartPolicy: "OnFailure"
       containers:
@@ -53,7 +55,7 @@ spec:
                 kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o json
                 if [ $? -ne 0 ]; then
                   echo "[]" > /tmp/static-nodes.json.raw
-                else 
+                else
                   echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-peers -o jsonpath='{.data.static-nodes\.json}' ) > /tmp/static-nodes.json.raw
                 fi
                 # update the entries
@@ -89,7 +91,7 @@ spec:
                   echo "[]" > /tmp/besu-bootnodes-json.raw
                   kubectl -n {{ .Release.Namespace }} create configmap besu-bootnodes --from-file=bootnodes-json=/tmp/besu-bootnodes-json.raw --from-literal=bootnodes-string=""
                 fi
-                
+
                 echo "updating besu-bootnodes..."
                 echo $(kubectl -n {{ .Release.Namespace }} get configmap besu-bootnodes -o jsonpath='{.data.bootnodes-json}' ) > /tmp/besu-bootnodes-json.raw
                 pubkey=$(cat $PUBKEY_LOC )
@@ -152,7 +154,7 @@ spec:
               echo "Nodekey generation ..."
               FOLDER_PATH=$(quorum-genesis-tool --validators 0 --members 1 --bootnodes 0 {{ if .Values.node.besu.account.password }} --accountPassword {{ .Values.node.besu.account.password }} {{ end }} --outputPath /generated-config | tail -1 | sed -e "s/^Artifacts in folder: //")
               echo "Creating {{ template "besu-node.fullname" . }} secrets in k8s ..."
-              
+
 {{- if .Values.cluster.cloudNativeServices }}
               echo "Creating keys in vault for {{ template "besu-node.fullname" . }} ..."
               safeWriteSecret {{ template "besu-node.fullname" . }}-nodekey $FOLDER_PATH/member0/nodekey
@@ -160,9 +162,9 @@ spec:
               safeWriteSecret {{ template "besu-node.fullname" . }}-enode $FOLDER_PATH/member0/nodekey.pub
               safeWriteSecret {{ template "besu-node.fullname" . }}-address $FOLDER_PATH/member0/address
               safeWriteSecret {{ template "besu-node.fullname" . }}-accountPrivateKey $FOLDER_PATH/member0/accountPrivateKey
-              safeWriteSecret {{ template "besu-node.fullname" . }}-accountPassword $FOLDER_PATH/member0/accountPassword 
-              safeWriteSecret {{ template "besu-node.fullname" . }}-accountKeystore $FOLDER_PATH/member0/accountKeystore 
-              safeWriteSecret {{ template "besu-node.fullname" . }}-accountAddress $FOLDER_PATH/member0/accountAddress 
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountPassword $FOLDER_PATH/member0/accountPassword
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountKeystore $FOLDER_PATH/member0/accountKeystore
+              safeWriteSecret {{ template "besu-node.fullname" . }}-accountAddress $FOLDER_PATH/member0/accountAddress
 {{- else }}
               safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
 {{- end }}
@@ -173,7 +175,7 @@ spec:
               update_peers_configmap /tmp/enode
 {{- if .Values.quorumFlags.isBootnode }}
               update_bootnodes_configmap /tmp/enode
-{{- end }}              
+{{- end }}
               echo "Completed"
 
 {{- if .Values.quorumFlags.privacy }}

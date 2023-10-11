@@ -29,7 +29,7 @@ from the tutorial in there to run the key generation process.
 ```bash
 mkdir -p $PWD/ibftSetup
 # copy the `ibftConfigFile.json` file from the tutorial here and then proceed
-docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:latest operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
+docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:23.7.0 operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 mv ./ibftSetup/networkFiles/genesis.json ./ibftSetup/
 ```
@@ -64,7 +64,7 @@ minikube dashboard &
 minikube ssh
 
 # once in the terminal
-curl -X POST --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' <besu_NODE_SERVICE_HOST>:8545
+curl -X POST --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' <BESU_NODE_SERVICE_HOST>:8545
 
 # which should return:
 The result confirms that the node running the JSON-RPC service has two peers:

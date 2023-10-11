@@ -61,7 +61,7 @@ spec:
       serviceAccountName: validator1-sa
       containers:
         - name: validator1
-          image: hyperledger/besu:latest
+          image: hyperledger/besu:23.7.0
           imagePullPolicy: IfNotPresent
           resources:
             requests:
