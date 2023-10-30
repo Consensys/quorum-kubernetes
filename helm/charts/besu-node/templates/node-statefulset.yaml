@@ -59,7 +59,7 @@ spec:
     spec:
 {{- if and (eq .Values.cluster.provider "azure") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.azure.serviceAccountName }}
-{{- if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
+{{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
       serviceAccountName: {{ include "besu-node.fullname" . }}-sa
