@@ -5,7 +5,7 @@ kind: StorageClass
 metadata:
   name: {{ include "besu-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
-provisioner: kubernetes.io/azure-file
+provisioner: file.csi.azure.com # replace with "kubernetes.io/azure-file" if aks version is less than 1.21
 reclaimPolicy: {{ .Values.cluster.reclaimPolicy }}
 allowVolumeExpansion: true
 mountOptions:
