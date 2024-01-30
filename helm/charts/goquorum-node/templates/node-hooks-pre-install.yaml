@@ -67,7 +67,7 @@ spec:
               fi
             }
 
-            az login --identity --debug
+            az login --federated-token "$(cat $AZURE_FEDERATED_TOKEN_FILE)" --service-principal -u $AZURE_CLIENT_ID -t $AZURE_TENANT_ID
             az account set --subscription {{ .Values.azure.subscriptionId }}
 
 {{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
