@@ -36,7 +36,7 @@ spec:
 {{- else if and (eq .Values.cluster.provider "aws") (.Values.cluster.cloudNativeServices) }}
       serviceAccountName: {{ .Values.aws.serviceAccountName }}
 {{- else }}
-      serviceAccountName: {{ .Values.azure.serviceAccountName}}-sa
+      serviceAccountName: {{ include "besu-genesis.name" . }}-sa
 {{- end }}
       restartPolicy: "Never"
       containers:
