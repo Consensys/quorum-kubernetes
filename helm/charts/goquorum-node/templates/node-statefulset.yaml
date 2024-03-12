@@ -320,7 +320,7 @@ spec:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
-            secretProviderClass: {{ include "goquorum-node.fullname" . }}-azure-secret-provider
+            secretProviderClass: {{ include "goquorum-node.fullname" . }}-{{ .Values.cluster.provider }}-secret-provider
 {{- else }}
       - name: quorum-keys
         secret:
