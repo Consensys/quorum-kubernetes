@@ -7,7 +7,7 @@ kind: StorageClass
 metadata:
   name: {{ include "goquorum-node.fullname" . }}-storage
   namespace: {{ .Release.Namespace }}
-provisioner: kubernetes.io/azure-file
+provisioner: file.csi.azure.com # replace with "kubernetes.io/azure-file" if aks version is less than 1.21
 reclaimPolicy: "{{.Values.storage.reclaimPolicy }}"
 allowVolumeExpansion: true
 mountOptions:
