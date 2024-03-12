@@ -23,7 +23,7 @@
 Create private/public keys for the validators using the besu subcommands. The private keys are put into secrets and the public keys go into a configmap to get the bootnode enode address easily
 Repeat this process for as many validators as you would like to provision i.e keys and replicate the deployment & service
 
-Essentially you are following the [genesis tutorial](https://besu.hyperledger.org/en/latest/Tutorials/Private-Network/Create-IBFT-Network/) here. Create a folder called `ibftSetup` and copy the `ibftConfigFile.json`
+Essentially you are following the [genesis tutorial](https://besu.hyperledger.org/private-networks/tutorials/ibft/) here. Create a folder called `ibftSetup` and copy the `ibftConfigFile.json`
 from the tutorial in there to run the key generation process. 
 
 ```bash
