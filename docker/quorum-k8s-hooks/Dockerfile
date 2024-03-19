@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-ARG QGT_VERSION=0.2.12
+ARG QGT_VERSION=0.2.15
 
 RUN mkdir -p /root/.kube/ && \
     echo "fd97de6b91a121428112c52e5fe04a15" > /etc/machine-id && \
