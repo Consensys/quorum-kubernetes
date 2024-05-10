@@ -17,11 +17,12 @@ echo "az get-credentials ..."
 # az login --identity --debug
 # if running locally
 az login
+az aks get-credentials --resource-group "$AKS_RESOURCE_GROUP" --name "$AKS_CLUSTER_NAME"
 
 # https://learn.microsoft.com/en-us/azure/aks/use-oidc-issuer
 echo "Get the oidc issuer and workload identity ID from the cluster... "
 AKS_MANAGED_IDENTITY_RESOURCE_ID=$(az identity show --name "$AKS_MANAGED_IDENTITY"  --resource-group "$AKS_RESOURCE_GROUP" | jq -r '.id')
-AKS_OIDC_ISSUER=$(az aks show -n $AKS_CLUSTER_NAME -g "$AKS_RESOURCE_GROUP" --query "oidcIssuerProfile.issuerUrl" -otsv)
+AKS_OIDC_ISSUER=$(az aks show -n "$AKS_CLUSTER_NAME" -g "$AKS_RESOURCE_GROUP" --query "oidcIssuerProfile.issuerUrl" -otsv)
 
 # https://learn.microsoft.com/en-gb/azure/aks/workload-identity-deploy-cluster#create-kubernetes-service-account
 cat <<EOF | kubectl apply -f -
@@ -29,16 +30,15 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    azure.workload.identity/client-id: "${AKS_MANAGED_IDENTITY_RESOURCE_ID}"
+    azure.workload.identity/client-id: "$AKS_MANAGED_IDENTITY_RESOURCE_ID"
   name: "$SA_NAME"
   namespace: "$AKS_NAMESPACE"
 EOF
 
 # Create the federated identity credential between the managed identity, the service account issuer, and the subject.
-az identity federated-credential create --name "${AKS_MANAGED_IDENTITY}-fc" --identity-name "${AKS_MANAGED_IDENTITY}" --resource-group "${AKS_RESOURCE_GROUP}" --issuer "${AKS_OIDC_ISSUER}" --subject system:serviceaccount:"${AKS_NAMESPACE}":"${SA_NAME}" --audience api://AzureADTokenExchange
+az identity federated-credential create --name "$AKS_MANAGED_IDENTITY-fc" --identity-name "$AKS_MANAGED_IDENTITY" --resource-group "$AKS_RESOURCE_GROUP" --issuer "$AKS_OIDC_ISSUER" --subject system:serviceaccount:"$AKS_NAMESPACE":"$SA_NAME" --audience api://AzureADTokenExchange
 
 echo "Provisioning CSI drivers... "
-az aks get-credentials --resource-group "${AKS_RESOURCE_GROUP}" --name "${AKS_CLUSTER_NAME}" --admin
 # Helm charts for KeyVault drivers
 helm repo add stable https://charts.helm.sh/stable
 helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
