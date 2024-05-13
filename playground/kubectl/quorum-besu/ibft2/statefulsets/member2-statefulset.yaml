@@ -178,7 +178,7 @@ spec:
                   java -Xms128M -Xmx128M -jar /tessera/tessera-app.jar -configfile /data/tm/tessera-config-09.json
 
         - name: member2-besu
-          image: hyperledger/besu:23.7.0
+          image: hyperledger/besu:24.3
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -248,7 +248,7 @@ spec:
                 --privacy-enabled=true \
                 --privacy-url=http://localhost:9101 \
                 --privacy-public-key-file=/secrets/tm.pub \
-                --privacy-onchain-groups-enabled=false \
+                --privacy-flexible-groups-enabled=false \
                 --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-member2 \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
 
