@@ -92,9 +92,6 @@ node:
       host: "0.0.0.0"
       port: 8547
       corsOrigins: '["all"]'
-    txPool:
-      retentionHours: 999
-      maxSize: 1024
     http:
       allowlist: '["*"]'
     metrics:
@@ -149,7 +146,7 @@ node:
 image:
   besu:
     repository: hyperledger/besu
-    tag: 22.7.2
+    tag: 24.3
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
