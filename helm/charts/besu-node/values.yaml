@@ -22,6 +22,8 @@ azure:
   serviceAccountName: quorum-sa
   # the clientId of the user assigned managed identity created in the template
   identityClientId: azure-clientId
+  # the clientId of the user assigned managed identity in the node pool's resource group
+  nodePoolIdentityClientId: azure-clientId
   keyvaultName: azure-keyvault
   # the tenant ID of the key vault
   tenantId: azure-tenantId
