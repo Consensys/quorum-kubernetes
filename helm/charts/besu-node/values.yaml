@@ -154,6 +154,6 @@ image:
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks
-    tag: qgt-0.2.15
+    tag: qgt-0.2.12
     pullPolicy: IfNotPresent
 
