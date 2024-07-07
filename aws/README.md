@@ -51,7 +51,7 @@ aws eks --region AWS_REGION update-kubeconfig --name CLUSTER_NAME
 
 4. [Provision Secrets Drivers](https://github.com/aws/secrets-store-csi-driver-provider-aws)
 
-Once the deployment has completed, please provision the Secrets Manager identity and the CSI drivers
+Once the deployment has been completed, please provision the Secrets Manager identity and the CSI drivers
 
 ```bash
 ./scripts/bootstrap.sh  "AWS_REGION" "AWS_ACCOUNT" "CLUSTER_NAME" "AKS_NAMESPACE"
