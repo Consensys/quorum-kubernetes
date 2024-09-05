@@ -6,7 +6,7 @@ The following repo has example reference implementations of private networks usi
 
 You will need the following tools to proceed:
 
-- [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) This is the local equivalent of a K8S cluster (refer to the [playground](./playground) for manifests to deploy)
+- [Minikube](https://kubernetes.io/docs/tasks/tools/#minikube) This is the local equivalent of a K8S cluster (refer to the [playground](./playground) for manifests to deploy)
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/)
 - [Helm](https://helm.sh/docs/)
 - [Helm Diff plugin](https://github.com/databus23/helm-diff)
