@@ -192,6 +192,8 @@ http://<INGRESS_IP>/explorer
 ### _For Besu:_
 
 ```bash
+# Following step creates config maps required for subsequent steps. Allow Kubernetes jobs to complete the
+# process before proceeding to next steps
 helm install genesis ./charts/besu-genesis --namespace quorum --create-namespace --values ./values/genesis-besu.yml
 
 # bootnodes - optional but recommended
