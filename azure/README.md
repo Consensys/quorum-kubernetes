@@ -4,7 +4,7 @@
 ## Background
 The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
-It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template](./arm/azuredeploy.json). We also make use some Azure native services and features (tha are are provisioned via a [script](./scripts/bootstrap.sh)) after the cluster is created. These include:
+It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template](./arm/azuredeploy.json). We also make use some Azure native services and features (tha are provisioned via a [script](./scripts/bootstrap.sh)) after the cluster is created. These include:
 - [AAD pod identities](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity).
 - [Secrets Store CSI drivers](https://docs.microsoft.com/en-us/azure/key-vault/general/key-vault-integrate-kubernetes)
 - Data is stored using dynamic StorageClasses backed by Azure Files. Please note the [Volume Claims](https://docs.microsoft.com/en-us/azure/aks/azure-disks-dynamic-pv) are fixed sizes and can be updated as you grow via a helm update, and will not need reprovisioning of the underlying storage class.
