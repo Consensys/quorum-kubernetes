@@ -146,7 +146,7 @@ node:
 image:
   besu:
     repository: hyperledger/besu
-    tag: 24.3
+    tag: 24.8.0
     pullPolicy: IfNotPresent
   tessera:
     repository: quorumengineering/tessera
@@ -154,6 +154,6 @@ image:
     pullPolicy: IfNotPresent
   hooks:
     repository: consensys/quorum-k8s-hooks
-    tag: qgt-0.2.15
+    tag: qgt-0.2.18
     pullPolicy: IfNotPresent
 

@@ -92,11 +92,13 @@ spec:
               fpath=$2
               kubectl get secret ${key}-keys --namespace {{ .Release.Namespace }} -o json > /dev/null 2>&1
               if [ $? -ne 0 ]; then
-                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub  --from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
+                echo "Creating new $key"
+                kubectl create secret generic ${key}-keys --namespace {{ .Release.Namespace }} --from-file=nodekey=${fpath}/nodekey --from-file=nodekey.pub=${fpath}/nodekey.pub --from-file=enode=${fpath}/nodekey.pub  --from-file=address=${fpath}/address--from-file=accountPrivate.key=${fpath}/accountPrivateKey --from-file=accountPassword=${fpath}/accountPassword --from-file=accountKeystore=${fpath}/accountKeystore --from-file=accountAdddress=${fpath}/accountAddress
               else
                 # if the key exists pull it from secrets so that when you update the enodes configmap, you have the right value
-                mkdir -p $fpath
-                kubectl get secrets --namespace {{ .Release.Namespace }} ${key}-keys -o json | jq '.data.enode' | tr -d '"' | base64 --decode > $fpath/nodekey.pub
+                echo "Reusing an existing $key"
+                kubectl get secrets ${key}-keys --namespace {{ .Release.Namespace }}  -o json | jq '.data.enode' | tr -d '"'| base64 --decode > ${fpath}/nodekey.pub
+                kubectl get secrets ${key}-keys --namespace {{ .Release.Namespace }}  -o json | jq '.data.address' | tr -d '"'| base64 --decode > ${fpath}/address
               fi
             }
 

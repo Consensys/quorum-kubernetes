@@ -168,4 +168,3 @@ Ensure that if you are using a cloud provider you have enough spread across AZ's
 When deploying a private network, eg: IBFT you need to ensure that the bootnodes are accessible to all nodes on the network. Although the minimum number needed is 1, we recommend you use more than 1 spread across AZ's. In addition we also recommend you spread validators across AZ's and have a sufficient number available in the event of an AZ going down.
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
-
