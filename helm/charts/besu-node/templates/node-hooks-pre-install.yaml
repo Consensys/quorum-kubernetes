@@ -171,7 +171,9 @@ spec:
 {{- else }}
               safeWriteSecret {{ template "besu-node.fullname" . }} $FOLDER_PATH/member0
 {{- end }}
+              cat $FOLDER_PATH/member0/nodekey.pub
               cat $FOLDER_PATH/member0/nodekey.pub > /tmp/enode
+              cat /tmp/enode
               echo "Creating configmap for node address"
               kubectl create configmap {{ template "besu-node.fullname" . }}-address --from-file=address=$FOLDER_PATH/${f}/member0/address
 
