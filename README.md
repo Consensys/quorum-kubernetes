@@ -169,3 +169,12 @@ When deploying a private network, eg: IBFT you need to ensure that the bootnodes
 
 You need to ensure that the genesis file is accessible to all nodes joining the network.
 
+{
+	"static-nodes.json": "[
+		\"enode://714d52d43e5b3017837448ca4c66429527de41619052501e8aa8f75e76003982bc9ea86fb88b77e335d52a332b400da7f6292133b0ba5452a2c980f0da9b2379@besu-node-validator-1-0.besu-node-validator-1.besu.svc.cluster.local:30303?discport=0\"
+		,\"enode://bc1168204fa99830b1253f15f6722911993a0b9d8c3f57c7d411d519ffff32611e2c508f3b9e1fb0ac332f1ec479c0fff353c3191d1e6e29e20f1b473bc9f516@besu-node-validator-2-0.besu-node-validator-2.besu.svc.cluster.local:30303?discport=0\"
+		,\"enode://18e3d5cbb38dbd35c990dc08556f4f48787cdce49428605c63daa6ff62db25bc3910db9151217c2ada569b83634d0874a6eb4f44d50af4822a829236feba162c@besu-node-validator-3-0.besu-node-validator-3.besu.svc.cluster.local:30303?discport=0\"
+		,\"enode://cfd1d14d624f23f6e8ae0188702f825d7193ace263c67140f76196137cb59226ec35443566e98bcf04b7d488439b1dbfeaddd318409ac219f4b6245fc314f16e@besu-node-validator-4-0.besu-node-validator-4.besu.svc.cluster.local:30303?discport=0\"
+		]
+		"
+}
