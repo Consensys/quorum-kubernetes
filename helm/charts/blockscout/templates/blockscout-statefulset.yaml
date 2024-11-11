@@ -58,6 +58,8 @@ spec:
     metadata:
       labels:
         app: {{ template "blockscout.fullname" . }}
+        app.kubernetes.io/part-of: {{ include "blockscout.fullname" . }}
+        app.kubernetes.io/namespace: {{ .Release.Namespace }}
     spec:
       serviceAccountName: {{ include "blockscout.fullname" . }}-sa
       containers:
