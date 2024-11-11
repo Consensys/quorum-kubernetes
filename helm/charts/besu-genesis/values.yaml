@@ -1,5 +1,17 @@
 ---
 
+initJob:
+  annotations: {} # additional annotations to init job
+
+serviceAccount:
+  annotations: {} # additional annotations for the service account
+
+serviceAccountRole:
+  annotations: {} # additional annotations for the service account role
+
+serviceAccountRoleBinding:
+  annotations: {} # additional annotations for the service account role binding
+
 quorumFlags:
   removeGenesisOnDelete: true
 
