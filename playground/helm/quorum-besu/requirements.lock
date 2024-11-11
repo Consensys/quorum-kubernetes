@@ -1,0 +1,21 @@
+dependencies:
+- name: besu-genesis
+  repository: file://charts/besu-genesis
+  version: 0.1.0
+- name: besu-node
+  repository: file://charts/besu-node
+  version: 0.1.0
+- name: besu-node
+  repository: file://charts/besu-node
+  version: 0.1.0
+- name: besu-node
+  repository: file://charts/besu-node
+  version: 0.1.0
+- name: besu-node
+  repository: file://charts/besu-node
+  version: 0.1.0
+- name: blockscout
+  repository: file://charts/besu-node
+  version: 0.1.0
+digest: sha256:d9ec61140e436353de5288e8fcb5545de3ea16b509a23eb284f3715a163a7010
+generated: "2024-11-11T05:18:55.056189547+01:00"

@@ -1,0 +1,42 @@
+blockscout:
+  fullnameOverride: blockscout
+  blockscout:
+    database_url: "ecto://postgres:postgres@besu-minikube-postgresql/postgres?ssl=false"
+    ethereum_jsonrpc_endpoint: "besu-node-validator-1"
+
+genesis:
+  rawGenesisConfig:
+    genesis:
+      includeQuickStartAccounts: "false"
+
+  serviceAccountRole:
+    annotations:
+      helm.sh/hook: pre-install,pre-delete,post-delete
+      helm.sh/hook-weight: "-12"
+
+  serviceAccountRoleBinding:
+    annotations:
+      helm.sh/hook: pre-install,pre-delete,post-delete
+      helm.sh/hook-weight: "-11"
+
+  serviceAccount:
+    annotations:
+      helm.sh/hook: pre-install,pre-delete,post-delete
+      helm.sh/hook-weight: "-11"
+
+  initJob:
+    annotations:
+      helm.sh/hook: pre-install
+      helm.sh/hook-weight: "-10"
+
+validator-1:
+  fullnameOverride: besu-node-validator-1
+
+validator-2:
+  fullnameOverride: besu-node-validator-2
+
+validator-3:
+  fullnameOverride: besu-node-validator-3
+
+validator-4:
+  fullnameOverride: besu-node-validator-4

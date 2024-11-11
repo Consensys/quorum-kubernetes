@@ -1,0 +1,23 @@
+rawGenesisConfig:
+  genesis:
+    includeQuickStartAccounts: "false"
+
+serviceAccountRole:
+  annotations:
+    helm.sh/hook: pre-install,pre-delete,post-delete
+    helm.sh/hook-weight: "-2"
+
+serviceAccountRoleBinding:
+  annotations:
+    helm.sh/hook: pre-install,pre-delete,post-delete
+    helm.sh/hook-weight: "-1"
+
+serviceAccount:
+  annotations:
+    helm.sh/hook: pre-install,pre-delete,post-delete
+    helm.sh/hook-weight: "-1"
+
+initJob:
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "0"
