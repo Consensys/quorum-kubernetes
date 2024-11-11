@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-set -x
+set -e
 
 rm -rf charts/besu-genesis
 rm -rf charts/besu-node
 rm -rf charts/blockscout
 
-cp -rf ../../../helm/charts/besu-genesis charts/.
-cp -rf ../../../helm/charts/besu-node charts/.
-cp -rf ../../../helm/charts/blockscout charts/.
+mkdir -p charts
+cp -r ../../../helm/charts/besu-genesis charts/.
+cp -r ../../../helm/charts/besu-node charts/.
+cp -r ../../../helm/charts/blockscout charts/.
 
 helm dependency update
 
