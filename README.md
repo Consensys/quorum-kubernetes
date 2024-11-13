@@ -40,17 +40,18 @@ The current repo layout is:
   │   ├── arm                       # azure ARM templates to deploy resources ie cluster, keyvault, identity etc
   │   └── scripts                   # azure scripts to install CSI drivers on the AKS cluster and the like
   ├── playground                    # playground for users to get familiar with concepts and how to run and tweak things - START HERE 
-  │   └── kubectl
-  │       ├── quorum-besu           # use Hyperledger Besu as the block chain client
-  │       │   ├── clique
-  │       │   │   ├── ...           # templates, config etc hidden here for brevity
-  │       │   ├── ethash
-  │       │   │   ├── ...
-  │       │   └── ibft2
-  │       │       └── ...
-  │       └── quorum-go             # use GoQuorum as the block chain client
-  │           └── ibft
-  │               └── ...
+  │   ├── kubectl
+  │   │   ├── quorum-besu           # use Hyperledger Besu as the block chain client
+  │   │   │   ├── clique
+  │   │   │   │   ├── ...           # templates, config etc hidden here for brevity
+  │   │   │   ├── ethash
+  │   │   │   │   ├── ...
+  │   │   │   └── ibft2
+  │   │   │       └── ...
+  │   │   └── quorum-go             # use GoQuorum as the block chain client
+  │   │       └── ibft
+  │   │           └── ...
+  │   └── helm                      # playground for helm-based deployments
   ├── helm                       
   │   ├── charts            
   │   │   ├── ...                   # helm charts, hidden here for brevity
