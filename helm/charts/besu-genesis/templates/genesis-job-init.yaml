@@ -14,8 +14,10 @@ metadata:
     app.kubernetes.io/release: {{ .Release.Name }}
     app.kubernetes.io/managed-by: helm
   namespace: {{ .Release.Namespace }}
+{{- if .Values.initJob.annotations }}
   annotations:
-    helm.sh/hook-delete-policy: "hook-succeeded"
+{{- toYaml .Values.initJob.annotations | nindent 4 }}
+{{- end}}
 spec:
   # backoffLimit: 3
   completions: 1
