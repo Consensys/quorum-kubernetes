@@ -40,7 +40,7 @@ dependencies:
     version: 0.1.0
     alias: validator-4
   - name: blockscout
-    repository: "file://charts/besu-node"
+    repository: "file://charts/blockscout"
     version: 0.1.0
     alias: blockscout
 
