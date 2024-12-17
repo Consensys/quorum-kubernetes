@@ -41,7 +41,7 @@ The current repo layout is:
   │   └── scripts                   # azure scripts to install CSI drivers on the AKS cluster and the like
   ├── playground                    # playground for users to get familiar with concepts and how to run and tweak things - START HERE 
   │   └── kubectl
-  │       ├── quorum-besu           # use Hyperledger Besu as the block chain client
+  │       ├── quorum-besu           # use Besu as the block chain client
   │       │   ├── clique
   │       │   │   ├── ...           # templates, config etc hidden here for brevity
   │       │   ├── ethash
@@ -95,7 +95,7 @@ When deploying a private network, eg: QBFT, if you use bootnodes, you need to en
 
 You need to ensure that the genesis file is accessible to **all** nodes joining the network.
 
-Hyperledger Besu supports [NAT mechanisms](https://besu.hyperledger.org/en/stable/Reference/CLI/CLI-Syntax/#nat-method) and the default is set to automatically handle NAT environments. If you experience issues with NAT and logs have messages that have the NATService throwing exceptions connecting to external IPs, please add this option in your Besu deployments `--nat-method = NONE`
+Besu has deprecated [NAT for K8S](https://github.com/hyperledger/besu/blob/main/CHANGELOG.md) with version 24.12.0 and we recommend setting `--nat-method = NONE`
 
 #### Data Volumes:
 We use separate data volumes to store the blockchain data, over the default of the host nodes. This is similar to using separate volumes to store data when using docker containers natively or via docker-compose. This is done for a couple of reasons; firstly, containers are mortal and we don't want to store data on them, secondly, host nodes can fail and we would like the chain data to persist.  

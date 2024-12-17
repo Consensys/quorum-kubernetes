@@ -62,7 +62,7 @@ spec:
       serviceAccountName: member1-sa
       initContainers:
         - name: init-bootnode
-          image: curlimages/curl:7.79.1
+          image: curlimages/curl:8.11.1
           command:
             - "sh"
             - "-c"
@@ -176,7 +176,7 @@ spec:
                   /tessera/bin/tessera -configfile /data/tm/tessera-config-09.json
 
         - name: member1-besu
-          image: hyperledger/besu:24.3
+          image: hyperledger/besu:24.12.1
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -194,6 +194,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: BESU_P2P_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP                  
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
@@ -247,7 +251,7 @@ spec:
                 --privacy-url=http://localhost:9101 \
                 --privacy-public-key-file=/secrets/tm.pub \
                 --privacy-flexible-groups-enabled=false \
-                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-member1 \
+                --Xdns-enabled=true --Xdns-update-enabled=true \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
 
       volumes:

@@ -61,14 +61,14 @@ spec:
       serviceAccountName: validator2-sa
       initContainers:
         - name: init-bootnode
-          image: curlimages/curl:7.79.1
+          image: curlimages/curl:8.11.1
           command:
             - "sh"
             - "-c"
             - "curl -X GET --connect-timeout 30 --max-time 10 --retry 6 --retry-delay 0 --retry-max-time 300 ${BESU_VALIDATOR1_SERVICE_HOST}:8545/liveness"
       containers:
         - name: validator2
-          image: hyperledger/besu:24.3
+          image: hyperledger/besu:24.12.1
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -86,6 +86,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: BESU_P2P_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: VALIDATOR1_PUBKEY
               valueFrom:
                 configMapKeyRef:
@@ -134,7 +138,7 @@ spec:
               exec /opt/besu/bin/besu \
                 --node-private-key-file=/secrets/nodekey \
                 --config-file=/etc/besu/config.toml \
-                --Xdns-enabled=true --Xdns-update-enabled=true --Xnat-kube-service-name=besu-validator2 \
+                --Xdns-enabled=true --Xdns-update-enabled=true \
                 --bootnodes=enode://${VALIDATOR1_PUBKEY}@validator1-0.besu-validator1.besu.svc.cluster.local:30303,enode://${VALIDATOR2_PUBKEY}@validator2-0.besu-validator2.besu.svc.cluster.local:30303
 
       volumes:

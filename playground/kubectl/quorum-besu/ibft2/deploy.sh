@@ -3,4 +3,7 @@ kubectl apply -f secrets/
 kubectl apply -f configmap/
 kubectl apply -f services/
 kubectl apply -f deployments/
-kubectl apply -f statefulsets/
+kubectl apply -f statefulsets/validator1-statefulset.yaml
+kubectl apply -f statefulsets/validator2-statefulset.yaml
+kubectl apply -f statefulsets/validator3-statefulset.yaml
+kubectl apply -f statefulsets/validator4-statefulset.yaml
