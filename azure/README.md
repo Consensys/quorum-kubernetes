@@ -2,7 +2,7 @@
 # Azure
 
 ## Background
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
+The following is meant to guide you through running Besu or GoQuorum clients in Azure AKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with AKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 It essentially comprises base infrastructure that is used to build the cluster & other resources in Azure via an [ARM template](./arm/azuredeploy.json). We also make use some Azure native services and features (tha are provisioned via a [script](./scripts/bootstrap.sh)) after the cluster is created. These include:
 - [AAD pod identities](https://docs.microsoft.com/en-us/azure/aks/use-azure-ad-pod-identity).

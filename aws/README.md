@@ -2,7 +2,7 @@
 
 ## Background
 
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
+The following is meant to guide you through running Besu or GoQuorum clients in AWS EKS (Kubernetes) in both development and production scenarios. As always you are free to customize the charts to suit your requirements. It is highly recommended to familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 It essentially comprises base infrastructure that is used to build the cluster & other resources in AWS via a [template]('./templates/cluster.yml'). We also make use some AWS native services and features after the cluster is created. These include:
 
@@ -66,6 +66,6 @@ The `cluster.yml` file that is included in this folder uses the EBS drivers but 
 
 6. Deploy the charts as per the `helm` folder readme files
 
-The following is meant to guide you through running Hyperledger Besu or GoQuorum clients in AWS EKS (Kubernetes). As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
+The following is meant to guide you through running Besu or GoQuorum clients in AWS EKS (Kubernetes). As always you are free to customize the charts to suit your requirements. It is highly recommended that you familiarize yourself with EKS (or equivalent Kubernetes infrastructure) before running things in production on Kubernetes.
 
 7. Optionally deploy the kubernetes [dashboard](./templates/k8s-dashboard/README.md)

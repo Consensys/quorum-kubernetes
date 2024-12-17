@@ -62,7 +62,7 @@ spec:
       serviceAccountName: validator3-sa
       initContainers:
         - name: init-bootnode
-          image: curlimages/curl:7.79.1
+          image: curlimages/curl:8.11.1
           command:
             - /bin/sh
             - -c

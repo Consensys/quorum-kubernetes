@@ -29,7 +29,7 @@ from the tutorial in there to run the key generation process.
 ```bash
 mkdir -p $PWD/ibftSetup
 # copy the `ibftConfigFile.json` file from the tutorial here and then proceed
-docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:23.7.0 operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
+docker run --rm --volume $PWD/ibftSetup/:/opt/besu/data hyperledger/besu:24.12.1 operator generate-blockchain-config --config-file=/opt/besu/data/ibftConfigFile.json --to=/opt/besu/data/networkFiles --private-key-file-name=key
 sudo chown -R $USER:$USER ./ibftSetup
 mv ./ibftSetup/networkFiles/genesis.json ./ibftSetup/
 ```

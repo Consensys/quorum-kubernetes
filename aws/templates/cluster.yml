@@ -5,7 +5,7 @@ kind: ClusterConfig
 metadata:
   name: quorum-cluster
   region: ap-southeast-2
-  version: "1.23"
+  version: "1.31"
 
 # It is recommended that you let eksctl deploy a new VPC for your cluster, it will automatically tag the subnets with the appropriate tags. You may use an existing VPC if you wish but take note of the necessary subnet tags: https://github.com/weaveworks/eksctl/blob/main/examples/04-existing-vpc.yaml https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html
 vpc:
