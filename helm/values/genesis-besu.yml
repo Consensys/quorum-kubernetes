@@ -37,6 +37,8 @@ rawGenesisConfig:
     difficulty: '0x1'
     coinbase: '0x0000000000000000000000000000000000000000'
     includeQuickStartAccounts: false # set to true if you would like to use the quorum-dev-quickstart test accounts. This setting will be forced false if cloudNativeServices is set to true which is assuming a prod environment
+    maxCodeSize: 64000  # 64 KB
+    txnSizeLimit: 64000  # 64 KB
   blockchain:
     nodes:
       generate: true

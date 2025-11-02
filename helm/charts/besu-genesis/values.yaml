@@ -37,6 +37,8 @@ rawGenesisConfig:
     gasLimit: '0xf7b760' 
     difficulty: '0x1'
     coinbase: '0x0000000000000000000000000000000000000000'
+    maxCodeSize: 64000  # 64 KB
+    txnSizeLimit: 64000  # 64 KB
   blockchain:
     nodes:
       generate: true
@@ -46,5 +48,5 @@ rawGenesisConfig:
 
 image:
   repository: consensys/quorum-k8s-hooks
-  tag: qgt-0.2.18
+  tag: qgt-0.2.20 
   pullPolicy: IfNotPresent
