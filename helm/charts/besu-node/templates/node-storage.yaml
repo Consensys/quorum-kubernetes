@@ -1,3 +1,4 @@
+{{- if .Values.storage.enabled }}
 {{- if eq .Values.cluster.provider "azure" }}
 ---
 apiVersion: storage.k8s.io/v1
@@ -68,4 +69,4 @@ spec:
     path: "/tmp/{{ include "besu-node.fullname" . }}"
 
 {{- end }}
-
+{{- end }}
